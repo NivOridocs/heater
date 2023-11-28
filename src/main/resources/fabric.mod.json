@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "heater",
+	"version": "${version}",
+	"name": "Heater",
+	"description": "",
+	"authors": [
+		"Niv Oridocs"
+	],
+	"contact": {
+		"homepage": "",
+		"sources": ""
+	},
+	"license": "MIT",
+	"icon": "assets/heater/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"niv.heater.Heater"
+		],
+		"client": [
+			"niv.heater.HeaterClient"
+		],
+		"fabric-datagen": [
+			"niv.heater.HeaterDataGenerator"
+		]
+	},
+    "accessWidener" : "heater.accesswidener",
+	"mixins": [
+	],
+	"depends": {
+		"fabricloader": ">=0.14.22",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
+}
