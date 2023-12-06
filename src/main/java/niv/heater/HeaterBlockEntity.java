@@ -2,6 +2,11 @@ package niv.heater;
 
 import static net.minecraft.block.AbstractFurnaceBlock.LIT;
 
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.function.Consumer;
+import java.util.function.ObjIntConsumer;
+
 import com.google.common.collect.TreeMultiset;
 
 import net.minecraft.block.AbstractFurnaceBlock;
@@ -27,6 +32,8 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
 
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
+
+    private static final int MAX_HEAT = 63;
 
     private int burnTime;
 
@@ -172,7 +179,7 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         var dirty = false;
 
         if (heater.isBurning()) {
-            propBurnTime(world, pos, heater);
+            propagateBurnTime(world, pos, heater);
         }
 
         if (heater.isBurning()) {
@@ -192,17 +199,8 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         }
     }
 
-    private static void propBurnTime(World world, BlockPos pos, HeaterBlockEntity heater) {
-        TreeMultiset<PosStateEntity> triplets = TreeMultiset
-                .create((a, b) -> Integer.compare(b.entity().burnTime, a.entity().burnTime));
-
-        for (var direction : Direction.values()) {
-            var newPos = pos.offset(direction, 1);
-            var newEntity = world.getBlockEntity(newPos);
-            if (newEntity != null && newEntity instanceof AbstractFurnaceBlockEntity newFurnace) {
-                triplets.add(new PosStateEntity(newPos, world.getBlockState(newPos), newFurnace));
-            }
-        }
+    private static void propagateBurnTime(World world, BlockPos pos, HeaterBlockEntity heater) {
+        TreeMultiset<PropagationTarget> triplets = searchBlocks(world, pos);
 
         if (triplets.isEmpty()) {
             return;
@@ -220,30 +218,75 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         }
     }
 
-    private static boolean propagateTo(HeaterBlockEntity heater, World world, BlockPos pos, BlockState state,
-            AbstractFurnaceBlockEntity entity, int deltaBurn) {
-        var wasBurning = entity.burnTime > 0;
+    private static TreeMultiset<PropagationTarget> searchBlocks(World world, BlockPos heaterPos) {
+        var targets = TreeMultiset.<PropagationTarget>create(HeaterBlockEntity::compare);
+        var channels = new LinkedList<PropagationChannel>();
+        var visited = new HashSet<BlockPos>();
+
+        for (var direction : Direction.values()) {
+            var pos = heaterPos.offset(direction);
+            visited.add(pos);
+            channels.add(new PropagationChannel(heaterPos, MAX_HEAT));
+        }
+
+        while (!channels.isEmpty()) {
+            var channel = channels.poll();
+            var pos = channel.pos();
+            var state = world.getBlockState(pos);
+            doVisit(world, pos, state, channel.heat(),
+                    f -> targets.add(new PropagationTarget(pos, state, f)),
+                    (p, h) -> {
+                        if (!visited.contains(p)) {
+                            channels.add(new PropagationChannel(p, h));
+                        }
+                    });
+            visited.add(channel.pos());
+        }
+
+        return targets;
+    }
+
+    private static void doVisit(World world, BlockPos pos, BlockState state, int heat,
+            Consumer<AbstractFurnaceBlockEntity> addTarget,
+            ObjIntConsumer<BlockPos> addChannel) {
+        var block = state.getBlock();
+
+        if (block instanceof AbstractFurnaceBlock) {
+            var entity = world.getBlockEntity(pos);
+            if (entity != null && entity instanceof AbstractFurnaceBlockEntity furnace) {
+                addTarget.accept(furnace);
+            }
+        } else if (block instanceof HeatPipeBlock && heat - 1 > 0) {
+            for (var direction : HeatPipeBlock.getConnectedDirections(state)) {
+                addChannel.accept(pos.offset(direction), heat - 1);
+            }
+        }
+    }
+
+    private static boolean propagateTo(HeaterBlockEntity heater, World world, BlockPos furnacePos,
+            BlockState furnaceState, AbstractFurnaceBlockEntity furnace, int deltaBurn) {
+        var wasBurning = furnace.burnTime > 0;
 
         if (deltaBurn > heater.burnTime) {
             deltaBurn = heater.burnTime;
         }
 
-        if (entity.fuelTime < heater.fuelTime) {
-            entity.fuelTime = heater.fuelTime;
+        if (furnace.fuelTime < heater.fuelTime) {
+            furnace.fuelTime = heater.fuelTime;
         }
 
-        if (entity.burnTime + deltaBurn > entity.fuelTime) {
+        if (furnace.burnTime + deltaBurn > furnace.fuelTime) {
             return true;
         }
 
         heater.burnTime -= deltaBurn;
-        entity.burnTime += deltaBurn;
+        furnace.burnTime += deltaBurn;
 
-        var isBurning = entity.burnTime > 0;
+        var isBurning = furnace.burnTime > 0;
         if (wasBurning != isBurning) {
-            state = state.with(LIT, isBurning);
-            world.setBlockState(pos, state);
-            markDirty(world, pos, state);
+            furnaceState = furnaceState.with(LIT, isBurning);
+            world.setBlockState(furnacePos, furnaceState);
+            markDirty(world, furnacePos, furnaceState);
         }
 
         if (heater.burnTime <= 0) {
@@ -274,7 +317,14 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         return dirty;
     }
 
-    private static final record PosStateEntity(BlockPos pos, BlockState state, AbstractFurnaceBlockEntity entity) {
+    private static int compare(PropagationTarget a, PropagationTarget b) {
+        return Integer.compare(b.entity().burnTime, a.entity().burnTime);
+    }
+
+    private static final record PropagationTarget(BlockPos pos, BlockState state, AbstractFurnaceBlockEntity entity) {
+    }
+
+    private static final record PropagationChannel(BlockPos pos, int heat) {
     }
 
 }
