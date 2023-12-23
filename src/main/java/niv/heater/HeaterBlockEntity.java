@@ -257,7 +257,7 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
                 addTarget.accept(furnace);
             }
         } else if (block instanceof HeatPipeBlock && heat - 1 > 0) {
-            for (var direction : HeatPipeBlock.getConnectedDirections(state)) {
+            for (var direction : HeatPipeBlock.getConnected(state)) {
                 addChannel.accept(pos.offset(direction), heat - 1);
             }
         }

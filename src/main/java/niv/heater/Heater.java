@@ -35,6 +35,10 @@ public class Heater implements ModInitializer {
 
     public static final ScreenHandlerType<HeaterScreenHandler> HEATER_SCREEN_HANDLER;
 
+    public static final Block HEAT_PIPE_BLOCK;
+
+    public static final Item HEAT_PIPE_ITEM;
+
     static {
         MOD_ID = "heater";
         var id = new Identifier(MOD_ID, "heater");
@@ -50,6 +54,14 @@ public class Heater implements ModInitializer {
         HEATER_SCREEN_HANDLER = Registry.register(
                 Registries.SCREEN_HANDLER, id,
                 new ScreenHandlerType<>(HeaterScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
+
+        id = new Identifier(MOD_ID, "heat_pipe");
+        HEAT_PIPE_BLOCK = Registry.register(
+                Registries.BLOCK, id,
+                new HeatPipeBlock(FabricBlockSettings.copyOf(Blocks.COPPER_BLOCK)));
+        HEAT_PIPE_ITEM = Registry.register(
+                Registries.ITEM, id,
+                new BlockItem(HEAT_PIPE_BLOCK, new FabricItemSettings()));
     }
 
     @Override
@@ -61,6 +73,6 @@ public class Heater implements ModInitializer {
         LOGGER.info("Initialize");
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL)
-                .register(content -> content.addBefore(Items.FURNACE, HEATER_ITEM));
+                .register(content -> content.addBefore(Items.FURNACE, HEATER_ITEM, HEAT_PIPE_ITEM));
     }
 }
