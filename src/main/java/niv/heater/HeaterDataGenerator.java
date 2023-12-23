@@ -91,7 +91,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     Optional.empty()));
 
             itemModelGenerator.register(HEAT_PIPE_ITEM, new Model(
-                    Optional.of(new Identifier(MOD_ID, "block/heat_pipe")),
+                    Optional.of(ModelIds.getItemSubModelId(HEAT_PIPE_ITEM, "_core")),
                     Optional.empty()));
         }
 
