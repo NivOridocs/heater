@@ -2,16 +2,12 @@ package niv.heater;
 
 import static net.minecraft.block.AbstractFurnaceBlock.LIT;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.function.Consumer;
-import java.util.function.ObjIntConsumer;
-
-import com.google.common.collect.TreeMultiset;
+import java.util.Optional;
 
 import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.LockableContainerBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -25,7 +21,6 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 public class HeaterBlockEntity extends LockableContainerBlockEntity {
@@ -200,67 +195,38 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
     }
 
     private static void propagateBurnTime(World world, BlockPos pos, HeaterBlockEntity heater) {
-        TreeMultiset<PropagationTarget> triplets = searchBlocks(world, pos);
 
-        if (triplets.isEmpty()) {
+        var propagator = new Propagator<AbstractFurnaceBlockEntity>(world, pos, MAX_HEAT,
+                HeaterBlockEntity::cast, HeaterBlockEntity::compare);
+        propagator.run();
+        var targets = propagator.get();
+
+        if (targets.isEmpty()) {
             return;
         }
 
-        var deltaBurn = heater.burnTime / triplets.size();
-        if (heater.burnTime % triplets.size() > 0) {
+        var deltaBurn = heater.burnTime / targets.size();
+        if (heater.burnTime % targets.size() > 0) {
             deltaBurn += 1;
         }
 
-        for (var triplet : triplets) {
-            if (!propagateTo(heater, world, triplet.pos(), triplet.state(), triplet.entity(), deltaBurn)) {
+        for (var target : targets) {
+            if (!propagateTo(heater, world, target.pos(), target.state(), target.entity(), deltaBurn)) {
                 break;
             }
         }
     }
 
-    private static TreeMultiset<PropagationTarget> searchBlocks(World world, BlockPos heaterPos) {
-        var targets = TreeMultiset.<PropagationTarget>create(HeaterBlockEntity::compare);
-        var channels = new LinkedList<PropagationChannel>();
-        var visited = new HashSet<BlockPos>();
-
-        for (var direction : Direction.values()) {
-            var pos = heaterPos.offset(direction);
-            visited.add(pos);
-            channels.add(new PropagationChannel(heaterPos, MAX_HEAT));
+    private static Optional<AbstractFurnaceBlockEntity> cast(BlockEntity entity) {
+        if (entity instanceof AbstractFurnaceBlockEntity furnace) {
+            return Optional.of(furnace);
+        } else {
+            return Optional.empty();
         }
-
-        while (!channels.isEmpty()) {
-            var channel = channels.poll();
-            var pos = channel.pos();
-            var state = world.getBlockState(pos);
-            doVisit(world, pos, state, channel.heat(),
-                    f -> targets.add(new PropagationTarget(pos, state, f)),
-                    (p, h) -> {
-                        if (!visited.contains(p)) {
-                            channels.add(new PropagationChannel(p, h));
-                        }
-                    });
-            visited.add(channel.pos());
-        }
-
-        return targets;
     }
 
-    private static void doVisit(World world, BlockPos pos, BlockState state, int heat,
-            Consumer<AbstractFurnaceBlockEntity> addTarget,
-            ObjIntConsumer<BlockPos> addChannel) {
-        var block = state.getBlock();
-
-        if (block instanceof AbstractFurnaceBlock) {
-            var entity = world.getBlockEntity(pos);
-            if (entity != null && entity instanceof AbstractFurnaceBlockEntity furnace) {
-                addTarget.accept(furnace);
-            }
-        } else if (block instanceof HeatPipeBlock && heat - 1 > 0) {
-            for (var direction : HeatPipeBlock.getConnected(state)) {
-                addChannel.accept(pos.offset(direction), heat - 1);
-            }
-        }
+    private static int compare(AbstractFurnaceBlockEntity a, AbstractFurnaceBlockEntity b) {
+        return Integer.compare(b.burnTime, a.burnTime);
     }
 
     private static boolean propagateTo(HeaterBlockEntity heater, World world, BlockPos furnacePos,
@@ -315,16 +281,6 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
             }
         }
         return dirty;
-    }
-
-    private static int compare(PropagationTarget a, PropagationTarget b) {
-        return Integer.compare(b.entity().burnTime, a.entity().burnTime);
-    }
-
-    private static final record PropagationTarget(BlockPos pos, BlockState state, AbstractFurnaceBlockEntity entity) {
-    }
-
-    private static final record PropagationChannel(BlockPos pos, int heat) {
     }
 
 }
