@@ -83,8 +83,6 @@ public class Propagator<E> implements
                 visit(pipe.pos().offset(direction), pipe.heat() - 1);
             }
         }
-
-        Heater.LOGGER.info("Found targets: {}", targets);
     }
 
     private void visit(BlockPos pos, int heat) {
