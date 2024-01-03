@@ -112,9 +112,9 @@ publishing {
 	}
 }
 
-// modrinth {
-//     token = System.getenv("MODRINTH_TOKEN")
-//     projectId = "${project.project_id}"
-//     uploadFile = remapJar
-//     syncBodyFrom = rootProject.file("README.md").text
-// }
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "${project.project_id}"
+    uploadFile = remapJar
+    syncBodyFrom = rootProject.file("README.md").text
+}
