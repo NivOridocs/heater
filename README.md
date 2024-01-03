@@ -6,7 +6,7 @@ The **Heater** block is a furnace-like block but without any processing slot. In
 
 In other words, the **Heater** allows you to centralise the burning process and avoid building complex fuel lines.
 
-On the other hand, the Heat Pipe is a pipe-like block that just extends the reach of a **Heater** up to 64 blocks.
+On the other hand, the **Heat Pipe** is a pipe-like block that just extends the reach of a **Heater** up to 64 blocks.
 
 ![Heater Showcase](img/Heater_Showcase_1.png)
 
