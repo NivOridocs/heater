@@ -2,6 +2,10 @@ package niv.heater;
 
 import static net.minecraft.block.Blocks.COPPER_BLOCK;
 import static net.minecraft.block.Blocks.FURNACE;
+import static net.minecraft.block.Oxidizable.OxidationLevel.EXPOSED;
+import static net.minecraft.block.Oxidizable.OxidationLevel.OXIDIZED;
+import static net.minecraft.block.Oxidizable.OxidationLevel.UNAFFECTED;
+import static net.minecraft.block.Oxidizable.OxidationLevel.WEATHERED;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +15,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
+import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
@@ -88,13 +93,13 @@ public class Heater implements ModInitializer {
 
         id = id.withPath(heater);
         HEATER_BLOCK = Registry.register(Registries.BLOCK, id,
-                new HeaterBlock(FabricBlockSettings.copyOf(FURNACE)));
+                new HeaterOxidizableBlock(UNAFFECTED, FabricBlockSettings.copyOf(FURNACE)));
         EXPOSED_HEATER_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(exposed),
-                new HeaterBlock(FabricBlockSettings.copyOf(FURNACE)));
+                new HeaterOxidizableBlock(EXPOSED, FabricBlockSettings.copyOf(FURNACE)));
         WEATHERED_HEATER_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(weathered),
-                new HeaterBlock(FabricBlockSettings.copyOf(FURNACE)));
+                new HeaterOxidizableBlock(WEATHERED, FabricBlockSettings.copyOf(FURNACE)));
         OXIDIZED_HEATER_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(oxidized),
-                new HeaterBlock(FabricBlockSettings.copyOf(FURNACE)));
+                new HeaterOxidizableBlock(OXIDIZED, FabricBlockSettings.copyOf(FURNACE)));
 
         WAXED_HEATER_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(waxed),
                 new HeaterBlock(FabricBlockSettings.copyOf(FURNACE)));
@@ -107,13 +112,13 @@ public class Heater implements ModInitializer {
 
         id = id.withPath(heatPipe);
         HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id,
-                new HeatPipeBlock(FabricBlockSettings.copyOf(COPPER_BLOCK)));
+                new HeatPipeOxidizableBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
         EXPOSED_HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(exposed),
-                new HeatPipeBlock(FabricBlockSettings.copyOf(COPPER_BLOCK)));
+                new HeatPipeOxidizableBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
         WEATHERED_HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(weathered),
-                new HeatPipeBlock(FabricBlockSettings.copyOf(COPPER_BLOCK)));
+                new HeatPipeOxidizableBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
         OXIDIZED_HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(oxidized),
-                new HeatPipeBlock(FabricBlockSettings.copyOf(COPPER_BLOCK)));
+                new HeatPipeOxidizableBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
 
         WAXED_HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(waxed),
                 new HeatPipeBlock(FabricBlockSettings.copyOf(COPPER_BLOCK)));
@@ -182,6 +187,24 @@ public class Heater implements ModInitializer {
         // Proceed with mild caution.
 
         LOGGER.info("Initialize");
+
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(HEATER_BLOCK, EXPOSED_HEATER_BLOCK);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(EXPOSED_HEATER_BLOCK, WEATHERED_HEATER_BLOCK);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(WEATHERED_HEATER_BLOCK, OXIDIZED_HEATER_BLOCK);
+
+        OxidizableBlocksRegistry.registerWaxableBlockPair(HEATER_BLOCK, WAXED_HEATER_BLOCK);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(EXPOSED_HEATER_BLOCK, WAXED_EXPOSED_HEATER_BLOCK);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(WEATHERED_HEATER_BLOCK, WAXED_WEATHERED_HEATER_BLOCK);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(OXIDIZED_HEATER_BLOCK, WAXED_OXIDIZED_HEATER_BLOCK);
+
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(HEAT_PIPE_BLOCK, EXPOSED_HEAT_PIPE_BLOCK);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(EXPOSED_HEAT_PIPE_BLOCK, WEATHERED_HEAT_PIPE_BLOCK);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(WEATHERED_HEAT_PIPE_BLOCK, OXIDIZED_HEAT_PIPE_BLOCK);
+
+        OxidizableBlocksRegistry.registerWaxableBlockPair(HEAT_PIPE_BLOCK, WAXED_HEAT_PIPE_BLOCK);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(EXPOSED_HEAT_PIPE_BLOCK, WAXED_EXPOSED_HEAT_PIPE_BLOCK);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(WEATHERED_HEAT_PIPE_BLOCK, WAXED_WEATHERED_HEAT_PIPE_BLOCK);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(OXIDIZED_HEAT_PIPE_BLOCK, WAXED_OXIDIZED_HEAT_PIPE_BLOCK);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL)
                 .register(content -> content.addBefore(Items.FURNACE,
