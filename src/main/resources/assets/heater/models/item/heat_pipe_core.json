@@ -1,7 +1,4 @@
 {
-    "textures": {
-        "texture": "heater:block/heat_pipe"
-    },
     "parent": "block/block",
     "elements": [
         {

@@ -1,6 +1,5 @@
 {
     "textures": {
-        "texture":  "heater:block/heat_pipe",
         "particle": "#texture"
     },
     "elements": [
