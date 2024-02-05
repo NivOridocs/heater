@@ -10,8 +10,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Oxidizable.OxidationLevel;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -36,6 +38,8 @@ public class Propagator<E> implements
 
     private final Comparator<E> comparator;
 
+    private final ToIntFunction<OxidationLevel> mapToWaste;
+
     private final int maxHeat;
 
     private final Queue<Pipe> pipes;
@@ -46,11 +50,12 @@ public class Propagator<E> implements
 
     public Propagator(World world, BlockPos startingPos, int maxHeat,
             Function<BlockEntity, Optional<E>> mapToInstance,
-            Comparator<E> comparator) {
+            Comparator<E> comparator, ToIntFunction<OxidationLevel> mapToWaste) {
         this.world = world;
         this.startingPos = startingPos;
         this.mapToInstance = mapToInstance;
         this.comparator = comparator;
+        this.mapToWaste = mapToWaste;
         this.maxHeat = maxHeat;
         this.pipes = new LinkedList<>();
         this.targets = new TreeSet<>(this::compare);
@@ -79,8 +84,11 @@ public class Propagator<E> implements
 
         while (!pipes.isEmpty()) {
             var pipe = pipes.poll();
-            for (var direction : HeatPipeBlock.getConnected(pipe.state())) {
-                visit(pipe.pos().offset(direction), pipe.heat() - 1);
+            if (pipe.state().getBlock() instanceof HeatPipeBlock block) {
+                for (var direction : HeatPipeBlock.getConnected(pipe.state())) {
+                    visit(pipe.pos().offset(direction),
+                            pipe.heat() - mapToWaste.applyAsInt((block.getOxidationLevel())));
+                }
             }
         }
     }
