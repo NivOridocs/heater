@@ -6,13 +6,10 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 
-public class HeaterOxidizableBlock extends HeaterBlock implements Oxidizable {
+public class OxidizableHeaterBlock extends HeaterBlock implements Oxidizable {
 
-    private final OxidationLevel oxidationLevel;
-
-    public HeaterOxidizableBlock(OxidationLevel oxidationLevel, Settings settings) {
-        super(settings);
-        this.oxidationLevel = oxidationLevel;
+    public OxidizableHeaterBlock(OxidationLevel oxidationLevel, Settings settings) {
+        super(oxidationLevel, settings);
     }
 
     @Override
@@ -26,8 +23,8 @@ public class HeaterOxidizableBlock extends HeaterBlock implements Oxidizable {
     }
 
     @Override
-    public Oxidizable.OxidationLevel getDegradationLevel() {
-        return this.oxidationLevel;
+    public OxidationLevel getDegradationLevel() {
+        return getOxidationLevel();
     }
 
 }

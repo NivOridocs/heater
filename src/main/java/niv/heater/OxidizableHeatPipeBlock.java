@@ -6,13 +6,10 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 
-public class HeatPipeOxidizableBlock extends HeatPipeBlock implements Oxidizable {
+public class OxidizableHeatPipeBlock extends HeatPipeBlock implements Oxidizable {
 
-    private final OxidationLevel oxidationLevel;
-
-    public HeatPipeOxidizableBlock(OxidationLevel oxidationLevel, Settings settings) {
-        super(settings);
-        this.oxidationLevel = oxidationLevel;
+    public OxidizableHeatPipeBlock(OxidationLevel oxidationLevel, Settings settings) {
+        super(oxidationLevel, settings);
     }
 
     @Override
@@ -26,8 +23,8 @@ public class HeatPipeOxidizableBlock extends HeatPipeBlock implements Oxidizable
     }
 
     @Override
-    public Oxidizable.OxidationLevel getDegradationLevel() {
-        return this.oxidationLevel;
+    public OxidationLevel getDegradationLevel() {
+        return getOxidationLevel();
     }
 
 }

@@ -4,6 +4,7 @@ import java.util.Random;
 
 import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Oxidizable.OxidationLevel;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
@@ -21,8 +22,15 @@ import net.minecraft.world.World;
 
 public class HeaterBlock extends AbstractFurnaceBlock {
 
-    public HeaterBlock(Settings settings) {
+    private final OxidationLevel oxidationLevel;
+
+    public HeaterBlock(OxidationLevel oxidationLevel, Settings settings) {
         super(settings);
+        this.oxidationLevel = oxidationLevel;
+    }
+
+    public OxidationLevel getOxidationLevel() {
+        return oxidationLevel;
     }
 
     @Override

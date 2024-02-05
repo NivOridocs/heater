@@ -7,6 +7,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.Waterloggable;
+import net.minecraft.block.Oxidizable.OxidationLevel;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
@@ -58,8 +59,11 @@ public class HeatPipeBlock extends Block implements Waterloggable {
         // };
     }
 
-    public HeatPipeBlock(Settings settings) {
+    private final OxidationLevel oxidationLevel;
+
+    public HeatPipeBlock(OxidationLevel oxidationLevel, Settings settings) {
         super(settings);
+        this.oxidationLevel = oxidationLevel;
         this.setDefaultState(stateManager.getDefaultState()
                 .with(DOWN, false)
                 .with(UP, false)
@@ -68,6 +72,10 @@ public class HeatPipeBlock extends Block implements Waterloggable {
                 .with(WEST, false)
                 .with(EAST, false)
                 .with(WATERLOGGED, false));
+    }
+
+    public OxidationLevel getOxidationLevel() {
+        return oxidationLevel;
     }
 
     @Override
