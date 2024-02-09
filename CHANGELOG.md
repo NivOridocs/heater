@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2024-02-09
+
+### Fixed
+
++ Fix oxidation, restoration, waxing, and unwaxing processes for every introduced block. They now work correctly, and you can obtain every block in Survival.
+
 ## [1.1.0] - 2024-01-31
 
 ### Added
@@ -14,5 +20,6 @@
 
 Initial release.
 
-[1.1.0]: https://github.com/NivOridocs/heater/releases/tag/1.0.1
+[1.1.1]: https://github.com/NivOridocs/heater/releases/tag/1.1.1
+[1.1.0]: https://github.com/NivOridocs/heater/releases/tag/1.1.0
 [1.0.0]: https://github.com/NivOridocs/heater/releases/tag/1.0.0
