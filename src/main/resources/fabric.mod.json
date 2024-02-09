@@ -7,9 +7,12 @@
 	"authors": [
 		"Niv Oridocs"
 	],
+    "contributors": [
+        "StarOcean"
+    ],
 	"contact": {
-		"homepage": "",
-		"sources": ""
+		"homepage": "https://modrinth.com/mod/heater",
+		"sources": "https://github.com/NivOridocs/heater"
 	},
 	"license": "MIT",
 	"icon": "assets/heater/icon.png",
