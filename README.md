@@ -10,16 +10,8 @@ On the other hand, the **Heat Pipe** is a pipe-like block that just extends the 
 
 ![Heater Showcase](img/Heater_Showcase_1.png)
 
+Credits to [StarOcean](https://github.com/0Starocean0) for the fantastic textures they created!
+
 ## Planned Features
 
-Not in any particular order.
-
-I am considering whether or not to add redstone logic to the Heater so that it doesn't propagate heat when powered. Until I reach a consensus between me, myself, and yours truly, I'll implement nothing.
-
-~~I don't quite like the Heat Pipe's texture, but I haven't yet been able to do better. However, I have already spent too many afternoons drawing ugly pixelled textures for now and the foreseeable future, so that's on hold. I guess the same goes for Heater block, although I don't dislike it as much.~~
-
-~~Finally, since the Heater and the Heat Pipe are both copper-based blocks, I should add some oxidation logic to them, but again, textures, see above.~~
-
-Thanks to [StarOcean](https://github.com/0Starocean0) for the amazing new textures they created!
-
-Apparently, adding new oxidizing blocks isn't as easy as I initially presumed... Anyhow, now that I have the textures, the planned feature is implementing the oxidization process for the new blocks. I'm getting there.
+There are no planned features!
