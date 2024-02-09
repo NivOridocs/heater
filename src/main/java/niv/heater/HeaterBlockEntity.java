@@ -189,7 +189,6 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
 
     public static void tick(World world, BlockPos pos, BlockState state, HeaterBlockEntity heater) {
         var wasBurning = heater.isBurning();
-        var dirty = false;
 
         if (heater.isBurning()) {
             propagateBurnTime(world, pos, heater);
@@ -202,8 +201,9 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
             }
         }
 
-        dirty = consumeFuel(heater, dirty);
+        consumeFuel(heater);
 
+        var dirty = false;
         if (wasBurning != heater.isBurning()) {
             dirty = true;
             state = state.with(AbstractFurnaceBlock.LIT, heater.isBurning());
@@ -216,7 +216,6 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
     }
 
     private static void propagateBurnTime(World world, BlockPos pos, HeaterBlockEntity heater) {
-
         var propagator = new Propagator<AbstractFurnaceBlockEntity>(world, pos, MAX_HEAT,
                 HeaterBlockEntity::cast, HeaterBlockEntity::compare, HeaterBlockEntity::mapToWaste);
         propagator.run();
@@ -284,24 +283,21 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         return true;
     }
 
-    private static boolean consumeFuel(HeaterBlockEntity heater, boolean dirty) {
+    private static void consumeFuel(HeaterBlockEntity heater) {
         var fuelStack = heater.inventory.get(0);
         var hasFuel = !fuelStack.isEmpty();
         if (!heater.isBurning() && hasFuel) {
-            heater.fuelTime = heater.burnTime = heater.getFuelTime(fuelStack);
-            if (heater.isBurning()) {
-                dirty = true;
-                if (hasFuel) {
-                    var fuelItem = fuelStack.getItem();
-                    fuelStack.decrement(1);
-                    if (fuelStack.isEmpty()) {
-                        var bucketItem = fuelItem.getRecipeRemainder();
-                        heater.inventory.set(0, bucketItem == null ? ItemStack.EMPTY : new ItemStack(bucketItem));
-                    }
+            var fuelTime = heater.getFuelTime(fuelStack);
+            if (fuelTime > 0) {
+                var fuelItem = fuelStack.getItem();
+                fuelStack.decrement(1);
+                if (fuelStack.isEmpty()) {
+                    var bucketItem = fuelItem.getRecipeRemainder();
+                    heater.inventory.set(0, bucketItem == null ? ItemStack.EMPTY : new ItemStack(bucketItem));
                 }
+                heater.fuelTime = heater.burnTime = fuelTime;
             }
         }
-        return dirty;
     }
 
 }

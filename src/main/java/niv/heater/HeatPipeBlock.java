@@ -37,7 +37,6 @@ public class HeatPipeBlock extends Block implements Waterloggable {
 
     private static final VoxelShape CORE;
     private static final VoxelShape[] PIPE_ARM;
-    // private static final VoxelShape[] PIPE_CONNECTOR;
 
     static {
         CORE = Block.createCuboidShape(5, 5, 5, 11, 11, 11);
@@ -49,14 +48,6 @@ public class HeatPipeBlock extends Block implements Waterloggable {
                 Block.createCuboidShape(0, 5, 5, 5, 11, 11),
                 Block.createCuboidShape(11, 5, 5, 16, 11, 11),
         };
-        // PIPE_CONNECTOR = new VoxelShape[] {
-        //         Block.createCuboidShape(4, 0, 4, 12, 2, 12),
-        //         Block.createCuboidShape(4, 14, 4, 12, 16, 12),
-        //         Block.createCuboidShape(4, 4, 0, 12, 12, 2),
-        //         Block.createCuboidShape(4, 4, 14, 12, 12, 16),
-        //         Block.createCuboidShape(0, 4, 4, 2, 12, 12),
-        //         Block.createCuboidShape(14, 4, 4, 2, 12, 12)
-        // };
     }
 
     private final OxidationLevel oxidationLevel;
