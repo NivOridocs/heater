@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "heater:block/weathered_heater_front_on",
+    "side": "heater:block/weathered_heater_side",
+    "top": "heater:block/weathered_heater_top"
+  }
+}
