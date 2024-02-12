@@ -3,7 +3,7 @@
 	"id": "heater",
 	"version": "${version}",
 	"name": "Heater",
-	"description": "",
+	"description": "A bare minimal tech mod for centralised furnace fuel management. It adds just two blocks.",
 	"authors": [
 		"Niv Oridocs"
 	],
