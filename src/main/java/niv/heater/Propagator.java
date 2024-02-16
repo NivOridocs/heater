@@ -13,30 +13,31 @@ import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.Oxidizable.OxidationLevel;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-public class Propagator<E> implements
-        Supplier<Set<Propagator.Target<E>>>,
-        Iterable<Propagator.Target<E>>,
+public class Propagator implements
+        Supplier<Set<Propagator.Target>>,
+        Iterable<Propagator.Target>,
         Runnable {
 
-    public record Target<E>(BlockPos pos, BlockState state, E entity) {
+    public record Target(BlockPos pos, BlockState state, BurnerBlockEntity burner) {
     }
 
-    private record Pipe(BlockPos pos, BlockState state, int heat) {
+    private record Pipe(BlockPos pos, BlockState state, HeatPipeBlock block, int heat) {
     }
 
     private final World world;
 
     private final BlockPos startingPos;
 
-    private final Function<BlockEntity, Optional<E>> mapToInstance;
+    private final Function<BlockEntity, Optional<BurnerBlockEntity>> mapToBurner;
 
-    private final Comparator<E> comparator;
+    private final Comparator<BurnerBlockEntity> comparator;
 
     private final ToIntFunction<OxidationLevel> mapToWaste;
 
@@ -44,16 +45,16 @@ public class Propagator<E> implements
 
     private final Queue<Pipe> pipes;
 
-    private final Set<Target<E>> targets;
+    private final Set<Target> targets;
 
     private final Set<BlockPos> visited;
 
     public Propagator(World world, BlockPos startingPos, int maxHeat,
-            Function<BlockEntity, Optional<E>> mapToInstance,
-            Comparator<E> comparator, ToIntFunction<OxidationLevel> mapToWaste) {
+            Function<BlockEntity, Optional<BurnerBlockEntity>> mapToBurner,
+            Comparator<BurnerBlockEntity> comparator, ToIntFunction<OxidationLevel> mapToWaste) {
         this.world = world;
         this.startingPos = startingPos;
-        this.mapToInstance = mapToInstance;
+        this.mapToBurner = mapToBurner;
         this.comparator = comparator;
         this.mapToWaste = mapToWaste;
         this.maxHeat = maxHeat;
@@ -63,12 +64,12 @@ public class Propagator<E> implements
     }
 
     @Override
-    public Set<Target<E>> get() {
+    public Set<Target> get() {
         return targets;
     }
 
     @Override
-    public Iterator<Target<E>> iterator() {
+    public Iterator<Target> iterator() {
         return targets.iterator();
     }
 
@@ -84,11 +85,9 @@ public class Propagator<E> implements
 
         while (!pipes.isEmpty()) {
             var pipe = pipes.poll();
-            if (pipe.state().getBlock() instanceof HeatPipeBlock block) {
-                for (var direction : HeatPipeBlock.getConnected(pipe.state())) {
-                    visit(pipe.pos().offset(direction),
-                            pipe.heat() - mapToWaste.applyAsInt((block.getOxidationLevel())));
-                }
+            for (var direction : HeatPipeBlock.getConnected(pipe.state())) {
+                visit(pipe.pos().offset(direction),
+                        pipe.heat() - mapToWaste.applyAsInt((pipe.block().getOxidationLevel())));
             }
         }
     }
@@ -99,23 +98,26 @@ public class Propagator<E> implements
         }
 
         var state = world.getBlockState(pos);
-        var entity = world.getBlockEntity(pos);
         var block = state.getBlock();
 
-        if (block instanceof HeatPipeBlock) {
+        if (block instanceof HeaterBlock) {
+            return;
+        }
+
+        if (block instanceof HeatPipeBlock pipe) {
             visited.add(pos);
-            pipes.add(new Pipe(pos, state, heat));
-        } else if (entity != null) {
-            var cast = mapToInstance.apply(entity);
-            if (cast.isPresent()) {
+            pipes.add(new Pipe(pos, state, pipe, heat));
+        } else if (block instanceof BlockWithEntity) {
+            var entity = Optional.ofNullable(world.getBlockEntity(pos)).flatMap(mapToBurner);
+            if (entity.isPresent()) {
                 visited.add(pos);
-                targets.add(new Target<>(pos, state, cast.get()));
+                targets.add(new Target(pos, state, entity.get()));
             }
         }
     }
 
-    private int compare(Target<E> a, Target<E> b) {
-        int result = comparator.compare(a.entity(), b.entity());
+    private int compare(Target a, Target b) {
+        int result = comparator.compare(a.burner(), b.burner());
         if (result == 0) {
             result = a.pos().compareTo(b.pos());
         }
