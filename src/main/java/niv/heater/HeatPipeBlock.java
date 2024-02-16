@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.Waterloggable;
 import net.minecraft.block.Oxidizable.OxidationLevel;
@@ -131,7 +132,10 @@ public class HeatPipeBlock extends Block implements Waterloggable {
 
     private boolean canConnect(WorldAccess world, BlockPos pos) {
         var block = world.getBlockState(pos).getBlock();
-        return block instanceof HeatPipeBlock || block instanceof AbstractFurnaceBlock;
+        return block instanceof HeatPipeBlock
+                || block instanceof AbstractFurnaceBlock
+                || (block instanceof BlockWithEntity
+                        && ForwardingBurnerBlockEntity.isForwardable(world.getBlockEntity(pos)));
     }
 
     public static boolean isConnected(BlockState state, Direction direction) {

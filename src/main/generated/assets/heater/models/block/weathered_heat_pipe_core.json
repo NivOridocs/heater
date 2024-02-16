@@ -1,0 +1,6 @@
+{
+  "parent": "heater:block/heat_pipe_base_core",
+  "textures": {
+    "texture": "heater:block/weathered_heat_pipe"
+  }
+}

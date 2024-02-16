@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.0] - 2024-02-16
+
+### Added
+
++ Add compatibility with mods that add furnaces whose entities don't extend `AbstractFurnaceBlockEntity`.
+
+### Fixed
+
++ Fix Heaters dropping their content when they get oxidized, restored, waxed, or unwaxed.
+
 ## [1.1.1] - 2024-02-09
 
 ### Fixed
@@ -20,6 +30,7 @@
 
 Initial release.
 
+[1.2.0]: https://github.com/NivOridocs/heater/releases/tag/1.2.0
 [1.1.1]: https://github.com/NivOridocs/heater/releases/tag/1.1.1
 [1.1.0]: https://github.com/NivOridocs/heater/releases/tag/1.1.0
 [1.0.0]: https://github.com/NivOridocs/heater/releases/tag/1.0.0

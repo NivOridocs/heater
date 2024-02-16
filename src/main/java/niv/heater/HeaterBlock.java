@@ -63,7 +63,7 @@ public class HeaterBlock extends AbstractFurnaceBlock {
 
     @Override
     public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
-        if (state.isOf(newState.getBlock())) {
+        if (state.getBlock() instanceof HeaterBlock && newState.getBlock() instanceof HeaterBlock) {
             return;
         }
         var entity = world.getBlockEntity(pos);
