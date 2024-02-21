@@ -23,7 +23,7 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.WorldAccess;
 
-public class HeatPipeBlock extends Block implements Waterloggable {
+public class HeatPipeBlock extends Block implements HeatPipe, Waterloggable {
 
     public static final BooleanProperty DOWN = Properties.DOWN;
     public static final BooleanProperty UP = Properties.UP;
@@ -135,14 +135,19 @@ public class HeatPipeBlock extends Block implements Waterloggable {
         return block instanceof HeatPipeBlock
                 || block instanceof AbstractFurnaceBlock
                 || (block instanceof BlockWithEntity
-                        && ForwardingBurnerBlockEntity.isForwardable(world.getBlockEntity(pos)));
+                        && ForwardingHeatSink.isForwardable(world.getBlockEntity(pos)));
     }
 
     public static boolean isConnected(BlockState state, Direction direction) {
         return state.get(getProperty(direction)).booleanValue();
     }
 
-    public static Direction[] getConnected(BlockState state) {
+    public static BooleanProperty getProperty(Direction direction) {
+        return FACING_PROPERTIES[direction.getId()];
+    }
+
+    @Override
+    public Direction[] getConnected(WorldAccess world, BlockPos pos, BlockState state) {
         var directions = new ArrayList<>(6);
         for (var direction : Direction.values()) {
             if (isConnected(state, direction)) {
@@ -152,8 +157,9 @@ public class HeatPipeBlock extends Block implements Waterloggable {
         return directions.toArray(Direction[]::new);
     }
 
-    public static BooleanProperty getProperty(Direction direction) {
-        return FACING_PROPERTIES[direction.getId()];
+    @Override
+    public int reducedHeat(WorldAccess world, BlockPos pos, BlockState state, int heat) {
+        return HeatPipe.reduceHeat(oxidationLevel, heat);
     }
 
 }

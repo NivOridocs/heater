@@ -1,18 +1,10 @@
 package niv.heater;
 
 import static net.minecraft.block.AbstractFurnaceBlock.LIT;
-import static net.minecraft.block.Oxidizable.OxidationLevel.EXPOSED;
-import static net.minecraft.block.Oxidizable.OxidationLevel.OXIDIZED;
-import static net.minecraft.block.Oxidizable.OxidationLevel.UNAFFECTED;
-import static net.minecraft.block.Oxidizable.OxidationLevel.WEATHERED;
-
-import java.util.Optional;
 
 import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Oxidizable.OxidationLevel;
 import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.LockableContainerBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -33,20 +25,7 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
 
-    private static final int[] OXIDATION_WASTE_MAP = new int[4];
-
     private static final int MAX_HEAT = 63;
-
-    static {
-        OXIDATION_WASTE_MAP[UNAFFECTED.ordinal()] = 1;
-        OXIDATION_WASTE_MAP[EXPOSED.ordinal()] = 2;
-        OXIDATION_WASTE_MAP[WEATHERED.ordinal()] = 3;
-        OXIDATION_WASTE_MAP[OXIDIZED.ordinal()] = 4;
-    }
-
-    private static final int mapToWaste(OxidationLevel oxidationLevel) {
-        return OXIDATION_WASTE_MAP[oxidationLevel.ordinal()];
-    }
 
     private int burnTime;
 
@@ -195,10 +174,7 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         }
 
         if (heater.isBurning() && world.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
-            heater.burnTime -= mapToWaste(block.getOxidationLevel());
-            if (heater.burnTime < 0) {
-                heater.burnTime = 0;
-            }
+            heater.burnTime = HeatPipe.reduceHeat(block.getOxidationLevel(), heater.burnTime);
         }
 
         consumeFuel(heater);
@@ -216,8 +192,7 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
     }
 
     private static void propagateBurnTime(World world, BlockPos pos, HeaterBlockEntity heater) {
-        var propagator = new Propagator(world, pos, MAX_HEAT,
-                HeaterBlockEntity::toBurner, HeaterBlockEntity::compare, HeaterBlockEntity::mapToWaste);
+        var propagator = new Propagator(world, pos, MAX_HEAT);
         propagator.run();
         var targets = propagator.get();
 
@@ -231,78 +206,33 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         }
 
         for (var target : targets) {
-            if (!propagateTo(heater, world, target.pos(), target.state(), target.burner(), deltaBurn)) {
-                break;
+            var wasBurning = target.entity().getBurnTime() > 0;
+
+            if (deltaBurn > heater.burnTime) {
+                deltaBurn = heater.burnTime;
+            }
+
+            if (target.entity().getFuelTime() < heater.fuelTime) {
+                target.entity().setFuelTime(heater.fuelTime);
+            }
+
+            if (target.entity().getBurnTime() + deltaBurn <= target.entity().getFuelTime()) {
+                heater.burnTime -= deltaBurn;
+                target.entity().setBurnTime(target.entity().getBurnTime() + deltaBurn);
+
+                var isBurning = target.entity().getBurnTime() > 0;
+                if (wasBurning != isBurning) {
+                    var state = target.state().with(LIT, isBurning);
+                    world.setBlockState(target.pos(), state);
+                    markDirty(world, target.pos(), state);
+                }
+
+                if (heater.burnTime <= 0) {
+                    heater.burnTime = 0;
+                    break;
+                }
             }
         }
-    }
-
-    private static Optional<BurnerBlockEntity> toBurner(BlockEntity entity) {
-        if (entity instanceof AbstractFurnaceBlockEntity furnace) {
-            return Optional.of(new BurnerBlockEntity() {
-
-                @Override
-                public int getBurnTime() {
-                    return furnace.burnTime;
-                }
-
-                @Override
-                public void setBurnTime(int value) {
-                    furnace.burnTime = value;
-                }
-
-                @Override
-                public int getFuelTime() {
-                    return furnace.fuelTime;
-                }
-
-                @Override
-                public void setFuelTime(int value) {
-                    furnace.fuelTime = value;
-                }
-
-            });
-        } else {
-            return ForwardingBurnerBlockEntity.getBurnerBlockEntity(entity);
-        }
-    }
-
-    private static int compare(BurnerBlockEntity a, BurnerBlockEntity b) {
-        return Integer.compare(b.getBurnTime(), a.getBurnTime());
-    }
-
-    private static boolean propagateTo(HeaterBlockEntity heater, World world, BlockPos furnacePos,
-            BlockState furnaceState, BurnerBlockEntity burner, int deltaBurn) {
-        var wasBurning = burner.getBurnTime() > 0;
-
-        if (deltaBurn > heater.burnTime) {
-            deltaBurn = heater.burnTime;
-        }
-
-        if (burner.getFuelTime() < heater.fuelTime) {
-            burner.setFuelTime(heater.fuelTime);
-        }
-
-        if (burner.getBurnTime() + deltaBurn > burner.getFuelTime()) {
-            return true;
-        }
-
-        heater.burnTime -= deltaBurn;
-        burner.setBurnTime(burner.getBurnTime() + deltaBurn);
-
-        var isBurning = burner.getBurnTime() > 0;
-        if (wasBurning != isBurning) {
-            furnaceState = furnaceState.with(LIT, isBurning);
-            world.setBlockState(furnacePos, furnaceState);
-            markDirty(world, furnacePos, furnaceState);
-        }
-
-        if (heater.burnTime <= 0) {
-            heater.burnTime = 0;
-            return false;
-        }
-
-        return true;
     }
 
     private static void consumeFuel(HeaterBlockEntity heater) {

@@ -9,15 +9,16 @@ import java.util.function.Function;
 
 import net.minecraft.block.entity.BlockEntity;
 
-public class ForwardingBurnerBlockEntity implements BurnerBlockEntity {
+@SuppressWarnings("java:S3011")
+public class ForwardingHeatSink implements HeatSink {
 
-    private static final Map<Class<? extends BlockEntity>, Optional<Function<? super BlockEntity, BurnerBlockEntity>>> CACHE = new HashMap<>();
+    private static final Map<Class<? extends BlockEntity>, Optional<Function<? super BlockEntity, HeatSink>>> CACHE = new HashMap<>();
 
     private final BlockEntity target;
     private final Field burnTime;
     private final Field fuelTime;
 
-    public ForwardingBurnerBlockEntity(BlockEntity target, Field burnTime, Field fuelTime) {
+    public ForwardingHeatSink(BlockEntity target, Field burnTime, Field fuelTime) {
         this.target = Objects.requireNonNull(target);
         this.burnTime = Objects.requireNonNull(burnTime);
         this.fuelTime = Objects.requireNonNull(fuelTime);
@@ -63,16 +64,16 @@ public class ForwardingBurnerBlockEntity implements BurnerBlockEntity {
         return get(entity).isPresent();
     }
 
-    public static final <E extends BlockEntity> Optional<BurnerBlockEntity> getBurnerBlockEntity(E entity) {
+    public static final <E extends BlockEntity> Optional<HeatSink> getHeatSink(E entity) {
         return get(entity).map(constructor -> constructor.apply(entity));
     }
 
-    private static final <E extends BlockEntity> Optional<Function<? super BlockEntity, BurnerBlockEntity>> get(
+    private static final <E extends BlockEntity> Optional<Function<? super BlockEntity, HeatSink>> get(
             E entity) {
-        return CACHE.computeIfAbsent(entity.getClass(), ForwardingBurnerBlockEntity::compute);
+        return CACHE.computeIfAbsent(entity.getClass(), ForwardingHeatSink::compute);
     }
 
-    private static final Optional<Function<? super BlockEntity, BurnerBlockEntity>> compute(
+    private static final Optional<Function<? super BlockEntity, HeatSink>> compute(
             Class<?> clazz) {
         try {
             var burnTime = clazz.getDeclaredField("burnTime");
@@ -81,7 +82,7 @@ public class ForwardingBurnerBlockEntity implements BurnerBlockEntity {
             burnTime.setAccessible(true);
             fuelTime.setAccessible(true);
 
-            return Optional.of(entry -> new ForwardingBurnerBlockEntity(entry, burnTime, fuelTime));
+            return Optional.of(entry -> new ForwardingHeatSink(entry, burnTime, fuelTime));
         } catch (NoSuchFieldException ex) {
             var superclazz = clazz.getSuperclass();
             if (superclazz != null && BlockEntity.class.isAssignableFrom(superclazz)) {
