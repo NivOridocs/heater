@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Chenged
+
++ Drop mod's patch version because unnecessary.
+
++ Update target Minecraft version to 1.20.2 and remap mod.
+
 ## [1.2.0] - 2024-02-16
 
 ### Added

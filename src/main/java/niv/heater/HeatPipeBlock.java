@@ -6,9 +6,9 @@ import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
+import net.minecraft.block.Oxidizable.OxidationLevel;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.Waterloggable;
-import net.minecraft.block.Oxidizable.OxidationLevel;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
@@ -91,7 +91,7 @@ public class HeatPipeBlock extends Block implements Waterloggable {
         if (state.get(WATERLOGGED).booleanValue()) {
             return Fluids.WATER.getStill(false);
         }
-        return super.getFluidState(state);
+        return state.getFluidState();
     }
 
     @Override

@@ -42,7 +42,6 @@ import static niv.heater.Heater.WEATHERED_HEAT_PIPE_ITEM;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
@@ -66,7 +65,7 @@ import net.minecraft.data.client.VariantSettings;
 import net.minecraft.data.client.VariantSettings.Rotation;
 import net.minecraft.data.client.VariantsBlockStateSupplier;
 import net.minecraft.data.client.When;
-import net.minecraft.data.server.recipe.RecipeJsonProvider;
+import net.minecraft.data.server.recipe.RecipeExporter;
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder;
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder;
 import net.minecraft.item.Item;
@@ -283,7 +282,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
         }
 
         @Override
-        public void generate(Consumer<RecipeJsonProvider> exporter) {
+        public void generate(RecipeExporter exporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HEATER_BLOCK)
                     .pattern("ccc")
                     .pattern("cfc")
@@ -311,7 +310,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             generateWaxingRecipe(exporter, OXIDIZED_HEAT_PIPE_ITEM, WAXED_OXIDIZED_HEAT_PIPE_ITEM);
         }
 
-        private void generateWaxingRecipe(Consumer<RecipeJsonProvider> exporter, Item unwaxed, Item waxed) {
+        private void generateWaxingRecipe(RecipeExporter exporter, Item unwaxed, Item waxed) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, waxed)
                     .input(unwaxed).input(HONEYCOMB)
                     .criterion(hasItem(unwaxed), conditionsFromItem(unwaxed))
