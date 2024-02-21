@@ -1,4 +1,4 @@
-package niv.heater;
+package niv.heater.screen;
 
 import static niv.heater.Heater.HEATER_SCREEN_HANDLER;
 

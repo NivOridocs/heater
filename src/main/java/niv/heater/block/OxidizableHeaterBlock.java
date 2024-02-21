@@ -1,4 +1,4 @@
-package niv.heater;
+package niv.heater.block;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Oxidizable;
@@ -6,9 +6,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 
-public class OxidizableHeatPipeBlock extends HeatPipeBlock implements Oxidizable {
+public class OxidizableHeaterBlock extends HeaterBlock implements Oxidizable {
 
-    public OxidizableHeatPipeBlock(OxidationLevel oxidationLevel, Settings settings) {
+    public OxidizableHeaterBlock(OxidationLevel oxidationLevel, Settings settings) {
         super(oxidationLevel, settings);
     }
 

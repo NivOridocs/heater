@@ -1,4 +1,4 @@
-package niv.heater;
+package niv.heater.block;
 
 import java.util.ArrayList;
 
@@ -22,6 +22,7 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.WorldAccess;
+import niv.heater.block.entity.ForwardingHeatSink;
 
 public class HeatPipeBlock extends Block implements HeatPipe, Waterloggable {
 

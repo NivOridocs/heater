@@ -1,4 +1,4 @@
-package niv.heater;
+package niv.heater.util;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,6 +14,9 @@ import net.minecraft.block.BlockWithEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import niv.heater.block.HeatPipe;
+import niv.heater.block.HeaterBlock;
+import niv.heater.block.entity.HeatSink;
 
 public class Propagator implements
         Supplier<Set<Propagator.Target>>,

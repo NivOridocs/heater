@@ -1,4 +1,4 @@
-package niv.heater;
+package niv.heater.block;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Oxidizable.OxidationLevel;

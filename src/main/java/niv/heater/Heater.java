@@ -27,6 +27,12 @@ import net.minecraft.registry.Registry;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
+import niv.heater.block.HeatPipeBlock;
+import niv.heater.block.HeaterBlock;
+import niv.heater.block.OxidizableHeatPipeBlock;
+import niv.heater.block.OxidizableHeaterBlock;
+import niv.heater.block.entity.HeaterBlockEntity;
+import niv.heater.screen.HeaterScreenHandler;
 
 public class Heater implements ModInitializer {
 

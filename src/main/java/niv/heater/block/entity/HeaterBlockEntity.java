@@ -1,4 +1,4 @@
-package niv.heater;
+package niv.heater.block.entity;
 
 import static net.minecraft.block.AbstractFurnaceBlock.LIT;
 
@@ -19,6 +19,11 @@ import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import niv.heater.Heater;
+import niv.heater.block.HeatPipe;
+import niv.heater.block.HeaterBlock;
+import niv.heater.screen.HeaterScreenHandler;
+import niv.heater.util.Propagator;
 
 public class HeaterBlockEntity extends LockableContainerBlockEntity {
 

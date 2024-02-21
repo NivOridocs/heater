@@ -1,4 +1,4 @@
-package niv.heater;
+package niv.heater.block.entity;
 
 import java.util.Optional;
 

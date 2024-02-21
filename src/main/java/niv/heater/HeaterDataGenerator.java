@@ -75,6 +75,7 @@ import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
+import niv.heater.block.HeatPipeBlock;
 
 public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
