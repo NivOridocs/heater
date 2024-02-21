@@ -114,11 +114,11 @@ public class Heater implements ModInitializer {
         HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id,
                 new OxidizableHeatPipeBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
         EXPOSED_HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(exposed),
-                new OxidizableHeatPipeBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
+                new OxidizableHeatPipeBlock(EXPOSED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
         WEATHERED_HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(weathered),
-                new OxidizableHeatPipeBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
+                new OxidizableHeatPipeBlock(WEATHERED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
         OXIDIZED_HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(oxidized),
-                new OxidizableHeatPipeBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
+                new OxidizableHeatPipeBlock(OXIDIZED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
 
         WAXED_HEAT_PIPE_BLOCK = Registry.register(Registries.BLOCK, id.withPrefixedPath(waxed),
                 new HeatPipeBlock(UNAFFECTED, FabricBlockSettings.copyOf(COPPER_BLOCK)));
