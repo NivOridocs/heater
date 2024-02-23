@@ -20,12 +20,12 @@ import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import niv.heater.Heater;
-import niv.heater.block.HeatPipe;
+import niv.heater.block.HeatSource;
 import niv.heater.block.HeaterBlock;
 import niv.heater.screen.HeaterScreenHandler;
 import niv.heater.util.Propagator;
 
-public class HeaterBlockEntity extends LockableContainerBlockEntity {
+public class HeaterBlockEntity extends LockableContainerBlockEntity implements HeatSink {
 
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
@@ -161,6 +161,26 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         Inventories.writeNbt(nbt, inventory);
     }
 
+    @Override
+    public int getBurnTime() {
+        return burnTime;
+    }
+
+    @Override
+    public void setBurnTime(int value) {
+        burnTime = value;
+    }
+
+    @Override
+    public int getFuelTime() {
+        return fuelTime;
+    }
+
+    @Override
+    public void setFuelTime(int value) {
+        fuelTime = value;
+    }
+
     private boolean isBurning() {
         return burnTime > 0;
     }
@@ -179,7 +199,7 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity {
         }
 
         if (heater.isBurning() && world.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
-            heater.burnTime = HeatPipe.reduceHeat(block.getOxidationLevel(), heater.burnTime);
+            heater.burnTime = HeatSource.reduceHeat(block.getOxidationLevel(), heater.burnTime);
         }
 
         consumeFuel(heater);

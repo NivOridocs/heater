@@ -2,8 +2,12 @@ package niv.heater.block.entity;
 
 import java.util.Optional;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldAccess;
 
 public interface HeatSink extends Comparable<HeatSink> {
 
@@ -22,6 +26,16 @@ public interface HeatSink extends Comparable<HeatSink> {
 
     static int compare(HeatSink a, HeatSink b) {
         return Integer.compare(b.getBurnTime(), a.getBurnTime());
+    }
+
+    static boolean isHeatSink(WorldAccess world, BlockPos pos, Block block) {
+        if (block instanceof BlockWithEntity) {
+            var entity = world.getBlockEntity(pos);
+            return entity instanceof HeatSink
+                    || entity instanceof AbstractFurnaceBlockEntity
+                    || ForwardingHeatSink.isForwardable(entity);
+        }
+        return false;
     }
 
     static Optional<HeatSink> getHeatSink(BlockEntity entity) {

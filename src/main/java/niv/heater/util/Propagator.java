@@ -3,18 +3,16 @@ package niv.heater.util;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
-import niv.heater.block.HeatPipe;
+import net.minecraft.world.WorldAccess;
+import niv.heater.block.HeatSource;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.entity.HeatSink;
 
@@ -26,26 +24,26 @@ public class Propagator implements
     public record Target(BlockPos pos, BlockState state, HeatSink entity) {
     }
 
-    private record Pipe(BlockPos pos, BlockState state, HeatPipe block, int heat) {
+    private record Source(BlockPos pos, BlockState state, HeatSource block, int heat) {
     }
 
-    private final World world;
+    private final WorldAccess world;
 
     private final BlockPos startingPos;
 
     private final int maxHeat;
 
-    private final Queue<Pipe> pipes;
+    private final Queue<Source> sources;
 
     private final Set<Target> targets;
 
     private final Set<BlockPos> visited;
 
-    public Propagator(World world, BlockPos startingPos, int maxHeat) {
+    public Propagator(WorldAccess world, BlockPos startingPos, int maxHeat) {
         this.world = world;
         this.startingPos = startingPos;
         this.maxHeat = maxHeat;
-        this.pipes = new LinkedList<>();
+        this.sources = new LinkedList<>();
         this.targets = new TreeSet<>(this::compare);
         this.visited = new HashSet<>();
     }
@@ -62,43 +60,39 @@ public class Propagator implements
 
     @Override
     public void run() {
-        pipes.clear();
+        sources.clear();
         targets.clear();
         visited.clear();
 
-        for (var direction : Direction.values()) {
-            visit(startingPos.offset(direction), maxHeat);
+        visited.add(startingPos);
+
+        var state = world.getBlockState(startingPos);
+        if (state.getBlock() instanceof HeaterBlock heater) {
+            sources.add(new Source(startingPos, state, heater, maxHeat));
         }
 
-        while (!pipes.isEmpty()) {
-            var pipe = pipes.poll();
-            for (var direction : pipe.block().getConnected(world, pipe.pos(), pipe.state())) {
-                visit(pipe.pos().offset(direction),
-                        pipe.block().reducedHeat(world, pipe.pos(), pipe.state(), pipe.heat()));
+        while (!sources.isEmpty()) {
+            var src = sources.poll();
+            for (var dir : src.block().getConnected(src.state())) {
+                visit(src, dir);
             }
         }
     }
 
-    private void visit(BlockPos pos, int heat) {
-        if (visited.contains(pos) || heat < 1) {
-            return;
-        }
-
-        var state = world.getBlockState(pos);
-        var block = state.getBlock();
-
-        if (block instanceof HeaterBlock) {
-            return;
-        }
-
-        if (block instanceof HeatPipe pipe) {
-            visited.add(pos);
-            pipes.add(new Pipe(pos, state, pipe, heat));
-        } else if (block instanceof BlockWithEntity) {
-            var entity = Optional.ofNullable(world.getBlockEntity(pos)).flatMap(HeatSink::getHeatSink);
-            if (entity.isPresent()) {
+    private void visit(Source src, Direction dir) {
+        var pos = src.pos().offset(dir);
+        var heat = src.block().reducedHeat(src.heat());
+        if (!visited.contains(pos) && heat > 0) {
+            var tryAsSource = src.block().getNeighborAsSource(world, src.pos(), dir);
+            if (tryAsSource.isPresent()) {
                 visited.add(pos);
-                targets.add(new Target(pos, state, entity.get()));
+                sources.add(new Source(pos, world.getBlockState(pos), tryAsSource.get(), heat));
+                return;
+            }
+            var tryAsSink = src.block().getNeighborAsSink(world, src.pos(), dir);
+            if (tryAsSink.isPresent()) {
+                visited.add(pos);
+                targets.add(new Target(pos, world.getBlockState(pos), tryAsSink.get()));
             }
         }
     }

@@ -1,8 +1,6 @@
 package niv.heater.block.entity;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -11,8 +9,6 @@ import net.minecraft.block.entity.BlockEntity;
 
 @SuppressWarnings("java:S3011")
 public class ForwardingHeatSink implements HeatSink {
-
-    private static final Map<Class<? extends BlockEntity>, Optional<Function<? super BlockEntity, HeatSink>>> CACHE = new HashMap<>();
 
     private final BlockEntity target;
     private final Field burnTime;
@@ -60,37 +56,31 @@ public class ForwardingHeatSink implements HeatSink {
         }
     }
 
-    public static final <E extends BlockEntity> boolean isForwardable(E entity) {
-        return get(entity).isPresent();
+    public static final boolean isForwardable(BlockEntity entity) {
+        return get(entity.getClass()).isPresent();
     }
 
-    public static final <E extends BlockEntity> Optional<HeatSink> getHeatSink(E entity) {
-        return get(entity).map(constructor -> constructor.apply(entity));
+    public static final Optional<HeatSink> getHeatSink(BlockEntity entity) {
+        return get(entity.getClass()).map(constructor -> constructor.apply(entity));
     }
 
-    private static final <E extends BlockEntity> Optional<Function<? super BlockEntity, HeatSink>> get(
-            E entity) {
-        return CACHE.computeIfAbsent(entity.getClass(), ForwardingHeatSink::compute);
-    }
+    private static final Optional<Function<? super BlockEntity, HeatSink>> get(Class<?> clazz) {
+        while (clazz != null
+                && BlockEntity.class.isAssignableFrom(clazz)
+                && !clazz.getName().startsWith("net.minecraft")) {
+            try {
+                var burnTime = clazz.getDeclaredField("burnTime");
+                var fuelTime = clazz.getDeclaredField("fuelTime");
 
-    private static final Optional<Function<? super BlockEntity, HeatSink>> compute(
-            Class<?> clazz) {
-        try {
-            var burnTime = clazz.getDeclaredField("burnTime");
-            var fuelTime = clazz.getDeclaredField("fuelTime");
+                burnTime.setAccessible(true);
+                fuelTime.setAccessible(true);
 
-            burnTime.setAccessible(true);
-            fuelTime.setAccessible(true);
-
-            return Optional.of(entry -> new ForwardingHeatSink(entry, burnTime, fuelTime));
-        } catch (NoSuchFieldException ex) {
-            var superclazz = clazz.getSuperclass();
-            if (superclazz != null && BlockEntity.class.isAssignableFrom(superclazz)) {
-                return compute(superclazz);
-            } else {
-                return Optional.empty();
+                return Optional.of(entry -> new ForwardingHeatSink(entry, burnTime, fuelTime));
+            } catch (NoSuchFieldException ex) {
+                clazz = clazz.getSuperclass();
             }
         }
+        return Optional.empty();
     }
 
 }

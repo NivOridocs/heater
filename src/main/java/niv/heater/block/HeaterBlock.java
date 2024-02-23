@@ -22,7 +22,7 @@ import net.minecraft.world.World;
 import niv.heater.Heater;
 import niv.heater.block.entity.HeaterBlockEntity;
 
-public class HeaterBlock extends AbstractFurnaceBlock {
+public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
 
     private final OxidationLevel oxidationLevel;
 
@@ -100,5 +100,10 @@ public class HeaterBlock extends AbstractFurnaceBlock {
             world.addParticle(ParticleTypes.SMOKE, x + dx, y + dy, z + dz, .0, .0, .0);
         }
     }
+
+	@Override
+	public int reducedHeat(int heat) {
+		return HeatSource.reduceHeat(oxidationLevel, heat);
+	}
 
 }
