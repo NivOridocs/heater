@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_heat_pipe": {
+    "has_exposed_thermostat": {
       "conditions": {
         "items": [
           {
             "items": [
-              "heater:heat_pipe"
+              "heater:exposed_thermostat"
             ]
           }
         ]
@@ -27,7 +27,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "heater:waxed_heat_pipe"
+        "recipe": "heater:waxed_exposed_thermostat"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -35,13 +35,13 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_heat_pipe",
+      "has_exposed_thermostat",
       "has_honeycomb"
     ]
   ],
   "rewards": {
     "recipes": [
-      "heater:waxed_heat_pipe"
+      "heater:waxed_exposed_thermostat"
     ]
   },
   "sends_telemetry_event": false

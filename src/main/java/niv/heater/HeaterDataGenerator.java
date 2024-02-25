@@ -5,12 +5,16 @@ import static net.minecraft.data.client.VariantSettings.Rotation.R0;
 import static net.minecraft.data.client.VariantSettings.Rotation.R180;
 import static net.minecraft.data.client.VariantSettings.Rotation.R270;
 import static net.minecraft.data.client.VariantSettings.Rotation.R90;
+import static net.minecraft.item.Items.COBBLESTONE;
 import static net.minecraft.item.Items.COPPER_INGOT;
 import static net.minecraft.item.Items.HONEYCOMB;
+import static net.minecraft.item.Items.REDSTONE;
 import static niv.heater.Heater.EXPOSED_HEATER_BLOCK;
 import static niv.heater.Heater.EXPOSED_HEATER_ITEM;
 import static niv.heater.Heater.EXPOSED_HEAT_PIPE_BLOCK;
 import static niv.heater.Heater.EXPOSED_HEAT_PIPE_ITEM;
+import static niv.heater.Heater.EXPOSED_THERMOSTAT_BLOCK;
+import static niv.heater.Heater.EXPOSED_THERMOSTAT_ITEM;
 import static niv.heater.Heater.HEATER_BLOCK;
 import static niv.heater.Heater.HEATER_ITEM;
 import static niv.heater.Heater.HEAT_PIPE_BLOCK;
@@ -19,10 +23,16 @@ import static niv.heater.Heater.OXIDIZED_HEATER_BLOCK;
 import static niv.heater.Heater.OXIDIZED_HEATER_ITEM;
 import static niv.heater.Heater.OXIDIZED_HEAT_PIPE_BLOCK;
 import static niv.heater.Heater.OXIDIZED_HEAT_PIPE_ITEM;
+import static niv.heater.Heater.OXIDIZED_THERMOSTAT_BLOCK;
+import static niv.heater.Heater.OXIDIZED_THERMOSTAT_ITEM;
+import static niv.heater.Heater.THERMOSTAT_BLOCK;
+import static niv.heater.Heater.THERMOSTAT_ITEM;
 import static niv.heater.Heater.WAXED_EXPOSED_HEATER_BLOCK;
 import static niv.heater.Heater.WAXED_EXPOSED_HEATER_ITEM;
 import static niv.heater.Heater.WAXED_EXPOSED_HEAT_PIPE_BLOCK;
 import static niv.heater.Heater.WAXED_EXPOSED_HEAT_PIPE_ITEM;
+import static niv.heater.Heater.WAXED_EXPOSED_THERMOSTAT_BLOCK;
+import static niv.heater.Heater.WAXED_EXPOSED_THERMOSTAT_ITEM;
 import static niv.heater.Heater.WAXED_HEATER_BLOCK;
 import static niv.heater.Heater.WAXED_HEATER_ITEM;
 import static niv.heater.Heater.WAXED_HEAT_PIPE_BLOCK;
@@ -31,14 +41,22 @@ import static niv.heater.Heater.WAXED_OXIDIZED_HEATER_BLOCK;
 import static niv.heater.Heater.WAXED_OXIDIZED_HEATER_ITEM;
 import static niv.heater.Heater.WAXED_OXIDIZED_HEAT_PIPE_BLOCK;
 import static niv.heater.Heater.WAXED_OXIDIZED_HEAT_PIPE_ITEM;
+import static niv.heater.Heater.WAXED_OXIDIZED_THERMOSTAT_BLOCK;
+import static niv.heater.Heater.WAXED_OXIDIZED_THERMOSTAT_ITEM;
+import static niv.heater.Heater.WAXED_THERMOSTAT_BLOCK;
+import static niv.heater.Heater.WAXED_THERMOSTAT_ITEM;
 import static niv.heater.Heater.WAXED_WEATHERED_HEATER_BLOCK;
 import static niv.heater.Heater.WAXED_WEATHERED_HEATER_ITEM;
 import static niv.heater.Heater.WAXED_WEATHERED_HEAT_PIPE_BLOCK;
 import static niv.heater.Heater.WAXED_WEATHERED_HEAT_PIPE_ITEM;
+import static niv.heater.Heater.WAXED_WEATHERED_THERMOSTAT_BLOCK;
+import static niv.heater.Heater.WAXED_WEATHERED_THERMOSTAT_ITEM;
 import static niv.heater.Heater.WEATHERED_HEATER_BLOCK;
 import static niv.heater.Heater.WEATHERED_HEATER_ITEM;
 import static niv.heater.Heater.WEATHERED_HEAT_PIPE_BLOCK;
 import static niv.heater.Heater.WEATHERED_HEAT_PIPE_ITEM;
+import static niv.heater.Heater.WEATHERED_THERMOSTAT_BLOCK;
+import static niv.heater.Heater.WEATHERED_THERMOSTAT_ITEM;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -124,6 +142,11 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             generatePipes(generator, EXPOSED_HEAT_PIPE_BLOCK, WAXED_EXPOSED_HEAT_PIPE_BLOCK);
             generatePipes(generator, WEATHERED_HEAT_PIPE_BLOCK, WAXED_WEATHERED_HEAT_PIPE_BLOCK);
             generatePipes(generator, OXIDIZED_HEAT_PIPE_BLOCK, WAXED_OXIDIZED_HEAT_PIPE_BLOCK);
+
+            generateThermostats(generator, THERMOSTAT_BLOCK, WAXED_THERMOSTAT_BLOCK);
+            generateThermostats(generator, EXPOSED_THERMOSTAT_BLOCK, WAXED_EXPOSED_THERMOSTAT_BLOCK);
+            generateThermostats(generator, WEATHERED_THERMOSTAT_BLOCK, WAXED_WEATHERED_THERMOSTAT_BLOCK);
+            generateThermostats(generator, OXIDIZED_THERMOSTAT_BLOCK, WAXED_OXIDIZED_THERMOSTAT_BLOCK);
         }
 
         private void generateHeaters(BlockStateModelGenerator generator, Block heater, Block waxed) {
@@ -168,6 +191,18 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             generator.blockStateCollector.accept(supplier);
         }
 
+        private void generateThermostats(BlockStateModelGenerator generator, Block thermostat, Block waxed) {
+            var off = TexturedModel.CUBE_TOP.upload(thermostat, generator.modelCollector);
+
+            generator.blockStateCollector.accept(VariantsBlockStateSupplier
+                    .create(thermostat, BlockStateVariant.create().put(VariantSettings.MODEL, off))
+                    .coordinate(BlockStateModelGenerator.createNorthDefaultRotationStates()));
+
+            generator.blockStateCollector.accept(VariantsBlockStateSupplier
+                    .create(waxed, BlockStateVariant.create().put(VariantSettings.MODEL, off))
+                    .coordinate(BlockStateModelGenerator.createNorthDefaultRotationStates()));
+        }
+
         private static Rotation getRotation(Direction direction) {
             return ROTATIONS[direction.getId()];
         }
@@ -207,6 +242,23 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     TextureMap.texture(WEATHERED_HEAT_PIPE_BLOCK), generator.writer);
             coreHeatPipeItem.upload(ModelIds.getItemModelId(WAXED_OXIDIZED_HEAT_PIPE_ITEM),
                     TextureMap.texture(OXIDIZED_HEAT_PIPE_BLOCK), generator.writer);
+
+            generator.register(THERMOSTAT_ITEM, new Model(
+                    Optional.of(ModelIds.getBlockModelId(THERMOSTAT_BLOCK)), Optional.empty()));
+            generator.register(EXPOSED_THERMOSTAT_ITEM, new Model(
+                    Optional.of(ModelIds.getBlockModelId(EXPOSED_THERMOSTAT_BLOCK)), Optional.empty()));
+            generator.register(WEATHERED_THERMOSTAT_ITEM, new Model(
+                    Optional.of(ModelIds.getBlockModelId(WEATHERED_THERMOSTAT_BLOCK)), Optional.empty()));
+            generator.register(OXIDIZED_THERMOSTAT_ITEM, new Model(
+                    Optional.of(ModelIds.getBlockModelId(OXIDIZED_THERMOSTAT_BLOCK)), Optional.empty()));
+            generator.register(WAXED_THERMOSTAT_ITEM, new Model(
+                    Optional.of(ModelIds.getBlockModelId(THERMOSTAT_BLOCK)), Optional.empty()));
+            generator.register(WAXED_EXPOSED_THERMOSTAT_ITEM, new Model(
+                    Optional.of(ModelIds.getBlockModelId(EXPOSED_THERMOSTAT_BLOCK)), Optional.empty()));
+            generator.register(WAXED_WEATHERED_THERMOSTAT_ITEM, new Model(
+                    Optional.of(ModelIds.getBlockModelId(WEATHERED_THERMOSTAT_BLOCK)), Optional.empty()));
+            generator.register(WAXED_OXIDIZED_THERMOSTAT_ITEM, new Model(
+                    Optional.of(ModelIds.getBlockModelId(OXIDIZED_THERMOSTAT_BLOCK)), Optional.empty()));
         }
 
     }
@@ -219,28 +271,52 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         @Override
         public void generateTranslations(TranslationBuilder translationBuilder) {
+            var name = "";
 
-            translationBuilder.add(HEATER_BLOCK, "Heater");
-            translationBuilder.add(EXPOSED_HEATER_BLOCK, "Exposed Heater");
-            translationBuilder.add(WEATHERED_HEATER_BLOCK, "Weathered Heater");
-            translationBuilder.add(OXIDIZED_HEATER_BLOCK, "Oxidized Heater");
+            final var exposed = "Exposed ";
+            final var weathered = "Weathered ";
+            final var oxidized = "Oxidized ";
 
-            translationBuilder.add(WAXED_HEATER_BLOCK, "Waxed Heater");
-            translationBuilder.add(WAXED_EXPOSED_HEATER_BLOCK, "Waxed Exposed Heater");
-            translationBuilder.add(WAXED_WEATHERED_HEATER_BLOCK, "Waxed Weathered Heater");
-            translationBuilder.add(WAXED_OXIDIZED_HEATER_BLOCK, "Waxed Oxidized Heater");
+            final var waxed = "Waxed ";
 
-            translationBuilder.add(HEAT_PIPE_BLOCK, "Heat Pipe");
-            translationBuilder.add(EXPOSED_HEAT_PIPE_BLOCK, "Exposed Heat Pipe");
-            translationBuilder.add(WEATHERED_HEAT_PIPE_BLOCK, "Weathered Heat Pipe");
-            translationBuilder.add(OXIDIZED_HEAT_PIPE_BLOCK, "Oxidized Heat Pipe");
+            name = "Heater";
 
-            translationBuilder.add(WAXED_HEAT_PIPE_BLOCK, "Waxed Heat Pipe");
-            translationBuilder.add(WAXED_EXPOSED_HEAT_PIPE_BLOCK, "Waxed Exposed Heat Pipe");
-            translationBuilder.add(WAXED_WEATHERED_HEAT_PIPE_BLOCK, "Waxed Weathered Heat Pipe");
-            translationBuilder.add(WAXED_OXIDIZED_HEAT_PIPE_BLOCK, "Waxed Oxidized Heat Pipe");
+            translationBuilder.add(HEATER_BLOCK, name);
+            translationBuilder.add(EXPOSED_HEATER_BLOCK, exposed + name);
+            translationBuilder.add(WEATHERED_HEATER_BLOCK, weathered + name);
+            translationBuilder.add(OXIDIZED_HEATER_BLOCK, oxidized + name);
 
-            translationBuilder.add("container.heater", "Heater");
+            translationBuilder.add(WAXED_HEATER_BLOCK, waxed + name);
+            translationBuilder.add(WAXED_EXPOSED_HEATER_BLOCK, waxed + exposed + name);
+            translationBuilder.add(WAXED_WEATHERED_HEATER_BLOCK, waxed + weathered + name);
+            translationBuilder.add(WAXED_OXIDIZED_HEATER_BLOCK, waxed + oxidized + name);
+
+            translationBuilder.add("container.heater", name);
+            translationBuilder.add("itemGroup.heater.tab", name);
+
+            name = "Heat Pipe";
+
+            translationBuilder.add(HEAT_PIPE_BLOCK, name);
+            translationBuilder.add(EXPOSED_HEAT_PIPE_BLOCK, exposed + name);
+            translationBuilder.add(WEATHERED_HEAT_PIPE_BLOCK, weathered + name);
+            translationBuilder.add(OXIDIZED_HEAT_PIPE_BLOCK, oxidized + name);
+
+            translationBuilder.add(WAXED_HEAT_PIPE_BLOCK, waxed + name);
+            translationBuilder.add(WAXED_EXPOSED_HEAT_PIPE_BLOCK, waxed + exposed + name);
+            translationBuilder.add(WAXED_WEATHERED_HEAT_PIPE_BLOCK, waxed + weathered + name);
+            translationBuilder.add(WAXED_OXIDIZED_HEAT_PIPE_BLOCK, waxed + oxidized + name);
+
+            name = "Thermostat";
+
+            translationBuilder.add(THERMOSTAT_BLOCK, name);
+            translationBuilder.add(EXPOSED_THERMOSTAT_BLOCK, exposed + name);
+            translationBuilder.add(WEATHERED_THERMOSTAT_BLOCK, weathered + name);
+            translationBuilder.add(OXIDIZED_THERMOSTAT_BLOCK, oxidized + name);
+
+            translationBuilder.add(WAXED_THERMOSTAT_BLOCK, waxed + name);
+            translationBuilder.add(WAXED_EXPOSED_THERMOSTAT_BLOCK, waxed + exposed + name);
+            translationBuilder.add(WAXED_WEATHERED_THERMOSTAT_BLOCK, waxed + weathered + name);
+            translationBuilder.add(WAXED_OXIDIZED_THERMOSTAT_BLOCK, waxed + oxidized + name);
         }
 
     }
@@ -272,6 +348,16 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             addDrop(WAXED_EXPOSED_HEAT_PIPE_BLOCK, WAXED_EXPOSED_HEAT_PIPE_ITEM);
             addDrop(WAXED_WEATHERED_HEAT_PIPE_BLOCK, WAXED_WEATHERED_HEAT_PIPE_ITEM);
             addDrop(WAXED_OXIDIZED_HEAT_PIPE_BLOCK, WAXED_OXIDIZED_HEAT_PIPE_ITEM);
+
+            addDrop(THERMOSTAT_BLOCK, THERMOSTAT_ITEM);
+            addDrop(EXPOSED_THERMOSTAT_BLOCK, EXPOSED_THERMOSTAT_ITEM);
+            addDrop(WEATHERED_THERMOSTAT_BLOCK, WEATHERED_THERMOSTAT_ITEM);
+            addDrop(OXIDIZED_THERMOSTAT_BLOCK, OXIDIZED_THERMOSTAT_ITEM);
+
+            addDrop(WAXED_THERMOSTAT_BLOCK, WAXED_THERMOSTAT_ITEM);
+            addDrop(WAXED_EXPOSED_THERMOSTAT_BLOCK, WAXED_EXPOSED_THERMOSTAT_ITEM);
+            addDrop(WAXED_WEATHERED_THERMOSTAT_BLOCK, WAXED_WEATHERED_THERMOSTAT_ITEM);
+            addDrop(WAXED_OXIDIZED_THERMOSTAT_BLOCK, WAXED_OXIDIZED_THERMOSTAT_ITEM);
         }
 
     }
@@ -309,6 +395,24 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             generateWaxingRecipe(exporter, EXPOSED_HEAT_PIPE_ITEM, WAXED_EXPOSED_HEAT_PIPE_ITEM);
             generateWaxingRecipe(exporter, WEATHERED_HEAT_PIPE_ITEM, WAXED_WEATHERED_HEAT_PIPE_ITEM);
             generateWaxingRecipe(exporter, OXIDIZED_HEAT_PIPE_ITEM, WAXED_OXIDIZED_HEAT_PIPE_ITEM);
+
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, THERMOSTAT_ITEM)
+                    .pattern("#c#")
+                    .pattern("#p#")
+                    .pattern("#r#")
+                    .input('#', COBBLESTONE)
+                    .input('c', COPPER_INGOT)
+                    .input('p', HEAT_PIPE_ITEM)
+                    .criterion(hasItem(COBBLESTONE), conditionsFromItem(COBBLESTONE))
+                    .criterion(hasItem(COPPER_INGOT), conditionsFromItem(COPPER_INGOT))
+                    .criterion(hasItem(REDSTONE), conditionsFromItem(REDSTONE))
+                    .input('r', REDSTONE)
+                    .offerTo(exporter);
+
+            generateWaxingRecipe(exporter, THERMOSTAT_ITEM, WAXED_THERMOSTAT_ITEM);
+            generateWaxingRecipe(exporter, EXPOSED_THERMOSTAT_ITEM, WAXED_EXPOSED_THERMOSTAT_ITEM);
+            generateWaxingRecipe(exporter, WEATHERED_THERMOSTAT_ITEM, WAXED_WEATHERED_THERMOSTAT_ITEM);
+            generateWaxingRecipe(exporter, OXIDIZED_THERMOSTAT_ITEM, WAXED_OXIDIZED_THERMOSTAT_ITEM);
         }
 
         private void generateWaxingRecipe(RecipeExporter exporter, Item unwaxed, Item waxed) {
@@ -333,14 +437,21 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .add(
                             HEATER_BLOCK, EXPOSED_HEATER_BLOCK,
                             WEATHERED_HEATER_BLOCK, OXIDIZED_HEATER_BLOCK,
+
                             WAXED_HEATER_BLOCK, WAXED_EXPOSED_HEATER_BLOCK,
                             WAXED_WEATHERED_HEATER_BLOCK, WAXED_OXIDIZED_HEATER_BLOCK,
+
                             HEAT_PIPE_BLOCK, EXPOSED_HEAT_PIPE_BLOCK,
                             WEATHERED_HEAT_PIPE_BLOCK, OXIDIZED_HEAT_PIPE_BLOCK,
+
                             WAXED_HEAT_PIPE_BLOCK, WAXED_EXPOSED_HEAT_PIPE_BLOCK,
-                            WAXED_WEATHERED_HEAT_PIPE_BLOCK, WAXED_OXIDIZED_HEAT_PIPE_BLOCK);
+                            WAXED_WEATHERED_HEAT_PIPE_BLOCK, WAXED_OXIDIZED_HEAT_PIPE_BLOCK,
+
+                            THERMOSTAT_BLOCK, EXPOSED_THERMOSTAT_BLOCK,
+                            WEATHERED_THERMOSTAT_BLOCK, OXIDIZED_THERMOSTAT_BLOCK,
+
+                            WAXED_THERMOSTAT_BLOCK, WAXED_EXPOSED_THERMOSTAT_BLOCK,
+                            WAXED_WEATHERED_THERMOSTAT_BLOCK, WAXED_OXIDIZED_THERMOSTAT_BLOCK);
         }
-
     }
-
 }

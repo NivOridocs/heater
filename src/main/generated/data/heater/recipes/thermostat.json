@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "minecraft:cobblestone"
+    },
+    "c": {
+      "item": "minecraft:copper_ingot"
+    },
+    "p": {
+      "item": "heater:heat_pipe"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "#c#",
+    "#p#",
+    "#r#"
+  ],
+  "result": {
+    "item": "heater:thermostat"
+  },
+  "show_notification": true
+}

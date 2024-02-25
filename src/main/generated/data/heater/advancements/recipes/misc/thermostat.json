@@ -1,24 +1,36 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_heat_pipe": {
+    "has_cobblestone": {
       "conditions": {
         "items": [
           {
             "items": [
-              "heater:heat_pipe"
+              "minecraft:cobblestone"
             ]
           }
         ]
       },
       "trigger": "minecraft:inventory_changed"
     },
-    "has_honeycomb": {
+    "has_copper_ingot": {
       "conditions": {
         "items": [
           {
             "items": [
-              "minecraft:honeycomb"
+              "minecraft:copper_ingot"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_redstone": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "minecraft:redstone"
             ]
           }
         ]
@@ -27,7 +39,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "heater:waxed_heat_pipe"
+        "recipe": "heater:thermostat"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -35,13 +47,14 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_heat_pipe",
-      "has_honeycomb"
+      "has_cobblestone",
+      "has_copper_ingot",
+      "has_redstone"
     ]
   ],
   "rewards": {
     "recipes": [
-      "heater:waxed_heat_pipe"
+      "heater:thermostat"
     ]
   },
   "sends_telemetry_event": false

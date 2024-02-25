@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_top",
+  "textures": {
+    "side": "heater:block/oxidized_thermostat_side",
+    "top": "heater:block/oxidized_thermostat_top"
+  }
+}

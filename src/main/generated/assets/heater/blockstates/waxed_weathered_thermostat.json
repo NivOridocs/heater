@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "heater:block/weathered_thermostat",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "heater:block/weathered_thermostat",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "heater:block/weathered_thermostat"
+    },
+    "facing=south": {
+      "model": "heater:block/weathered_thermostat",
+      "y": 180
+    },
+    "facing=up": {
+      "model": "heater:block/weathered_thermostat",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "heater:block/weathered_thermostat",
+      "y": 270
+    }
+  }
+}
