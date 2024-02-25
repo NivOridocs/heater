@@ -75,6 +75,7 @@ import net.minecraft.data.client.BlockStateVariant;
 import net.minecraft.data.client.ItemModelGenerator;
 import net.minecraft.data.client.Model;
 import net.minecraft.data.client.ModelIds;
+import net.minecraft.data.client.Models;
 import net.minecraft.data.client.MultipartBlockStateSupplier;
 import net.minecraft.data.client.TextureKey;
 import net.minecraft.data.client.TextureMap;
@@ -110,7 +111,14 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
     private static class BlockModelProvider extends FabricModelProvider {
 
+        private static final String INVENTORY = "_inventory";
+
         private static final Rotation[] ROTATIONS = new Rotation[] { R90, R270, R0, R180, R270, R90 };
+
+        private static final TexturedModel.Factory THERMOSTAT = TexturedModel
+                .makeFactory(BlockModelProvider::thermostat, Models.TEMPLATE_PISTON);
+        private static final TexturedModel.Factory THERMOSTAT_INVENTORY = TexturedModel
+                .makeFactory(BlockModelProvider::thermostatInventory, Models.CUBE_BOTTOM_TOP);
 
         private final Model coreHeatPipeBlock;
         private final Model armHeatPipeBlock;
@@ -192,7 +200,9 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
         }
 
         private void generateThermostats(BlockStateModelGenerator generator, Block thermostat, Block waxed) {
-            var off = TexturedModel.CUBE_TOP.upload(thermostat, generator.modelCollector);
+            var off = THERMOSTAT.upload(thermostat, generator.modelCollector);
+
+            THERMOSTAT_INVENTORY.upload(thermostat, INVENTORY, generator.modelCollector);
 
             generator.blockStateCollector.accept(VariantsBlockStateSupplier
                     .create(thermostat, BlockStateVariant.create().put(VariantSettings.MODEL, off))
@@ -205,6 +215,20 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         private static Rotation getRotation(Direction direction) {
             return ROTATIONS[direction.getId()];
+        }
+
+        private static TextureMap thermostat(Block block) {
+            return new TextureMap()
+                    .put(TextureKey.PLATFORM, TextureMap.getSubId(block, "_front"))
+                    .put(TextureKey.SIDE, TextureMap.getSubId(block, "_side"))
+                    .put(TextureKey.BOTTOM, TextureMap.getSubId(block, "_bottom"));
+        }
+
+        private static TextureMap thermostatInventory(Block block) {
+            return new TextureMap()
+                    .put(TextureKey.TOP, TextureMap.getSubId(block, "_front"))
+                    .put(TextureKey.SIDE, TextureMap.getSubId(block, "_side"))
+                    .put(TextureKey.BOTTOM, TextureMap.getSubId(block, "_bottom"));
         }
 
         @Override
@@ -244,21 +268,21 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     TextureMap.texture(OXIDIZED_HEAT_PIPE_BLOCK), generator.writer);
 
             generator.register(THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(THERMOSTAT_BLOCK)), Optional.empty()));
+                    Optional.of(ModelIds.getBlockSubModelId(THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
             generator.register(EXPOSED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(EXPOSED_THERMOSTAT_BLOCK)), Optional.empty()));
+                    Optional.of(ModelIds.getBlockSubModelId(EXPOSED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
             generator.register(WEATHERED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(WEATHERED_THERMOSTAT_BLOCK)), Optional.empty()));
+                    Optional.of(ModelIds.getBlockSubModelId(WEATHERED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
             generator.register(OXIDIZED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(OXIDIZED_THERMOSTAT_BLOCK)), Optional.empty()));
+                    Optional.of(ModelIds.getBlockSubModelId(OXIDIZED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
             generator.register(WAXED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(THERMOSTAT_BLOCK)), Optional.empty()));
+                    Optional.of(ModelIds.getBlockSubModelId(THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
             generator.register(WAXED_EXPOSED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(EXPOSED_THERMOSTAT_BLOCK)), Optional.empty()));
+                    Optional.of(ModelIds.getBlockSubModelId(EXPOSED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
             generator.register(WAXED_WEATHERED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(WEATHERED_THERMOSTAT_BLOCK)), Optional.empty()));
+                    Optional.of(ModelIds.getBlockSubModelId(WEATHERED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
             generator.register(WAXED_OXIDIZED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(OXIDIZED_THERMOSTAT_BLOCK)), Optional.empty()));
+                    Optional.of(ModelIds.getBlockSubModelId(OXIDIZED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
         }
 
     }

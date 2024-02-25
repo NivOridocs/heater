@@ -55,7 +55,7 @@ public class ThermostatBlock extends FacingBlock implements HeatSource {
     @Override
     public BlockState getPlacementState(ItemPlacementContext ctx) {
         return this.getDefaultState()
-                .with(FACING, ctx.getPlayerLookDirection().getOpposite().getOpposite())
+                .with(FACING, ctx.getPlayerLookDirection().getOpposite())
                 .with(POWERED, ctx.getWorld().isReceivingRedstonePower(ctx.getBlockPos()));
     }
 
