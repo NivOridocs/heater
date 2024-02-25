@@ -8,16 +8,13 @@
     "c": {
       "item": "minecraft:copper_ingot"
     },
-    "p": {
-      "item": "heater:heat_pipe"
-    },
     "r": {
       "item": "minecraft:redstone"
     }
   },
   "pattern": [
+    "ccc",
     "#c#",
-    "#p#",
     "#r#"
   ],
   "result": {

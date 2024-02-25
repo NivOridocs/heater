@@ -421,16 +421,15 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             generateWaxingRecipe(exporter, OXIDIZED_HEAT_PIPE_ITEM, WAXED_OXIDIZED_HEAT_PIPE_ITEM);
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, THERMOSTAT_ITEM)
+                    .pattern("ccc")
                     .pattern("#c#")
-                    .pattern("#p#")
                     .pattern("#r#")
-                    .input('#', COBBLESTONE)
                     .input('c', COPPER_INGOT)
-                    .input('p', HEAT_PIPE_ITEM)
+                    .input('r', REDSTONE)
+                    .input('#', COBBLESTONE)
                     .criterion(hasItem(COBBLESTONE), conditionsFromItem(COBBLESTONE))
                     .criterion(hasItem(COPPER_INGOT), conditionsFromItem(COPPER_INGOT))
                     .criterion(hasItem(REDSTONE), conditionsFromItem(REDSTONE))
-                    .input('r', REDSTONE)
                     .offerTo(exporter);
 
             generateWaxingRecipe(exporter, THERMOSTAT_ITEM, WAXED_THERMOSTAT_ITEM);
