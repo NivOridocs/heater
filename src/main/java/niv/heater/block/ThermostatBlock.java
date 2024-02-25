@@ -93,8 +93,9 @@ public class ThermostatBlock extends FacingBlock implements HeatSource {
 
     @Override
     public Optional<HeatSink> getNeighborAsSink(WorldAccess world, BlockPos pos, Direction direction) {
-        if (world.getBlockState(pos).getBlock() instanceof HeaterBlock) {
-            return HeatSink.getHeatSink(world.getBlockEntity(pos));
+        var targetPos = pos.offset(direction);
+        if (world.getBlockState(targetPos).getBlock() instanceof HeaterBlock) {
+            return HeatSink.getHeatSink(world.getBlockEntity(targetPos));
         } else {
             return HeatSource.super.getNeighborAsSink(world, pos, direction);
         }
