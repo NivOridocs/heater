@@ -1,4 +1,4 @@
-package niv.heater;
+package niv.heater.block;
 
 import java.util.Random;
 
@@ -19,8 +19,10 @@ import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction.Axis;
 import net.minecraft.world.World;
+import niv.heater.Heater;
+import niv.heater.block.entity.HeaterBlockEntity;
 
-public class HeaterBlock extends AbstractFurnaceBlock {
+public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
 
     private final OxidationLevel oxidationLevel;
 
@@ -48,7 +50,7 @@ public class HeaterBlock extends AbstractFurnaceBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
             World world, BlockState state, BlockEntityType<T> type) {
-        return world.isClient ? null : checkType(type, Heater.HEATER_BLOCK_ENTITY, HeaterBlockEntity::tick);
+        return world.isClient ? null : validateTicker(type, Heater.HEATER_BLOCK_ENTITY, HeaterBlockEntity::tick);
     }
 
     @Override
@@ -98,5 +100,10 @@ public class HeaterBlock extends AbstractFurnaceBlock {
             world.addParticle(ParticleTypes.SMOKE, x + dx, y + dy, z + dz, .0, .0, .0);
         }
     }
+
+	@Override
+	public int reducedHeat(int heat) {
+		return HeatSource.reduceHeat(oxidationLevel, heat);
+	}
 
 }

@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+## [2.0] - 2024-02-16
+
+## Added
+
++ Add the new Thermostat block, fully oxidiziable and waxable.
+
+### Chenged
+
++ Drop mod's patch version because unnecessary.
+
++ Update target Minecraft version to 1.20.2 and remap mod.
+
 ## [1.2.0] - 2024-02-16
 
 ### Added
@@ -30,6 +44,7 @@
 
 Initial release.
 
+[2.0]: https://github.com/NivOridocs/heater/releases/tag/2.0
 [1.2.0]: https://github.com/NivOridocs/heater/releases/tag/1.2.0
 [1.1.1]: https://github.com/NivOridocs/heater/releases/tag/1.1.1
 [1.1.0]: https://github.com/NivOridocs/heater/releases/tag/1.1.0

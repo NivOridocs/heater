@@ -34,9 +34,9 @@
   },
   "requirements": [
     [
+      "has_the_recipe",
       "has_copper_ingot",
-      "has_furnace",
-      "has_the_recipe"
+      "has_furnace"
     ]
   ],
   "rewards": {
