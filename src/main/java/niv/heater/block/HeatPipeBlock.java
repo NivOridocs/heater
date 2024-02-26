@@ -1,11 +1,9 @@
-package niv.heater;
+package niv.heater.block;
 
 import java.util.ArrayList;
 
-import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.Oxidizable.OxidationLevel;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.Waterloggable;
@@ -22,8 +20,9 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.WorldAccess;
+import niv.heater.block.entity.HeatSink;
 
-public class HeatPipeBlock extends Block implements Waterloggable {
+public class HeatPipeBlock extends Block implements HeatSource, Waterloggable {
 
     public static final BooleanProperty DOWN = Properties.DOWN;
     public static final BooleanProperty UP = Properties.UP;
@@ -132,17 +131,19 @@ public class HeatPipeBlock extends Block implements Waterloggable {
 
     private boolean canConnect(WorldAccess world, BlockPos pos) {
         var block = world.getBlockState(pos).getBlock();
-        return block instanceof HeatPipeBlock
-                || block instanceof AbstractFurnaceBlock
-                || (block instanceof BlockWithEntity
-                        && ForwardingBurnerBlockEntity.isForwardable(world.getBlockEntity(pos)));
+        return block instanceof HeatSource || HeatSink.isHeatSink(world, pos, block);
     }
 
     public static boolean isConnected(BlockState state, Direction direction) {
         return state.get(getProperty(direction)).booleanValue();
     }
 
-    public static Direction[] getConnected(BlockState state) {
+    public static BooleanProperty getProperty(Direction direction) {
+        return FACING_PROPERTIES[direction.getId()];
+    }
+
+    @Override
+    public Direction[] getConnected(BlockState state) {
         var directions = new ArrayList<>(6);
         for (var direction : Direction.values()) {
             if (isConnected(state, direction)) {
@@ -152,8 +153,9 @@ public class HeatPipeBlock extends Block implements Waterloggable {
         return directions.toArray(Direction[]::new);
     }
 
-    public static BooleanProperty getProperty(Direction direction) {
-        return FACING_PROPERTIES[direction.getId()];
+    @Override
+    public int reducedHeat(int heat) {
+        return HeatSource.reduceHeat(oxidationLevel, heat);
     }
 
 }

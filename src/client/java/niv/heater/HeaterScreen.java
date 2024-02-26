@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import niv.heater.screen.HeaterScreenHandler;
 
 import static niv.heater.Heater.MOD_ID;
 
