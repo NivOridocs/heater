@@ -4,11 +4,11 @@
 
 ## [2.0] - 2024-02-16
 
-## Added
+### Added
 
 + Add the new Thermostat block, fully oxidiziable and waxable.
 
-### Chenged
+### Changed
 
 + Drop mod's patch version because unnecessary.
 

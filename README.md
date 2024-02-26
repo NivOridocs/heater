@@ -41,7 +41,7 @@ The **Heat Pipe** is a pipe-like block which works as you may imagine. Heat prod
 
 The Heat Pipe is entity-free, so you can fully fulfil your pipe dreams without concerns about dropping performances.
 
-### Thermostate
+### Thermostat
 
 Only from version 2.0 forward.
 
