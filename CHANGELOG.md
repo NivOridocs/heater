@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## Added
+
++ Add the new Thermostat block, fully oxidiziable and waxable.
+
 ### Chenged
 
 + Drop mod's patch version because unnecessary.
