@@ -262,16 +262,6 @@ public class Heater implements ModInitializer {
                     entries.add(WAXED_WEATHERED_HEATER_ITEM);
                     entries.add(WAXED_OXIDIZED_HEATER_ITEM);
 
-                    entries.add(HEAT_PIPE_ITEM);
-                    entries.add(EXPOSED_HEAT_PIPE_ITEM);
-                    entries.add(WEATHERED_HEAT_PIPE_ITEM);
-                    entries.add(OXIDIZED_HEAT_PIPE_ITEM);
-
-                    entries.add(WAXED_HEAT_PIPE_ITEM);
-                    entries.add(WAXED_EXPOSED_HEAT_PIPE_ITEM);
-                    entries.add(WAXED_WEATHERED_HEAT_PIPE_ITEM);
-                    entries.add(WAXED_OXIDIZED_HEAT_PIPE_ITEM);
-
                     entries.add(THERMOSTAT_ITEM);
                     entries.add(EXPOSED_THERMOSTAT_ITEM);
                     entries.add(WEATHERED_THERMOSTAT_ITEM);
@@ -281,8 +271,17 @@ public class Heater implements ModInitializer {
                     entries.add(WAXED_EXPOSED_THERMOSTAT_ITEM);
                     entries.add(WAXED_WEATHERED_THERMOSTAT_ITEM);
                     entries.add(WAXED_OXIDIZED_THERMOSTAT_ITEM);
-                })
-                .build();
+
+                    entries.add(HEAT_PIPE_ITEM);
+                    entries.add(EXPOSED_HEAT_PIPE_ITEM);
+                    entries.add(WEATHERED_HEAT_PIPE_ITEM);
+                    entries.add(OXIDIZED_HEAT_PIPE_ITEM);
+
+                    entries.add(WAXED_HEAT_PIPE_ITEM);
+                    entries.add(WAXED_EXPOSED_HEAT_PIPE_ITEM);
+                    entries.add(WAXED_WEATHERED_HEAT_PIPE_ITEM);
+                    entries.add(WAXED_OXIDIZED_HEAT_PIPE_ITEM);
+                }).build();
         Registry.register(Registries.ITEM_GROUP, id.withPath("tab"), HEATER_GROUP);
     }
 
