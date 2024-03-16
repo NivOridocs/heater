@@ -2,35 +2,35 @@ package niv.heater.block;
 
 import java.util.ArrayList;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Oxidizable.OxidationLevel;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.block.Waterloggable;
-import net.minecraft.entity.ai.pathing.NavigationType;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.state.StateManager.Builder;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.WorldAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import niv.heater.block.entity.HeatSink;
 
-public class HeatPipeBlock extends Block implements HeatSource, Waterloggable {
+public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterloggedBlock {
 
-    public static final BooleanProperty DOWN = Properties.DOWN;
-    public static final BooleanProperty UP = Properties.UP;
-    public static final BooleanProperty NORTH = Properties.NORTH;
-    public static final BooleanProperty SOUTH = Properties.SOUTH;
-    public static final BooleanProperty WEST = Properties.WEST;
-    public static final BooleanProperty EAST = Properties.EAST;
-    public static final BooleanProperty WATERLOGGED = Properties.WATERLOGGED;
+    public static final BooleanProperty DOWN = BlockStateProperties.DOWN;
+    public static final BooleanProperty UP = BlockStateProperties.UP;
+    public static final BooleanProperty NORTH = BlockStateProperties.NORTH;
+    public static final BooleanProperty SOUTH = BlockStateProperties.SOUTH;
+    public static final BooleanProperty WEST = BlockStateProperties.WEST;
+    public static final BooleanProperty EAST = BlockStateProperties.EAST;
+    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     private static final BooleanProperty[] FACING_PROPERTIES = new BooleanProperty[] {
             DOWN, UP, NORTH, SOUTH, WEST, EAST };
@@ -39,107 +39,107 @@ public class HeatPipeBlock extends Block implements HeatSource, Waterloggable {
     private static final VoxelShape[] PIPE_ARM;
 
     static {
-        CORE = Block.createCuboidShape(5, 5, 5, 11, 11, 11);
+        CORE = Block.box(5, 5, 5, 11, 11, 11);
         PIPE_ARM = new VoxelShape[] {
-                Block.createCuboidShape(5, 0, 5, 11, 5, 11),
-                Block.createCuboidShape(5, 11, 5, 11, 16, 11),
-                Block.createCuboidShape(5, 5, 0, 11, 11, 5),
-                Block.createCuboidShape(5, 5, 11, 11, 11, 16),
-                Block.createCuboidShape(0, 5, 5, 5, 11, 11),
-                Block.createCuboidShape(11, 5, 5, 16, 11, 11),
+                Block.box(5, 0, 5, 11, 5, 11),
+                Block.box(5, 11, 5, 11, 16, 11),
+                Block.box(5, 5, 0, 11, 11, 5),
+                Block.box(5, 5, 11, 11, 11, 16),
+                Block.box(0, 5, 5, 5, 11, 11),
+                Block.box(11, 5, 5, 16, 11, 11),
         };
     }
 
-    private final OxidationLevel oxidationLevel;
+    private final WeatherState weatherState;
 
-    public HeatPipeBlock(OxidationLevel oxidationLevel, Settings settings) {
+    public HeatPipeBlock(WeatherState weatherState, Properties settings) {
         super(settings);
-        this.oxidationLevel = oxidationLevel;
-        this.setDefaultState(stateManager.getDefaultState()
-                .with(DOWN, false)
-                .with(UP, false)
-                .with(NORTH, false)
-                .with(SOUTH, false)
-                .with(WEST, false)
-                .with(EAST, false)
-                .with(WATERLOGGED, false));
+        this.weatherState = weatherState;
+        this.registerDefaultState(stateDefinition.any()
+                .setValue(DOWN, false)
+                .setValue(UP, false)
+                .setValue(NORTH, false)
+                .setValue(SOUTH, false)
+                .setValue(WEST, false)
+                .setValue(EAST, false)
+                .setValue(WATERLOGGED, false));
     }
 
-    public OxidationLevel getOxidationLevel() {
-        return oxidationLevel;
-    }
-
-    @Override
-    public boolean isTransparent(BlockState state, BlockView world, BlockPos pos) {
-        return !state.get(WATERLOGGED).booleanValue();
+    public WeatherState getWeatherState() {
+        return weatherState;
     }
 
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+    public boolean propagatesSkylightDown(BlockState state, BlockGetter getter, BlockPos pos) {
+        return !state.getValue(WATERLOGGED).booleanValue();
+    }
+
+    @Override
+    public VoxelShape getVisualShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext context) {
         var shapes = new ArrayList<VoxelShape>(6);
         for (var direction : Direction.values()) {
             if (isConnected(state, direction)) {
-                shapes.add(PIPE_ARM[direction.getId()]);
+                shapes.add(PIPE_ARM[direction.get3DDataValue()]);
             }
         }
-        return VoxelShapes.union(CORE, shapes.toArray(VoxelShape[]::new));
+        return Shapes.or(CORE, shapes.toArray(VoxelShape[]::new));
     }
 
     @Override
     public FluidState getFluidState(BlockState state) {
-        if (state.get(WATERLOGGED).booleanValue()) {
-            return Fluids.WATER.getStill(false);
+        if (state.getValue(WATERLOGGED).booleanValue()) {
+            return Fluids.WATER.getSource(false);
         }
         return state.getFluidState();
     }
 
     @Override
-    public boolean canPathfindThrough(BlockState state, BlockView world, BlockPos pos, NavigationType type) {
+    public boolean isPathfindable(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, PathComputationType type) {
         return false;
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        var world = ctx.getWorld();
-        var pos = ctx.getBlockPos();
-        var state = super.getPlacementState(ctx);
-        if (world.getFluidState(pos).getFluid() == Fluids.WATER) {
-            state = state.with(WATERLOGGED, true);
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var state = super.getStateForPlacement(context);
+        if (level.getFluidState(pos).is(Fluids.WATER)) {
+            state = state.setValue(WATERLOGGED, true);
         }
         for (var direction : Direction.values()) {
-            if (canConnect(world, pos.offset(direction))) {
-                state = state.with(getProperty(direction), true);
+            if (canConnect(level, pos.relative(direction))) {
+                state = state.setValue(getProperty(direction), true);
             }
         }
         return state;
     }
 
     @Override
-    public BlockState getStateForNeighborUpdate(
+    public BlockState updateShape(
             BlockState state, Direction direction, BlockState neighborState,
-            WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if (state.get(WATERLOGGED).booleanValue()) {
-            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+            LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+        if (state.getValue(WATERLOGGED).booleanValue()) {
+            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
-        return state.with(getProperty(direction), canConnect(world, neighborPos));
+        return state.setValue(getProperty(direction), canConnect(level, neighborPos));
     }
 
     @Override
-    protected void appendProperties(Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(DOWN, UP, NORTH, SOUTH, WEST, EAST, WATERLOGGED);
     }
 
-    private boolean canConnect(WorldAccess world, BlockPos pos) {
-        var block = world.getBlockState(pos).getBlock();
-        return block instanceof HeatSource || HeatSink.isHeatSink(world, pos, block);
+    private boolean canConnect(LevelAccessor level, BlockPos pos) {
+        var block = level.getBlockState(pos).getBlock();
+        return block instanceof HeatSource || HeatSink.isHeatSink(level, pos, block);
     }
 
     public static boolean isConnected(BlockState state, Direction direction) {
-        return state.get(getProperty(direction)).booleanValue();
+        return state.getValue(getProperty(direction)).booleanValue();
     }
 
     public static BooleanProperty getProperty(Direction direction) {
-        return FACING_PROPERTIES[direction.getId()];
+        return FACING_PROPERTIES[direction.get3DDataValue()];
     }
 
     @Override
@@ -155,7 +155,7 @@ public class HeatPipeBlock extends Block implements HeatSource, Waterloggable {
 
     @Override
     public int reducedHeat(int heat) {
-        return HeatSource.reduceHeat(oxidationLevel, heat);
+        return HeatSource.reduceHeat(weatherState, heat);
     }
 
 }

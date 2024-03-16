@@ -1,6 +1,6 @@
 package niv.heater.screen;
 
-import static niv.heater.Heater.HEATER_MENU_TYPE;
+import static niv.heater.Heater.HEATER_MENU;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -27,7 +27,7 @@ public class HeaterMenu extends AbstractContainerMenu {
 
     public HeaterMenu(int syncId, Inventory inventory,
             Container container, ContainerData containerData) {
-        super(HEATER_MENU_TYPE, syncId);
+        super(HEATER_MENU, syncId);
         checkContainerSize(container, 1);
         checkContainerDataCount(containerData, 2);
         this.container = container;
