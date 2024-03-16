@@ -118,4 +118,7 @@ modrinth {
     gameVersions = ["1.20.2"]
     uploadFile = remapJar
     syncBodyFrom = rootProject.file("README.md").text
+        dependencies {
+        required.project "fabric-api"
+    }
 }
