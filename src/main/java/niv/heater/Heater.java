@@ -1,10 +1,6 @@
 package niv.heater;
 
-import static net.minecraft.core.registries.BuiltInRegistries.BLOCK;
-import static net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE;
-import static net.minecraft.core.registries.BuiltInRegistries.CREATIVE_MODE_TAB;
-import static net.minecraft.core.registries.BuiltInRegistries.ITEM;
-import static net.minecraft.core.registries.BuiltInRegistries.MENU;
+import static net.minecraft.core.registries.BuiltInRegistries.*;
 import static net.minecraft.world.level.block.Blocks.COPPER_BLOCK;
 import static net.minecraft.world.level.block.Blocks.FURNACE;
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPOSED;
@@ -29,6 +25,8 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import niv.heater.block.HeatPipeBlock;
@@ -38,8 +36,10 @@ import niv.heater.block.WeatheringHeatPipeBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
+import niv.heater.recipes.HeatSinkRecipe;
 import niv.heater.screen.HeaterMenu;
 
+@SuppressWarnings("java:S2440")
 public class Heater implements ModInitializer {
 
     public static final String MOD_ID;
@@ -107,6 +107,12 @@ public class Heater implements ModInitializer {
     public static final Item WAXED_OXIDIZED_THERMOSTAT_ITEM;
 
     public static final BlockEntityType<HeaterBlockEntity> HEATER_BLOCK_ENTITY;
+
+    private static final String HEAT_SINK_RECIPE;
+
+    public static final RecipeType<HeatSinkRecipe> HEAT_SINK;
+
+    public static final RecipeSerializer<HeatSinkRecipe> HEAT_SINK_SERIALIZER;
 
     public static final MenuType<HeaterMenu> HEATER_MENU;
 
@@ -287,6 +293,19 @@ public class Heater implements ModInitializer {
                     output.accept(WAXED_OXIDIZED_HEAT_PIPE_ITEM);
                 }).build();
         Registry.register(CREATIVE_MODE_TAB, id.withPath("tab"), HEATER_TAB);
+
+        id = id.withPath("heat_sink");
+
+        HEAT_SINK_RECIPE = id.toString();
+
+        HEAT_SINK = Registry.register(RECIPE_TYPE, id, new RecipeType<HeatSinkRecipe>() {
+            @Override
+            public String toString() {
+                return HEAT_SINK_RECIPE;
+            }
+        });
+
+        HEAT_SINK_SERIALIZER = Registry.register(RECIPE_SERIALIZER, id, new HeatSinkRecipe.Serializer());
     }
 
     @Override

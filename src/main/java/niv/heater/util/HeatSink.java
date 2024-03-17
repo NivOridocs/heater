@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import niv.heater.recipes.HeatSinkRecipe;
 
 public interface HeatSink extends Comparable<HeatSink> {
 
@@ -33,12 +34,12 @@ public interface HeatSink extends Comparable<HeatSink> {
             var entity = level.getBlockEntity(pos);
             return entity instanceof HeatSink
                     || entity instanceof AbstractFurnaceBlockEntity
-                    || ForwardingHeatSink.isForwardable(entity);
+                    || HeatSinkRecipe.hasRecipeFor(level, entity);
         }
         return false;
     }
 
-    static Optional<HeatSink> getHeatSink(BlockEntity entity) {
+    static Optional<HeatSink> getHeatSink(LevelAccessor level, BlockEntity entity) {
         if (entity instanceof HeatSink sink) {
             return Optional.of(sink);
         } else if (entity instanceof AbstractFurnaceBlockEntity furnace) {
@@ -64,7 +65,7 @@ public interface HeatSink extends Comparable<HeatSink> {
                 }
             });
         } else {
-            return ForwardingHeatSink.getHeatSink(entity);
+            return HeatSinkRecipe.getRecipeFor(level, entity).flatMap(r -> r.apply(entity));
         }
     }
 
