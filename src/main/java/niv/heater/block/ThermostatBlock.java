@@ -2,6 +2,9 @@ package niv.heater.block;
 
 import java.util.Optional;
 
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -14,6 +17,7 @@ import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -22,6 +26,12 @@ import niv.heater.util.HeatSink;
 import niv.heater.util.HeatSource;
 
 public class ThermostatBlock extends DirectionalBlock implements HeatSource {
+
+    @SuppressWarnings("java:S1845")
+    public static final MapCodec<ThermostatBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(ThermostatBlock::getWeatherState),
+            Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
+            .apply(instance, ThermostatBlock::new));
 
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 
@@ -36,6 +46,11 @@ public class ThermostatBlock extends DirectionalBlock implements HeatSource {
 
     public WeatherState getWeatherState() {
         return weatherState;
+    }
+
+    @Override
+    public MapCodec<? extends ThermostatBlock> codec() {
+        return CODEC;
     }
 
     @Override

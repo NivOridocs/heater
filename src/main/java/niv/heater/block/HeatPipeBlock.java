@@ -2,6 +2,9 @@ package niv.heater.block;
 
 import java.util.ArrayList;
 
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -10,6 +13,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -24,6 +28,12 @@ import niv.heater.util.HeatSink;
 import niv.heater.util.HeatSource;
 
 public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterloggedBlock {
+
+    @SuppressWarnings("java:S1845")
+    public static final MapCodec<HeatPipeBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeatPipeBlock::getWeatherState),
+            Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
+            .apply(instance, HeatPipeBlock::new));
 
     public static final BooleanProperty DOWN = BlockStateProperties.DOWN;
     public static final BooleanProperty UP = BlockStateProperties.UP;
@@ -68,6 +78,11 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
 
     public WeatherState getWeatherState() {
         return weatherState;
+    }
+
+    @Override
+    public MapCodec<? extends HeatPipeBlock> codec() {
+        return CODEC;
     }
 
     @Override

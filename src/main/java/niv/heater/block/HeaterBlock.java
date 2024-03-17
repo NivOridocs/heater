@@ -2,6 +2,9 @@ package niv.heater.block;
 
 import java.util.Random;
 
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.particles.ParticleTypes;
@@ -18,12 +21,19 @@ import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.heater.Heater;
 import niv.heater.block.entity.HeaterBlockEntity;
 import niv.heater.util.HeatSource;
 
 public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
+
+    @SuppressWarnings("java:S1845")
+    public static final MapCodec<HeaterBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeaterBlock::getWeatherState),
+            Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
+            .apply(instance, HeaterBlock::new));
 
     private final WeatherState weatherState;
 
@@ -34,6 +44,11 @@ public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
 
     public WeatherState getWeatherState() {
         return weatherState;
+    }
+
+    @Override
+    public MapCodec<? extends HeaterBlock> codec() {
+        return CODEC;
     }
 
     @Override
@@ -51,7 +66,8 @@ public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
             Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide ? null : createTickerHelper(type, Heater.HEATER_BLOCK_ENTITY, HeaterBlockEntity::tick);
+        return level.isClientSide ? null
+                : createTickerHelper(type, Heater.HEATER_BLOCK_ENTITY, HeaterBlockEntity::tick);
     }
 
     @Override
@@ -102,9 +118,9 @@ public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
         }
     }
 
-	@Override
-	public int reducedHeat(int heat) {
-		return HeatSource.reduceHeat(weatherState, heat);
-	}
+    @Override
+    public int reducedHeat(int heat) {
+        return HeatSource.reduceHeat(weatherState, heat);
+    }
 
 }
