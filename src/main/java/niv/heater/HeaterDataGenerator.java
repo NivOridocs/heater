@@ -1,14 +1,14 @@
 package niv.heater;
 
-import static net.minecraft.block.Blocks.FURNACE;
-import static net.minecraft.data.client.VariantSettings.Rotation.R0;
-import static net.minecraft.data.client.VariantSettings.Rotation.R180;
-import static net.minecraft.data.client.VariantSettings.Rotation.R270;
-import static net.minecraft.data.client.VariantSettings.Rotation.R90;
-import static net.minecraft.item.Items.COBBLESTONE;
-import static net.minecraft.item.Items.COPPER_INGOT;
-import static net.minecraft.item.Items.HONEYCOMB;
-import static net.minecraft.item.Items.REDSTONE;
+import static net.minecraft.data.models.blockstates.VariantProperties.Rotation.R0;
+import static net.minecraft.data.models.blockstates.VariantProperties.Rotation.R180;
+import static net.minecraft.data.models.blockstates.VariantProperties.Rotation.R270;
+import static net.minecraft.data.models.blockstates.VariantProperties.Rotation.R90;
+import static net.minecraft.world.item.Items.COBBLESTONE;
+import static net.minecraft.world.item.Items.COPPER_INGOT;
+import static net.minecraft.world.item.Items.FURNACE;
+import static net.minecraft.world.item.Items.HONEYCOMB;
+import static net.minecraft.world.item.Items.REDSTONE;
 import static niv.heater.Heater.EXPOSED_HEATER_BLOCK;
 import static niv.heater.Heater.EXPOSED_HEATER_ITEM;
 import static niv.heater.Heater.EXPOSED_HEAT_PIPE_BLOCK;
@@ -69,31 +69,31 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider.BlockTagProvider;
-import net.minecraft.block.Block;
-import net.minecraft.data.client.BlockStateModelGenerator;
-import net.minecraft.data.client.BlockStateVariant;
-import net.minecraft.data.client.ItemModelGenerator;
-import net.minecraft.data.client.Model;
-import net.minecraft.data.client.ModelIds;
-import net.minecraft.data.client.Models;
-import net.minecraft.data.client.MultipartBlockStateSupplier;
-import net.minecraft.data.client.TextureKey;
-import net.minecraft.data.client.TextureMap;
-import net.minecraft.data.client.TexturedModel;
-import net.minecraft.data.client.VariantSettings;
-import net.minecraft.data.client.VariantSettings.Rotation;
-import net.minecraft.data.client.VariantsBlockStateSupplier;
-import net.minecraft.data.client.When;
-import net.minecraft.data.server.recipe.RecipeExporter;
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder;
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder;
-import net.minecraft.item.Item;
-import net.minecraft.recipe.book.RecipeCategory;
-import net.minecraft.registry.RegistryWrapper.WrapperLookup;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.models.BlockModelGenerators;
+import net.minecraft.data.models.ItemModelGenerators;
+import net.minecraft.data.models.blockstates.Condition;
+import net.minecraft.data.models.blockstates.MultiPartGenerator;
+import net.minecraft.data.models.blockstates.MultiVariantGenerator;
+import net.minecraft.data.models.blockstates.Variant;
+import net.minecraft.data.models.blockstates.VariantProperties;
+import net.minecraft.data.models.blockstates.VariantProperties.Rotation;
+import net.minecraft.data.models.model.ModelLocationUtils;
+import net.minecraft.data.models.model.ModelTemplate;
+import net.minecraft.data.models.model.ModelTemplates;
+import net.minecraft.data.models.model.TextureMapping;
+import net.minecraft.data.models.model.TextureSlot;
+import net.minecraft.data.models.model.TexturedModel;
+import net.minecraft.data.recipes.RecipeCategory;
+import net.minecraft.data.recipes.RecipeOutput;
+import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.heater.block.HeatPipeBlock;
 
 public class HeaterDataGenerator implements DataGeneratorEntrypoint {
@@ -115,32 +115,32 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         private static final Rotation[] ROTATIONS = new Rotation[] { R90, R270, R0, R180, R270, R90 };
 
-        private static final TexturedModel.Factory THERMOSTAT = TexturedModel
-                .makeFactory(BlockModelProvider::thermostat, Models.TEMPLATE_PISTON);
-        private static final TexturedModel.Factory THERMOSTAT_INVENTORY = TexturedModel
-                .makeFactory(BlockModelProvider::thermostatInventory, Models.CUBE_BOTTOM_TOP);
+        private static final TexturedModel.Provider THERMOSTAT = TexturedModel
+                .createDefault(BlockModelProvider::thermostat, ModelTemplates.PISTON);
+        private static final TexturedModel.Provider THERMOSTAT_INVENTORY = TexturedModel
+                .createDefault(BlockModelProvider::thermostatInventory, ModelTemplates.CUBE_BOTTOM_TOP);
 
-        private final Model coreHeatPipeBlock;
-        private final Model armHeatPipeBlock;
-        private final Model coreHeatPipeItem;
+        private final ModelTemplate coreHeatPipeBlock;
+        private final ModelTemplate armHeatPipeBlock;
+        private final ModelTemplate coreHeatPipeItem;
 
         private BlockModelProvider(FabricDataOutput output) {
             super(output);
-            coreHeatPipeBlock = new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(HEAT_PIPE_BLOCK, "_base_core")),
-                    Optional.empty(), TextureKey.TEXTURE);
+            coreHeatPipeBlock = new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(HEAT_PIPE_BLOCK, "_base_core")),
+                    Optional.empty(), TextureSlot.TEXTURE);
 
-            armHeatPipeBlock = new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(HEAT_PIPE_BLOCK, "_base_arm")),
-                    Optional.empty(), TextureKey.TEXTURE);
+            armHeatPipeBlock = new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(HEAT_PIPE_BLOCK, "_base_arm")),
+                    Optional.empty(), TextureSlot.TEXTURE);
 
-            coreHeatPipeItem = new Model(
-                    Optional.of(ModelIds.getItemSubModelId(HEAT_PIPE_ITEM, "_core")),
-                    Optional.empty(), TextureKey.TEXTURE);
+            coreHeatPipeItem = new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(HEAT_PIPE_ITEM, "_core")),
+                    Optional.empty(), TextureSlot.TEXTURE);
         }
 
         @Override
-        public void generateBlockStateModels(BlockStateModelGenerator generator) {
+        public void generateBlockStateModels(BlockModelGenerators generator) {
             generateHeaters(generator, HEATER_BLOCK, WAXED_HEATER_BLOCK);
             generateHeaters(generator, EXPOSED_HEATER_BLOCK, WAXED_EXPOSED_HEATER_BLOCK);
             generateHeaters(generator, WEATHERED_HEATER_BLOCK, WAXED_WEATHERED_HEATER_BLOCK);
@@ -157,132 +157,144 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             generateThermostats(generator, OXIDIZED_THERMOSTAT_BLOCK, WAXED_OXIDIZED_THERMOSTAT_BLOCK);
         }
 
-        private void generateHeaters(BlockStateModelGenerator generator, Block heater, Block waxed) {
-            var unlit = TexturedModel.ORIENTABLE.upload(heater, generator.modelCollector);
+        private void generateHeaters(BlockModelGenerators generator, Block heater, Block waxed) {
+            var unlit = TexturedModel.ORIENTABLE_ONLY_TOP.create(heater, generator.modelOutput);
 
-            var lit = TexturedModel.ORIENTABLE.get(heater)
-                    .textures(textures -> textures.put(TextureKey.FRONT, TextureMap.getSubId(heater, "_front_on")))
-                    .upload(heater, "_on", generator.modelCollector);
+            var lit = TexturedModel.ORIENTABLE_ONLY_TOP.get(heater)
+                    .updateTextures(
+                            textures -> textures.put(TextureSlot.FRONT,
+                                    TextureMapping.getBlockTexture(heater, "_front_on")))
+                    .createWithSuffix(heater, "_on", generator.modelOutput);
 
-            generator.blockStateCollector.accept(VariantsBlockStateSupplier.create(heater)
-                    .coordinate(BlockStateModelGenerator
-                            .createBooleanModelMap(Properties.LIT, lit, unlit))
-                    .coordinate(BlockStateModelGenerator
-                            .createNorthDefaultHorizontalRotationStates()));
+            generator.blockStateOutput.accept(MultiVariantGenerator.multiVariant(heater)
+                    .with(BlockModelGenerators
+                            .createBooleanModelDispatch(BlockStateProperties.LIT, lit, unlit))
+                    .with(BlockModelGenerators
+                            .createHorizontalFacingDispatch()));
 
-            generator.blockStateCollector.accept(VariantsBlockStateSupplier.create(waxed)
-                    .coordinate(BlockStateModelGenerator
-                            .createBooleanModelMap(Properties.LIT, lit, unlit))
-                    .coordinate(BlockStateModelGenerator
-                            .createNorthDefaultHorizontalRotationStates()));
+            generator.blockStateOutput.accept(MultiVariantGenerator.multiVariant(waxed)
+                    .with(BlockModelGenerators
+                            .createBooleanModelDispatch(BlockStateProperties.LIT, lit, unlit))
+                    .with(BlockModelGenerators
+                            .createHorizontalFacingDispatch()));
         }
 
-        private void generatePipes(BlockStateModelGenerator generator, Block pipe, Block waxed) {
-            var coreId = coreHeatPipeBlock.upload(pipe, "_core", TextureMap.texture(pipe), generator.modelCollector);
-            var armId = armHeatPipeBlock.upload(pipe, "_arm", TextureMap.texture(pipe), generator.modelCollector);
+        private void generatePipes(BlockModelGenerators generator, Block pipe, Block waxed) {
+            var coreId = coreHeatPipeBlock.createWithSuffix(pipe, "_core",
+                    TextureMapping.defaultTexture(pipe), generator.modelOutput);
+            var armId = armHeatPipeBlock.createWithSuffix(pipe, "_arm",
+                    TextureMapping.defaultTexture(pipe), generator.modelOutput);
             generatePipe(generator, pipe, coreId, armId);
             generatePipe(generator, waxed, coreId, armId);
         }
 
-        private void generatePipe(BlockStateModelGenerator generator, Block pipe, Identifier core, Identifier arm) {
-            var supplier = MultipartBlockStateSupplier.create(pipe)
-                    .with(BlockStateVariant.create().put(VariantSettings.MODEL, core));
+        private void generatePipe(BlockModelGenerators generator, Block pipe, ResourceLocation core,
+                ResourceLocation arm) {
+            var supplier = MultiPartGenerator.multiPart(pipe)
+                    .with(Variant.variant().with(VariantProperties.MODEL, core));
             for (var direction : Direction.values()) {
                 supplier.with(
-                        When.create().set(HeatPipeBlock.getProperty(direction), true),
-                        BlockStateVariant.create()
-                                .put(VariantSettings.MODEL, arm)
-                                .put(
-                                        direction.getAxis().isHorizontal() ? VariantSettings.Y : VariantSettings.X,
+                        Condition.condition().term(HeatPipeBlock.getProperty(direction), true),
+                        Variant.variant()
+                                .with(VariantProperties.MODEL, arm)
+                                .with(
+                                        direction.getAxis().isHorizontal() ? VariantProperties.Y_ROT
+                                                : VariantProperties.X_ROT,
                                         getRotation(direction)));
             }
-            generator.blockStateCollector.accept(supplier);
+            generator.blockStateOutput.accept(supplier);
         }
 
-        private void generateThermostats(BlockStateModelGenerator generator, Block thermostat, Block waxed) {
-            var off = THERMOSTAT.upload(thermostat, generator.modelCollector);
+        private void generateThermostats(BlockModelGenerators generator, Block thermostat, Block waxed) {
+            var off = THERMOSTAT.create(thermostat, generator.modelOutput);
 
-            THERMOSTAT_INVENTORY.upload(thermostat, INVENTORY, generator.modelCollector);
+            THERMOSTAT_INVENTORY.createWithSuffix(thermostat, INVENTORY, generator.modelOutput);
 
-            generator.blockStateCollector.accept(VariantsBlockStateSupplier
-                    .create(thermostat, BlockStateVariant.create().put(VariantSettings.MODEL, off))
-                    .coordinate(BlockStateModelGenerator.createNorthDefaultRotationStates()));
+            generator.blockStateOutput.accept(MultiVariantGenerator
+                    .multiVariant(thermostat, Variant.variant().with(VariantProperties.MODEL, off))
+                    .with(BlockModelGenerators.createFacingDispatch()));
 
-            generator.blockStateCollector.accept(VariantsBlockStateSupplier
-                    .create(waxed, BlockStateVariant.create().put(VariantSettings.MODEL, off))
-                    .coordinate(BlockStateModelGenerator.createNorthDefaultRotationStates()));
+            generator.blockStateOutput.accept(MultiVariantGenerator
+                    .multiVariant(waxed, Variant.variant().with(VariantProperties.MODEL, off))
+                    .with(BlockModelGenerators.createFacingDispatch()));
         }
 
         private static Rotation getRotation(Direction direction) {
-            return ROTATIONS[direction.getId()];
+            return ROTATIONS[direction.get3DDataValue()];
         }
 
-        private static TextureMap thermostat(Block block) {
-            return new TextureMap()
-                    .put(TextureKey.PLATFORM, TextureMap.getSubId(block, "_front"))
-                    .put(TextureKey.SIDE, TextureMap.getSubId(block, "_side"))
-                    .put(TextureKey.BOTTOM, TextureMap.getSubId(block, "_bottom"));
+        private static TextureMapping thermostat(Block block) {
+            return new TextureMapping()
+                    .put(TextureSlot.PLATFORM, TextureMapping.getBlockTexture(block, "_front"))
+                    .put(TextureSlot.SIDE, TextureMapping.getBlockTexture(block, "_side"))
+                    .put(TextureSlot.BOTTOM, TextureMapping.getBlockTexture(block, "_bottom"));
         }
 
-        private static TextureMap thermostatInventory(Block block) {
-            return new TextureMap()
-                    .put(TextureKey.TOP, TextureMap.getSubId(block, "_front"))
-                    .put(TextureKey.SIDE, TextureMap.getSubId(block, "_side"))
-                    .put(TextureKey.BOTTOM, TextureMap.getSubId(block, "_bottom"));
+        private static TextureMapping thermostatInventory(Block block) {
+            return new TextureMapping()
+                    .put(TextureSlot.TOP, TextureMapping.getBlockTexture(block, "_front"))
+                    .put(TextureSlot.SIDE, TextureMapping.getBlockTexture(block, "_side"))
+                    .put(TextureSlot.BOTTOM, TextureMapping.getBlockTexture(block, "_bottom"));
         }
 
         @Override
-        public void generateItemModels(ItemModelGenerator generator) {
-            generator.register(HEATER_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(HEATER_BLOCK)), Optional.empty()));
-            generator.register(EXPOSED_HEATER_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(EXPOSED_HEATER_BLOCK)), Optional.empty()));
-            generator.register(WEATHERED_HEATER_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(WEATHERED_HEATER_BLOCK)), Optional.empty()));
-            generator.register(OXIDIZED_HEATER_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(OXIDIZED_HEATER_BLOCK)), Optional.empty()));
-            generator.register(WAXED_HEATER_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(HEATER_BLOCK)), Optional.empty()));
-            generator.register(WAXED_EXPOSED_HEATER_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(EXPOSED_HEATER_BLOCK)), Optional.empty()));
-            generator.register(WAXED_WEATHERED_HEATER_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(WEATHERED_HEATER_BLOCK)), Optional.empty()));
-            generator.register(WAXED_OXIDIZED_HEATER_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockModelId(OXIDIZED_HEATER_BLOCK)), Optional.empty()));
+        public void generateItemModels(ItemModelGenerators generator) {
+            generator.generateFlatItem(HEATER_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(HEATER_BLOCK)), Optional.empty()));
+            generator.generateFlatItem(EXPOSED_HEATER_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(EXPOSED_HEATER_BLOCK)), Optional.empty()));
+            generator.generateFlatItem(WEATHERED_HEATER_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(WEATHERED_HEATER_BLOCK)), Optional.empty()));
+            generator.generateFlatItem(OXIDIZED_HEATER_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(OXIDIZED_HEATER_BLOCK)), Optional.empty()));
+            generator.generateFlatItem(WAXED_HEATER_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(HEATER_BLOCK)), Optional.empty()));
+            generator.generateFlatItem(WAXED_EXPOSED_HEATER_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(EXPOSED_HEATER_BLOCK)), Optional.empty()));
+            generator.generateFlatItem(WAXED_WEATHERED_HEATER_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(WEATHERED_HEATER_BLOCK)), Optional.empty()));
+            generator.generateFlatItem(WAXED_OXIDIZED_HEATER_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(OXIDIZED_HEATER_BLOCK)), Optional.empty()));
 
-            coreHeatPipeItem.upload(ModelIds.getItemModelId(HEAT_PIPE_ITEM),
-                    TextureMap.texture(HEAT_PIPE_BLOCK), generator.writer);
-            coreHeatPipeItem.upload(ModelIds.getItemModelId(EXPOSED_HEAT_PIPE_ITEM),
-                    TextureMap.texture(EXPOSED_HEAT_PIPE_BLOCK), generator.writer);
-            coreHeatPipeItem.upload(ModelIds.getItemModelId(WEATHERED_HEAT_PIPE_ITEM),
-                    TextureMap.texture(WEATHERED_HEAT_PIPE_BLOCK), generator.writer);
-            coreHeatPipeItem.upload(ModelIds.getItemModelId(OXIDIZED_HEAT_PIPE_ITEM),
-                    TextureMap.texture(OXIDIZED_HEAT_PIPE_BLOCK), generator.writer);
-            coreHeatPipeItem.upload(ModelIds.getItemModelId(WAXED_HEAT_PIPE_ITEM),
-                    TextureMap.texture(HEAT_PIPE_BLOCK), generator.writer);
-            coreHeatPipeItem.upload(ModelIds.getItemModelId(WAXED_EXPOSED_HEAT_PIPE_ITEM),
-                    TextureMap.texture(EXPOSED_HEAT_PIPE_BLOCK), generator.writer);
-            coreHeatPipeItem.upload(ModelIds.getItemModelId(WAXED_WEATHERED_HEAT_PIPE_ITEM),
-                    TextureMap.texture(WEATHERED_HEAT_PIPE_BLOCK), generator.writer);
-            coreHeatPipeItem.upload(ModelIds.getItemModelId(WAXED_OXIDIZED_HEAT_PIPE_ITEM),
-                    TextureMap.texture(OXIDIZED_HEAT_PIPE_BLOCK), generator.writer);
+            coreHeatPipeItem.create(ModelLocationUtils.getModelLocation(HEAT_PIPE_ITEM),
+                    TextureMapping.defaultTexture(HEAT_PIPE_BLOCK), generator.output);
+            coreHeatPipeItem.create(ModelLocationUtils.getModelLocation(EXPOSED_HEAT_PIPE_ITEM),
+                    TextureMapping.defaultTexture(EXPOSED_HEAT_PIPE_BLOCK), generator.output);
+            coreHeatPipeItem.create(ModelLocationUtils.getModelLocation(WEATHERED_HEAT_PIPE_ITEM),
+                    TextureMapping.defaultTexture(WEATHERED_HEAT_PIPE_BLOCK), generator.output);
+            coreHeatPipeItem.create(ModelLocationUtils.getModelLocation(OXIDIZED_HEAT_PIPE_ITEM),
+                    TextureMapping.defaultTexture(OXIDIZED_HEAT_PIPE_BLOCK), generator.output);
+            coreHeatPipeItem.create(ModelLocationUtils.getModelLocation(WAXED_HEAT_PIPE_ITEM),
+                    TextureMapping.defaultTexture(HEAT_PIPE_BLOCK), generator.output);
+            coreHeatPipeItem.create(ModelLocationUtils.getModelLocation(WAXED_EXPOSED_HEAT_PIPE_ITEM),
+                    TextureMapping.defaultTexture(EXPOSED_HEAT_PIPE_BLOCK), generator.output);
+            coreHeatPipeItem.create(ModelLocationUtils.getModelLocation(WAXED_WEATHERED_HEAT_PIPE_ITEM),
+                    TextureMapping.defaultTexture(WEATHERED_HEAT_PIPE_BLOCK), generator.output);
+            coreHeatPipeItem.create(ModelLocationUtils.getModelLocation(WAXED_OXIDIZED_HEAT_PIPE_ITEM),
+                    TextureMapping.defaultTexture(OXIDIZED_HEAT_PIPE_BLOCK), generator.output);
 
-            generator.register(THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
-            generator.register(EXPOSED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(EXPOSED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
-            generator.register(WEATHERED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(WEATHERED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
-            generator.register(OXIDIZED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(OXIDIZED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
-            generator.register(WAXED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
-            generator.register(WAXED_EXPOSED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(EXPOSED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
-            generator.register(WAXED_WEATHERED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(WEATHERED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
-            generator.register(WAXED_OXIDIZED_THERMOSTAT_ITEM, new Model(
-                    Optional.of(ModelIds.getBlockSubModelId(OXIDIZED_THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
+            generator.generateFlatItem(THERMOSTAT_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
+            generator.generateFlatItem(EXPOSED_THERMOSTAT_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(EXPOSED_THERMOSTAT_BLOCK, INVENTORY)),
+                    Optional.empty()));
+            generator.generateFlatItem(WEATHERED_THERMOSTAT_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(WEATHERED_THERMOSTAT_BLOCK, INVENTORY)),
+                    Optional.empty()));
+            generator.generateFlatItem(OXIDIZED_THERMOSTAT_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(OXIDIZED_THERMOSTAT_BLOCK, INVENTORY)),
+                    Optional.empty()));
+            generator.generateFlatItem(WAXED_THERMOSTAT_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(THERMOSTAT_BLOCK, INVENTORY)), Optional.empty()));
+            generator.generateFlatItem(WAXED_EXPOSED_THERMOSTAT_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(EXPOSED_THERMOSTAT_BLOCK, INVENTORY)),
+                    Optional.empty()));
+            generator.generateFlatItem(WAXED_WEATHERED_THERMOSTAT_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(WEATHERED_THERMOSTAT_BLOCK, INVENTORY)),
+                    Optional.empty()));
+            generator.generateFlatItem(WAXED_OXIDIZED_THERMOSTAT_ITEM, new ModelTemplate(
+                    Optional.of(ModelLocationUtils.getModelLocation(OXIDIZED_THERMOSTAT_BLOCK, INVENTORY)),
+                    Optional.empty()));
         }
 
     }
@@ -353,35 +365,35 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         @Override
         public void generate() {
-            addDrop(HEATER_BLOCK, HEATER_ITEM);
-            addDrop(EXPOSED_HEATER_BLOCK, EXPOSED_HEATER_ITEM);
-            addDrop(WEATHERED_HEATER_BLOCK, WEATHERED_HEATER_ITEM);
-            addDrop(OXIDIZED_HEATER_BLOCK, OXIDIZED_HEATER_ITEM);
+            dropSelf(HEATER_BLOCK);
+            dropSelf(EXPOSED_HEATER_BLOCK);
+            dropSelf(WEATHERED_HEATER_BLOCK);
+            dropSelf(OXIDIZED_HEATER_BLOCK);
 
-            addDrop(WAXED_HEATER_BLOCK, WAXED_HEATER_ITEM);
-            addDrop(WAXED_EXPOSED_HEATER_BLOCK, WAXED_EXPOSED_HEATER_ITEM);
-            addDrop(WAXED_WEATHERED_HEATER_BLOCK, WAXED_WEATHERED_HEATER_ITEM);
-            addDrop(WAXED_OXIDIZED_HEATER_BLOCK, WAXED_OXIDIZED_HEATER_ITEM);
+            dropSelf(WAXED_HEATER_BLOCK);
+            dropSelf(WAXED_EXPOSED_HEATER_BLOCK);
+            dropSelf(WAXED_WEATHERED_HEATER_BLOCK);
+            dropSelf(WAXED_OXIDIZED_HEATER_BLOCK);
 
-            addDrop(HEAT_PIPE_BLOCK, HEAT_PIPE_ITEM);
-            addDrop(EXPOSED_HEAT_PIPE_BLOCK, EXPOSED_HEAT_PIPE_ITEM);
-            addDrop(WEATHERED_HEAT_PIPE_BLOCK, WEATHERED_HEAT_PIPE_ITEM);
-            addDrop(OXIDIZED_HEAT_PIPE_BLOCK, OXIDIZED_HEAT_PIPE_ITEM);
+            dropSelf(HEAT_PIPE_BLOCK);
+            dropSelf(EXPOSED_HEAT_PIPE_BLOCK);
+            dropSelf(WEATHERED_HEAT_PIPE_BLOCK);
+            dropSelf(OXIDIZED_HEAT_PIPE_BLOCK);
 
-            addDrop(WAXED_HEAT_PIPE_BLOCK, WAXED_HEAT_PIPE_ITEM);
-            addDrop(WAXED_EXPOSED_HEAT_PIPE_BLOCK, WAXED_EXPOSED_HEAT_PIPE_ITEM);
-            addDrop(WAXED_WEATHERED_HEAT_PIPE_BLOCK, WAXED_WEATHERED_HEAT_PIPE_ITEM);
-            addDrop(WAXED_OXIDIZED_HEAT_PIPE_BLOCK, WAXED_OXIDIZED_HEAT_PIPE_ITEM);
+            dropSelf(WAXED_HEAT_PIPE_BLOCK);
+            dropSelf(WAXED_EXPOSED_HEAT_PIPE_BLOCK);
+            dropSelf(WAXED_WEATHERED_HEAT_PIPE_BLOCK);
+            dropSelf(WAXED_OXIDIZED_HEAT_PIPE_BLOCK);
 
-            addDrop(THERMOSTAT_BLOCK, THERMOSTAT_ITEM);
-            addDrop(EXPOSED_THERMOSTAT_BLOCK, EXPOSED_THERMOSTAT_ITEM);
-            addDrop(WEATHERED_THERMOSTAT_BLOCK, WEATHERED_THERMOSTAT_ITEM);
-            addDrop(OXIDIZED_THERMOSTAT_BLOCK, OXIDIZED_THERMOSTAT_ITEM);
+            dropSelf(THERMOSTAT_BLOCK);
+            dropSelf(EXPOSED_THERMOSTAT_BLOCK);
+            dropSelf(WEATHERED_THERMOSTAT_BLOCK);
+            dropSelf(OXIDIZED_THERMOSTAT_BLOCK);
 
-            addDrop(WAXED_THERMOSTAT_BLOCK, WAXED_THERMOSTAT_ITEM);
-            addDrop(WAXED_EXPOSED_THERMOSTAT_BLOCK, WAXED_EXPOSED_THERMOSTAT_ITEM);
-            addDrop(WAXED_WEATHERED_THERMOSTAT_BLOCK, WAXED_WEATHERED_THERMOSTAT_ITEM);
-            addDrop(WAXED_OXIDIZED_THERMOSTAT_BLOCK, WAXED_OXIDIZED_THERMOSTAT_ITEM);
+            dropSelf(WAXED_THERMOSTAT_BLOCK);
+            dropSelf(WAXED_EXPOSED_THERMOSTAT_BLOCK);
+            dropSelf(WAXED_WEATHERED_THERMOSTAT_BLOCK);
+            dropSelf(WAXED_OXIDIZED_THERMOSTAT_BLOCK);
         }
 
     }
@@ -393,69 +405,69 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
         }
 
         @Override
-        public void generate(RecipeExporter exporter) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HEATER_BLOCK)
+        public void buildRecipes(RecipeOutput output) {
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HEATER_BLOCK)
                     .pattern("ccc")
                     .pattern("cfc")
                     .pattern("ccc")
-                    .input('c', COPPER_INGOT)
-                    .input('f', FURNACE)
-                    .criterion(hasItem(COPPER_INGOT), conditionsFromItem(COPPER_INGOT))
-                    .criterion(hasItem(FURNACE), conditionsFromItem(FURNACE))
-                    .offerTo(exporter);
+                    .define('c', COPPER_INGOT)
+                    .define('f', FURNACE)
+                    .unlockedBy(getHasName(COPPER_INGOT), has(COPPER_INGOT))
+                    .unlockedBy(getHasName(FURNACE), has(FURNACE))
+                    .save(output);
 
-            generateWaxingRecipe(exporter, HEATER_ITEM, WAXED_HEATER_ITEM);
-            generateWaxingRecipe(exporter, EXPOSED_HEATER_ITEM, WAXED_EXPOSED_HEATER_ITEM);
-            generateWaxingRecipe(exporter, WEATHERED_HEATER_ITEM, WAXED_WEATHERED_HEATER_ITEM);
-            generateWaxingRecipe(exporter, OXIDIZED_HEATER_ITEM, WAXED_OXIDIZED_HEATER_ITEM);
+            generateWaxingRecipe(output, HEATER_ITEM, WAXED_HEATER_ITEM);
+            generateWaxingRecipe(output, EXPOSED_HEATER_ITEM, WAXED_EXPOSED_HEATER_ITEM);
+            generateWaxingRecipe(output, WEATHERED_HEATER_ITEM, WAXED_WEATHERED_HEATER_ITEM);
+            generateWaxingRecipe(output, OXIDIZED_HEATER_ITEM, WAXED_OXIDIZED_HEATER_ITEM);
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HEAT_PIPE_BLOCK)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HEAT_PIPE_BLOCK)
                     .pattern("ccc")
-                    .input('c', COPPER_INGOT)
-                    .criterion(hasItem(COPPER_INGOT), conditionsFromItem(COPPER_INGOT))
-                    .offerTo(exporter);
+                    .define('c', COPPER_INGOT)
+                    .unlockedBy(getHasName(COPPER_INGOT), has(COPPER_INGOT))
+                    .save(output);
 
-            generateWaxingRecipe(exporter, HEAT_PIPE_ITEM, WAXED_HEAT_PIPE_ITEM);
-            generateWaxingRecipe(exporter, EXPOSED_HEAT_PIPE_ITEM, WAXED_EXPOSED_HEAT_PIPE_ITEM);
-            generateWaxingRecipe(exporter, WEATHERED_HEAT_PIPE_ITEM, WAXED_WEATHERED_HEAT_PIPE_ITEM);
-            generateWaxingRecipe(exporter, OXIDIZED_HEAT_PIPE_ITEM, WAXED_OXIDIZED_HEAT_PIPE_ITEM);
+            generateWaxingRecipe(output, HEAT_PIPE_ITEM, WAXED_HEAT_PIPE_ITEM);
+            generateWaxingRecipe(output, EXPOSED_HEAT_PIPE_ITEM, WAXED_EXPOSED_HEAT_PIPE_ITEM);
+            generateWaxingRecipe(output, WEATHERED_HEAT_PIPE_ITEM, WAXED_WEATHERED_HEAT_PIPE_ITEM);
+            generateWaxingRecipe(output, OXIDIZED_HEAT_PIPE_ITEM, WAXED_OXIDIZED_HEAT_PIPE_ITEM);
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, THERMOSTAT_ITEM)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, THERMOSTAT_ITEM)
                     .pattern("ccc")
                     .pattern("#c#")
                     .pattern("#r#")
-                    .input('c', COPPER_INGOT)
-                    .input('r', REDSTONE)
-                    .input('#', COBBLESTONE)
-                    .criterion(hasItem(COBBLESTONE), conditionsFromItem(COBBLESTONE))
-                    .criterion(hasItem(COPPER_INGOT), conditionsFromItem(COPPER_INGOT))
-                    .criterion(hasItem(REDSTONE), conditionsFromItem(REDSTONE))
-                    .offerTo(exporter);
+                    .define('c', COPPER_INGOT)
+                    .define('r', REDSTONE)
+                    .define('#', COBBLESTONE)
+                    .unlockedBy(getHasName(COBBLESTONE), has(COBBLESTONE))
+                    .unlockedBy(getHasName(COPPER_INGOT), has(COPPER_INGOT))
+                    .unlockedBy(getHasName(REDSTONE), has(REDSTONE))
+                    .save(output);
 
-            generateWaxingRecipe(exporter, THERMOSTAT_ITEM, WAXED_THERMOSTAT_ITEM);
-            generateWaxingRecipe(exporter, EXPOSED_THERMOSTAT_ITEM, WAXED_EXPOSED_THERMOSTAT_ITEM);
-            generateWaxingRecipe(exporter, WEATHERED_THERMOSTAT_ITEM, WAXED_WEATHERED_THERMOSTAT_ITEM);
-            generateWaxingRecipe(exporter, OXIDIZED_THERMOSTAT_ITEM, WAXED_OXIDIZED_THERMOSTAT_ITEM);
+            generateWaxingRecipe(output, THERMOSTAT_ITEM, WAXED_THERMOSTAT_ITEM);
+            generateWaxingRecipe(output, EXPOSED_THERMOSTAT_ITEM, WAXED_EXPOSED_THERMOSTAT_ITEM);
+            generateWaxingRecipe(output, WEATHERED_THERMOSTAT_ITEM, WAXED_WEATHERED_THERMOSTAT_ITEM);
+            generateWaxingRecipe(output, OXIDIZED_THERMOSTAT_ITEM, WAXED_OXIDIZED_THERMOSTAT_ITEM);
         }
 
-        private void generateWaxingRecipe(RecipeExporter exporter, Item unwaxed, Item waxed) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, waxed)
-                    .input(unwaxed).input(HONEYCOMB)
-                    .criterion(hasItem(unwaxed), conditionsFromItem(unwaxed))
-                    .criterion(hasItem(HONEYCOMB), conditionsFromItem(HONEYCOMB))
-                    .offerTo(exporter);
+        private void generateWaxingRecipe(RecipeOutput output, Item unwaxed, Item waxed) {
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, waxed)
+                    .requires(unwaxed).requires(HONEYCOMB)
+                    .unlockedBy(getHasName(unwaxed), has(unwaxed))
+                    .unlockedBy(getHasName(HONEYCOMB), has(HONEYCOMB))
+                    .save(output);
         }
     }
 
     private static class TagProvider extends BlockTagProvider {
 
-        public TagProvider(FabricDataOutput output, CompletableFuture<WrapperLookup> registriesFuture) {
+        public TagProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registriesFuture) {
             super(output, registriesFuture);
         }
 
         @Override
-        protected void configure(WrapperLookup arg) {
-            getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE)
+        protected void addTags(HolderLookup.Provider arg) {
+            getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
                     .setReplace(false)
                     .add(
                             HEATER_BLOCK, EXPOSED_HEATER_BLOCK,

@@ -2,12 +2,12 @@ package niv.heater.block.entity;
 
 import java.util.Optional;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public interface HeatSink extends Comparable<HeatSink> {
 
@@ -28,9 +28,9 @@ public interface HeatSink extends Comparable<HeatSink> {
         return Integer.compare(b.getBurnTime(), a.getBurnTime());
     }
 
-    static boolean isHeatSink(WorldAccess world, BlockPos pos, Block block) {
-        if (block instanceof BlockWithEntity) {
-            var entity = world.getBlockEntity(pos);
+    static boolean isHeatSink(LevelAccessor level, BlockPos pos, Block block) {
+        if (block instanceof BaseEntityBlock) {
+            var entity = level.getBlockEntity(pos);
             return entity instanceof HeatSink
                     || entity instanceof AbstractFurnaceBlockEntity
                     || ForwardingHeatSink.isForwardable(entity);
@@ -45,22 +45,22 @@ public interface HeatSink extends Comparable<HeatSink> {
             return Optional.of(new HeatSink() {
                 @Override
                 public int getBurnTime() {
-                    return furnace.burnTime;
+                    return furnace.litTime;
                 }
 
                 @Override
                 public void setBurnTime(int value) {
-                    furnace.burnTime = value;
+                    furnace.litTime = value;
                 }
 
                 @Override
                 public int getFuelTime() {
-                    return furnace.fuelTime;
+                    return furnace.litDuration;
                 }
 
                 @Override
                 public void setFuelTime(int value) {
-                    furnace.fuelTime = value;
+                    furnace.litDuration = value;
                 }
             });
         } else {
