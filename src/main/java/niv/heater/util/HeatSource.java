@@ -1,4 +1,4 @@
-package niv.heater.block;
+package niv.heater.util;
 
 import java.util.Optional;
 
@@ -8,7 +8,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.BlockState;
-import niv.heater.block.entity.HeatSink;
+import niv.heater.block.HeaterBlock;
+import niv.heater.block.ThermostatBlock;
 
 public interface HeatSource {
 

@@ -20,9 +20,10 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.heater.Heater;
-import niv.heater.block.HeatSource;
 import niv.heater.block.HeaterBlock;
 import niv.heater.screen.HeaterMenu;
+import niv.heater.util.HeatSink;
+import niv.heater.util.HeatSource;
 import niv.heater.util.Propagator;
 
 public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatSink {

@@ -20,7 +20,8 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import niv.heater.block.entity.HeatSink;
+import niv.heater.util.HeatSink;
+import niv.heater.util.HeatSource;
 
 public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterloggedBlock {
 

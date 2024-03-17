@@ -12,9 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import niv.heater.block.HeatSource;
 import niv.heater.block.HeaterBlock;
-import niv.heater.block.entity.HeatSink;
 
 public class Propagator implements
         Supplier<Set<Propagator.Target>>,

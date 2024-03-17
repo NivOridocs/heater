@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.heater.Heater;
 import niv.heater.block.entity.HeaterBlockEntity;
+import niv.heater.util.HeatSource;
 
 public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
 

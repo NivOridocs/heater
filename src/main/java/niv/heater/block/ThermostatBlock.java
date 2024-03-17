@@ -18,7 +18,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import niv.heater.block.entity.HeatSink;
+import niv.heater.util.HeatSink;
+import niv.heater.util.HeatSource;
 
 public class ThermostatBlock extends DirectionalBlock implements HeatSource {
 
