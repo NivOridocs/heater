@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [3.0] - 2024-03-17
+
+### Changed
+
++ Update target Minecraft version to 1.20.3, with 1.20.4 compatibility.
+
 ## [2.0] - 2024-02-26
 
 ### Added
@@ -44,6 +50,7 @@
 
 Initial release.
 
+[3.0]: https://github.com/NivOridocs/heater/releases/tag/3.0
 [2.0]: https://github.com/NivOridocs/heater/releases/tag/2.0
 [1.2.0]: https://github.com/NivOridocs/heater/releases/tag/1.2.0
 [1.1.1]: https://github.com/NivOridocs/heater/releases/tag/1.1.1
