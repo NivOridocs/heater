@@ -75,7 +75,7 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
     }
 
     @Override
-    public VoxelShape getVisualShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext context) {
         var shapes = new ArrayList<VoxelShape>(6);
         for (var direction : Direction.values()) {
             if (isConnected(state, direction)) {
@@ -94,7 +94,7 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
     }
 
     @Override
-    public boolean isPathfindable(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, PathComputationType type) {
+    public boolean isPathfindable(BlockState state, BlockGetter getter, BlockPos pos, PathComputationType type) {
         return false;
     }
 
