@@ -1,31 +1,32 @@
 package niv.heater.block.entity;
 
-import static net.minecraft.block.AbstractFurnaceBlock.LIT;
+import static net.minecraft.world.level.block.AbstractFurnaceBlock.LIT;
 
-import net.minecraft.block.AbstractFurnaceBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.block.entity.LockableContainerBlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventories;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.text.Text;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractFurnaceBlock;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import niv.heater.Heater;
-import niv.heater.block.HeatSource;
 import niv.heater.block.HeaterBlock;
-import niv.heater.screen.HeaterScreenHandler;
+import niv.heater.screen.HeaterMenu;
+import niv.heater.util.HeatSink;
+import niv.heater.util.HeatSource;
 import niv.heater.util.Propagator;
 
-public class HeaterBlockEntity extends LockableContainerBlockEntity implements HeatSink {
+public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatSink {
 
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
@@ -36,9 +37,9 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity implements H
 
     private int fuelTime;
 
-    private DefaultedList<ItemStack> inventory;
+    private NonNullList<ItemStack> items;
 
-    private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
+    private final ContainerData containerData = new ContainerData() {
 
         @Override
         public int get(int index) {
@@ -67,7 +68,7 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity implements H
         }
 
         @Override
-        public int size() {
+        public int getCount() {
             return 2;
         }
 
@@ -76,89 +77,89 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity implements H
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
         super(Heater.HEATER_BLOCK_ENTITY, pos, state);
         burnTime = 0;
-        inventory = DefaultedList.ofSize(1, ItemStack.EMPTY);
+        items = NonNullList.withSize(1, ItemStack.EMPTY);
     }
 
-    public DefaultedList<ItemStack> getInventory() {
-        return inventory;
-    }
-
-    @Override
-    public boolean canPlayerUse(PlayerEntity player) {
-        return Inventory.canPlayerUse(this, player);
+    public NonNullList<ItemStack> getItems() {
+        return items;
     }
 
     @Override
-    public ItemStack getStack(int slot) {
-        return this.inventory.get(slot);
+    public boolean stillValid(Player player) {
+        return Container.stillValidBlockEntity(this, player);
+    }
+
+    @Override
+    public ItemStack getItem(int slot) {
+        return this.items.get(slot);
     }
 
     @Override
     public boolean isEmpty() {
-        return inventory.get(0).isEmpty();
+        return items.get(0).isEmpty();
     }
 
     @Override
-    public ItemStack removeStack(int slot) {
-        return Inventories.removeStack(inventory, slot);
+    public ItemStack removeItemNoUpdate(int slot) {
+        return ContainerHelper.takeItem(this.items, slot);
     }
 
     @Override
-    public ItemStack removeStack(int slot, int amount) {
-        return Inventories.splitStack(inventory, slot, amount);
+    public ItemStack removeItem(int slot, int amount) {
+        return ContainerHelper.removeItem(this.items, slot, amount);
     }
 
     @Override
-    public void setStack(int slot, ItemStack stack) {
-        inventory.set(slot, stack);
-        if (stack.getCount() > getMaxCountPerStack()) {
-            stack.setCount(getMaxCountPerStack());
+    public void setItem(int slot, ItemStack stack) {
+        items.set(slot, stack);
+        if (stack.getCount() > getMaxStackSize()) {
+            stack.setCount(getMaxStackSize());
         }
     }
 
     @Override
-    public boolean isValid(int slot, ItemStack stack) {
+    public boolean canPlaceItem(int slot, ItemStack stack) {
         if (slot == 0) {
-            return AbstractFurnaceBlockEntity.canUseAsFuel(stack)
-                    || stack.isOf(Items.BUCKET) && !inventory.get(0).isOf(Items.BUCKET);
+            return AbstractFurnaceBlockEntity.isFuel(stack)
+                    || stack.is(Items.BUCKET) && !items.get(0).is(Items.BUCKET);
         }
         return true;
     }
 
     @Override
-    public int size() {
-        return inventory.size();
+    public int getContainerSize() {
+        return items.size();
     }
 
     @Override
-    public void clear() {
-        this.inventory.clear();
+    public void clearContent() {
+        this.items.clear();
     }
 
     @Override
-    protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-        return new HeaterScreenHandler(syncId, playerInventory, this, propertyDelegate);
+    protected AbstractContainerMenu createMenu(int syncId, Inventory inventory) {
+        return new HeaterMenu(syncId, inventory, this, containerData);
     }
 
     @Override
-    protected Text getContainerName() {
-        return Text.translatable("container.heater");
+    protected Component getDefaultName() {
+        return Component.translatable("container.heater");
     }
 
     @Override
-    public void readNbt(NbtCompound nbt) {
-        super.readNbt(nbt);
-        inventory = DefaultedList.ofSize(this.size(), ItemStack.EMPTY);
-        Inventories.readNbt(nbt, inventory);
-        burnTime = nbt.getShort("BurnTime");
-        fuelTime = this.getFuelTime(this.inventory.get(0));
+    public void load(CompoundTag compoundTag) {
+        super.load(compoundTag);
+        items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+        ContainerHelper.loadAllItems(compoundTag, items);
+        burnTime = compoundTag.getShort("BurnTime");
+        fuelTime = this.getFuelTime(this.items.get(0));
     }
 
     @Override
-    public void writeNbt(NbtCompound nbt) {
-        super.writeNbt(nbt);
-        nbt.putShort("BurnTime", (short) burnTime);
-        Inventories.writeNbt(nbt, inventory);
+    public void saveAdditional(CompoundTag compoundTag) {
+        super.saveAdditional(compoundTag);
+        compoundTag.putShort("BurnTime", (short) burnTime);
+        ContainerHelper.saveAllItems(compoundTag, items);
     }
 
     @Override
@@ -187,37 +188,37 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity implements H
 
     private int getFuelTime(ItemStack fuel) {
         return fuel.isEmpty() ? 0
-                : AbstractFurnaceBlockEntity.createFuelTimeMap()
+                : AbstractFurnaceBlockEntity.getFuel()
                         .getOrDefault(fuel.getItem(), 0);
     }
 
-    public static void tick(World world, BlockPos pos, BlockState state, HeaterBlockEntity heater) {
+    public static void tick(Level level, BlockPos pos, BlockState state, HeaterBlockEntity heater) {
         var wasBurning = heater.isBurning();
 
         if (heater.isBurning()) {
-            propagateBurnTime(world, pos, heater);
+            propagateBurnTime(level, pos, heater);
         }
 
-        if (heater.isBurning() && world.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
-            heater.burnTime = HeatSource.reduceHeat(block.getOxidationLevel(), heater.burnTime);
+        if (heater.isBurning() && level.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
+            heater.burnTime = HeatSource.reduceHeat(block.getWeatherState(), heater.burnTime);
         }
 
         consumeFuel(heater);
 
-        var dirty = false;
+        var changed = false;
         if (wasBurning != heater.isBurning()) {
-            dirty = true;
-            state = state.with(AbstractFurnaceBlock.LIT, heater.isBurning());
-            world.setBlockState(pos, state);
+            changed = true;
+            state = state.setValue(AbstractFurnaceBlock.LIT, heater.isBurning());
+            level.setBlockAndUpdate(pos, state);
         }
 
-        if (dirty) {
-            markDirty(world, pos, state);
+        if (changed) {
+            setChanged(level, pos, state);
         }
     }
 
-    private static void propagateBurnTime(World world, BlockPos pos, HeaterBlockEntity heater) {
-        var propagator = new Propagator(world, pos, MAX_HEAT);
+    private static void propagateBurnTime(Level level, BlockPos pos, HeaterBlockEntity heater) {
+        var propagator = new Propagator(level, pos, MAX_HEAT);
         propagator.run();
         var targets = propagator.get();
 
@@ -247,9 +248,9 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity implements H
 
                 var isBurning = target.entity().getBurnTime() > 0;
                 if (wasBurning != isBurning) {
-                    var state = target.state().with(LIT, isBurning);
-                    world.setBlockState(target.pos(), state);
-                    markDirty(world, target.pos(), state);
+                    var state = target.state().setValue(LIT, isBurning);
+                    level.setBlockAndUpdate(target.pos(), state);
+                    setChanged(level, target.pos(), state);
                 }
 
                 if (heater.burnTime <= 0) {
@@ -261,16 +262,16 @@ public class HeaterBlockEntity extends LockableContainerBlockEntity implements H
     }
 
     private static void consumeFuel(HeaterBlockEntity heater) {
-        var fuelStack = heater.inventory.get(0);
+        var fuelStack = heater.items.get(0);
         var hasFuel = !fuelStack.isEmpty();
         if (!heater.isBurning() && hasFuel) {
             var fuelTime = heater.getFuelTime(fuelStack);
             if (fuelTime > 0) {
                 var fuelItem = fuelStack.getItem();
-                fuelStack.decrement(1);
+                fuelStack.shrink(1);
                 if (fuelStack.isEmpty()) {
-                    var bucketItem = fuelItem.getRecipeRemainder();
-                    heater.inventory.set(0, bucketItem == null ? ItemStack.EMPTY : new ItemStack(bucketItem));
+                    var bucketItem = fuelItem.getCraftingRemainingItem();
+                    heater.items.set(0, bucketItem == null ? ItemStack.EMPTY : new ItemStack(bucketItem));
                 }
                 heater.fuelTime = heater.burnTime = fuelTime;
             }

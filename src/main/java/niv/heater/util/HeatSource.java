@@ -1,14 +1,15 @@
-package niv.heater.block;
+package niv.heater.util;
 
 import java.util.Optional;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.Oxidizable.OxidationLevel;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.WorldAccess;
-import niv.heater.block.entity.HeatSink;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.state.BlockState;
+import niv.heater.block.HeaterBlock;
+import niv.heater.block.ThermostatBlock;
 
 public interface HeatSource {
 
@@ -16,12 +17,12 @@ public interface HeatSource {
         return Direction.values();
     }
 
-    default Optional<HeatSource> getNeighborAsSource(WorldAccess world, BlockPos pos, Direction direction) {
-        var targetState = world.getBlockState(pos.offset(direction));
+    default Optional<HeatSource> getNeighborAsSource(LevelAccessor level, BlockPos pos, Direction direction) {
+        var targetState = level.getBlockState(pos.relative(direction));
         var target = targetState.getBlock();
         if (target instanceof HeaterBlock) {
             return Optional.empty();
-        } else if (target instanceof ThermostatBlock thermostat && targetState.get(ThermostatBlock.POWERED).booleanValue()) {
+        } else if (target instanceof ThermostatBlock thermostat && targetState.getValue(ThermostatBlock.POWERED).booleanValue()) {
             return Optional.of(thermostat);
         } else if (target instanceof HeatSource source) {
             return Optional.of(source);
@@ -30,13 +31,13 @@ public interface HeatSource {
         }
     }
 
-    default Optional<HeatSink> getNeighborAsSink(WorldAccess world, BlockPos pos, Direction direction) {
-        var targetPos = pos.offset(direction);
+    default Optional<HeatSink> getNeighborAsSink(LevelAccessor world, BlockPos pos, Direction direction) {
+        var targetPos = pos.relative(direction);
         var targetState = world.getBlockState(targetPos);
         var target = targetState.getBlock();
         if (target instanceof HeaterBlock) {
             return Optional.empty();
-        } else if (target instanceof BlockWithEntity) {
+        } else if (target instanceof BaseEntityBlock) {
             return Optional.of(world.getBlockEntity(targetPos)).flatMap(HeatSink::getHeatSink);
         } else {
             return Optional.empty();
@@ -45,8 +46,8 @@ public interface HeatSource {
 
     int reducedHeat(int heat);
 
-    static int reduceHeat(OxidationLevel oxidationLevel, int heat) {
-        switch (oxidationLevel) {
+    static int reduceHeat(WeatherState weatherState, int heat) {
+        switch (weatherState) {
             case UNAFFECTED:
                 heat -= 1;
                 break;

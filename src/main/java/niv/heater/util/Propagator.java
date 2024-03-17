@@ -8,13 +8,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.WorldAccess;
-import niv.heater.block.HeatSource;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.state.BlockState;
 import niv.heater.block.HeaterBlock;
-import niv.heater.block.entity.HeatSink;
 
 public class Propagator implements
         Supplier<Set<Propagator.Target>>,
@@ -27,7 +25,7 @@ public class Propagator implements
     private record Source(BlockPos pos, BlockState state, HeatSource block, int heat) {
     }
 
-    private final WorldAccess world;
+    private final LevelAccessor level;
 
     private final BlockPos startingPos;
 
@@ -39,8 +37,8 @@ public class Propagator implements
 
     private final Set<BlockPos> visited;
 
-    public Propagator(WorldAccess world, BlockPos startingPos, int maxHeat) {
-        this.world = world;
+    public Propagator(LevelAccessor level, BlockPos startingPos, int maxHeat) {
+        this.level = level;
         this.startingPos = startingPos;
         this.maxHeat = maxHeat;
         this.sources = new LinkedList<>();
@@ -66,7 +64,7 @@ public class Propagator implements
 
         visited.add(startingPos);
 
-        var state = world.getBlockState(startingPos);
+        var state = level.getBlockState(startingPos);
         if (state.getBlock() instanceof HeaterBlock heater) {
             sources.add(new Source(startingPos, state, heater, maxHeat));
         }
@@ -80,19 +78,19 @@ public class Propagator implements
     }
 
     private void visit(Source src, Direction dir) {
-        var pos = src.pos().offset(dir);
+        var pos = src.pos().relative(dir);
         var heat = src.block().reducedHeat(src.heat());
         if (!visited.contains(pos) && heat > 0) {
-            var tryAsSource = src.block().getNeighborAsSource(world, src.pos(), dir);
+            var tryAsSource = src.block().getNeighborAsSource(level, src.pos(), dir);
             if (tryAsSource.isPresent()) {
                 visited.add(pos);
-                sources.add(new Source(pos, world.getBlockState(pos), tryAsSource.get(), heat));
+                sources.add(new Source(pos, level.getBlockState(pos), tryAsSource.get(), heat));
                 return;
             }
-            var tryAsSink = src.block().getNeighborAsSink(world, src.pos(), dir);
+            var tryAsSink = src.block().getNeighborAsSink(level, src.pos(), dir);
             if (tryAsSink.isPresent()) {
                 visited.add(pos);
-                targets.add(new Target(pos, world.getBlockState(pos), tryAsSink.get()));
+                targets.add(new Target(pos, level.getBlockState(pos), tryAsSink.get()));
             }
         }
     }

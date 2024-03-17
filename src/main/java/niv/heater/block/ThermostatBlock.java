@@ -2,108 +2,124 @@ package niv.heater.block;
 
 import java.util.Optional;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.FacingBlock;
-import net.minecraft.block.Oxidizable.OxidationLevel;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.StateManager.Builder;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
-import niv.heater.block.entity.HeatSink;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-public class ThermostatBlock extends FacingBlock implements HeatSource {
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DirectionalBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import niv.heater.util.HeatSink;
+import niv.heater.util.HeatSource;
 
-    public static final BooleanProperty POWERED = Properties.POWERED;
+public class ThermostatBlock extends DirectionalBlock implements HeatSource {
+
+    @SuppressWarnings("java:S1845")
+    public static final MapCodec<ThermostatBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(ThermostatBlock::getWeatherState),
+            Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
+            .apply(instance, ThermostatBlock::new));
+
+    public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 
     private static final Direction[] EMPTY_DIRECTIONS = new Direction[0];
 
-    private final OxidationLevel oxidationLevel;
+    private final WeatherState weatherState;
 
-    public ThermostatBlock(OxidationLevel oxidationLevel, Settings settings) {
+    public ThermostatBlock(WeatherState weatherState, Properties settings) {
         super(settings);
-        this.oxidationLevel = oxidationLevel;
+        this.weatherState = weatherState;
     }
 
-    public OxidationLevel getOxidationLevel() {
-        return oxidationLevel;
+    public WeatherState getWeatherState() {
+        return weatherState;
     }
 
     @Override
-    protected void appendProperties(Builder<Block, BlockState> builder) {
+    public MapCodec<? extends ThermostatBlock> codec() {
+        return CODEC;
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, POWERED);
     }
 
     @Override
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return state.with(FACING, rotation.rotate(state.get(FACING)));
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return this.getDefaultState()
-                .with(FACING, ctx.getPlayerLookDirection().getOpposite())
-                .with(POWERED, ctx.getWorld().isReceivingRedstonePower(ctx.getBlockPos()));
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState()
+                .setValue(FACING, context.getNearestLookingDirection().getOpposite())
+                .setValue(POWERED, context.getLevel().hasNeighborSignal(context.getClickedPos()));
     }
 
     @Override
-    public void neighborUpdate(BlockState state, World world, BlockPos pos, Block sourceBlock, BlockPos sourcePos,
+    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block sourceBlock, BlockPos sourcePos,
             boolean notify) {
-        if (world.isClient) {
+        if (world.isClientSide) {
             return;
         }
-        boolean powered = state.get(POWERED);
-        if (powered != world.isReceivingRedstonePower(pos)) {
+        boolean powered = state.getValue(POWERED);
+        if (powered != world.hasNeighborSignal(pos)) {
             if (powered) {
-                world.scheduleBlockTick(pos, this, 4);
+                world.scheduleTick(pos, this, 4);
             } else {
-                world.setBlockState(pos, state.cycle(POWERED), Block.NOTIFY_LISTENERS);
+                world.setBlock(pos, state.cycle(POWERED), 2);
             }
         }
     }
 
     @Override
-    public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-        if (state.get(POWERED).booleanValue() && !world.isReceivingRedstonePower(pos)) {
-            world.setBlockState(pos, state.cycle(POWERED), Block.NOTIFY_LISTENERS);
+    public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+        if (state.getValue(POWERED).booleanValue() && !world.hasNeighborSignal(pos)) {
+            world.setBlock(pos, state.cycle(POWERED), 2);
         }
     }
 
     @Override
     public Direction[] getConnected(BlockState state) {
-        if (state.getOrEmpty(POWERED).orElse(false)) {
-            return state.getOrEmpty(FACING).stream().toArray(Direction[]::new);
+        if (state.getOptionalValue(POWERED).orElse(false)) {
+            return state.getOptionalValue(FACING).stream().toArray(Direction[]::new);
         } else {
             return EMPTY_DIRECTIONS;
         }
     }
 
     @Override
-    public Optional<HeatSink> getNeighborAsSink(WorldAccess world, BlockPos pos, Direction direction) {
-        var targetPos = pos.offset(direction);
-        if (world.getBlockState(targetPos).getBlock() instanceof HeaterBlock) {
-            return HeatSink.getHeatSink(world.getBlockEntity(targetPos));
+    public Optional<HeatSink> getNeighborAsSink(LevelAccessor level, BlockPos pos, Direction direction) {
+        var targetPos = pos.relative(direction);
+        if (level.getBlockState(targetPos).getBlock() instanceof HeaterBlock) {
+            return HeatSink.getHeatSink(level.getBlockEntity(targetPos));
         } else {
-            return HeatSource.super.getNeighborAsSink(world, pos, direction);
+            return HeatSource.super.getNeighborAsSink(level, pos, direction);
         }
     }
 
     @Override
     public int reducedHeat(int heat) {
-        return HeatSource.reduceHeat(oxidationLevel, heat);
+        return HeatSource.reduceHeat(weatherState, heat);
     }
 
 }

@@ -2,108 +2,125 @@ package niv.heater.block;
 
 import java.util.Random;
 
-import net.minecraft.block.AbstractFurnaceBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Oxidizable.OxidationLevel;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ItemScatterer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction.Axis;
-import net.minecraft.world.World;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Containers;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractFurnaceBlock;
+import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import niv.heater.Heater;
 import niv.heater.block.entity.HeaterBlockEntity;
+import niv.heater.util.HeatSource;
 
 public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
 
-    private final OxidationLevel oxidationLevel;
+    @SuppressWarnings("java:S1845")
+    public static final MapCodec<HeaterBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeaterBlock::getWeatherState),
+            Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
+            .apply(instance, HeaterBlock::new));
 
-    public HeaterBlock(OxidationLevel oxidationLevel, Settings settings) {
-        super(settings);
-        this.oxidationLevel = oxidationLevel;
+    private final WeatherState weatherState;
+
+    public HeaterBlock(WeatherState weatherState, Properties properties) {
+        super(properties);
+        this.weatherState = weatherState;
     }
 
-    public OxidationLevel getOxidationLevel() {
-        return oxidationLevel;
+    public WeatherState getWeatherState() {
+        return weatherState;
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public MapCodec<? extends HeaterBlock> codec() {
+        return CODEC;
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new HeaterBlockEntity(pos, state);
     }
 
     @Override
-    protected void openScreen(World world, BlockPos pos, PlayerEntity player) {
-        if (world.getBlockEntity(pos) instanceof HeaterBlockEntity heater) {
-            player.openHandledScreen(heater);
+    protected void openContainer(Level level, BlockPos pos, Player player) {
+        if (level.getBlockEntity(pos) instanceof HeaterBlockEntity heater) {
+            player.openMenu(heater);
         }
     }
 
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
-            World world, BlockState state, BlockEntityType<T> type) {
-        return world.isClient ? null : validateTicker(type, Heater.HEATER_BLOCK_ENTITY, HeaterBlockEntity::tick);
+            Level level, BlockState state, BlockEntityType<T> type) {
+        return level.isClientSide ? null
+                : createTickerHelper(type, Heater.HEATER_BLOCK_ENTITY, HeaterBlockEntity::tick);
     }
 
     @Override
-    public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-        if (itemStack.hasCustomName()) {
+    public void setPlacedBy(Level world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+        if (itemStack.hasCustomHoverName()) {
             var entity = world.getBlockEntity(pos);
             if (entity instanceof HeaterBlockEntity heater) {
-                heater.setCustomName(itemStack.getName());
+                heater.setCustomName(itemStack.getHoverName());
             }
         }
     }
 
     @Override
-    public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
         if (state.getBlock() instanceof HeaterBlock && newState.getBlock() instanceof HeaterBlock) {
             return;
         }
-        var entity = world.getBlockEntity(pos);
+        var entity = level.getBlockEntity(pos);
         if (entity instanceof HeaterBlockEntity heater) {
-            if (world instanceof ServerWorld) {
-                ItemScatterer.spawn(world, pos, heater.getInventory());
+            if (level instanceof ServerLevel) {
+                Containers.dropContents(level, pos, heater.getItems());
             }
-            world.updateComparators(pos, this);
+            level.updateNeighbourForOutputSignal(pos, this);
         }
-        if (state.hasBlockEntity() && !state.isOf(newState.getBlock())) {
-            world.removeBlockEntity(pos);
+        if (state.hasBlockEntity() && !state.is(newState.getBlock())) {
+            level.removeBlockEntity(pos);
         }
     }
 
-    public void randomDisplayTick(BlockState state, World world, BlockPos pos, Random random) {
-        if (state.get(LIT).booleanValue()) {
+    public void randomDisplayTick(BlockState state, Level level, BlockPos pos, Random random) {
+        if (state.getValue(LIT).booleanValue()) {
             var x = pos.getX() + .5d;
             var y = pos.getY();
             var z = pos.getZ() + .5d;
             if (random.nextDouble() < .1d) {
-                world.playSound(x, y, z,
-                        SoundEvents.BLOCK_BLASTFURNACE_FIRE_CRACKLE,
-                        SoundCategory.BLOCKS, 1f, 1f, false);
+                level.playLocalSound(x, y, z,
+                        SoundEvents.BLASTFURNACE_FIRE_CRACKLE,
+                        SoundSource.BLOCKS, 1f, 1f, false);
             }
-            var direction = state.get(FACING);
+            var direction = state.getValue(FACING);
             var axis = direction.getAxis();
             var c = .52d;
             var r = random.nextDouble() * .6d - .3d;
-            var dx = axis == Axis.X ? direction.getOffsetX() * c : r;
+            var dx = axis == Axis.X ? direction.getStepX() * c : r;
             var dy = random.nextDouble() * 9d / 16d;
-            var dz = axis == Axis.Z ? direction.getOffsetZ() * c : r;
-            world.addParticle(ParticleTypes.SMOKE, x + dx, y + dy, z + dz, .0, .0, .0);
+            var dz = axis == Axis.Z ? direction.getStepY() * c : r;
+            level.addParticle(ParticleTypes.SMOKE, x + dx, y + dy, z + dz, .0, .0, .0);
         }
     }
 
-	@Override
-	public int reducedHeat(int heat) {
-		return HeatSource.reduceHeat(oxidationLevel, heat);
-	}
+    @Override
+    public int reducedHeat(int heat) {
+        return HeatSource.reduceHeat(weatherState, heat);
+    }
 
 }

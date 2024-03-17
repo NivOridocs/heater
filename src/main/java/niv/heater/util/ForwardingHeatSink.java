@@ -1,11 +1,11 @@
-package niv.heater.block.entity;
+package niv.heater.util;
 
 import java.lang.reflect.Field;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 @SuppressWarnings("java:S3011")
 public class ForwardingHeatSink implements HeatSink {
