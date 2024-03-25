@@ -34,6 +34,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import niv.heater.adapter.HeatSinkAdapter;
+import niv.heater.adapter.HeatSourceAdapter;
 import niv.heater.block.HeatPipeBlock;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.ThermostatBlock;
@@ -51,6 +52,7 @@ public class Heater implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Heater");
 
     public static final ResourceKey<Registry<HeatSinkAdapter>> HEAT_SINK_ADAPTER;
+    public static final ResourceKey<Registry<HeatSourceAdapter>> HEAT_SOURCE_ADAPTER;
 
     public static final Block HEATER_BLOCK;
     public static final Block EXPOSED_HEATER_BLOCK;
@@ -134,6 +136,9 @@ public class Heater implements ModInitializer {
 
         HEAT_SINK_ADAPTER = ResourceKey.createRegistryKey(id.withPath("adapters/heat_sink"));
         DynamicRegistries.register(HEAT_SINK_ADAPTER, HeatSinkAdapter.CODEC);
+
+        HEAT_SOURCE_ADAPTER = ResourceKey.createRegistryKey(id.withPath("adapters/heat_source"));
+        DynamicRegistries.register(HEAT_SOURCE_ADAPTER, HeatSourceAdapter.CODEC);
 
         id = id.withPath(heater);
         HEATER_BLOCK = Registry.register(BLOCK, id,
