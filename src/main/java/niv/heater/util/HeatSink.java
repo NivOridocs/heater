@@ -2,13 +2,10 @@ package niv.heater.util;
 
 import java.util.Optional;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import niv.heater.recipes.HeatSinkRecipe;
+import niv.heater.adapter.HeatSinkAdapter;
 
 public interface HeatSink extends Comparable<HeatSink> {
 
@@ -22,25 +19,20 @@ public interface HeatSink extends Comparable<HeatSink> {
 
     @Override
     default int compareTo(HeatSink that) {
-        return HeatSink.compare(this, that);
+        return Integer.compare(that.getBurnTime(), this.getBurnTime());
     }
 
-    static int compare(HeatSink a, HeatSink b) {
-        return Integer.compare(b.getBurnTime(), a.getBurnTime());
+    static boolean is(LevelAccessor level, BlockEntity entity) {
+        return entity != null
+                && (entity instanceof HeatSink
+                        || entity instanceof AbstractFurnaceBlockEntity
+                        || HeatSinkAdapter.of(level, entity.getType()).isPresent());
     }
 
-    static boolean isHeatSink(LevelAccessor level, BlockPos pos, Block block) {
-        if (block instanceof BaseEntityBlock) {
-            var entity = level.getBlockEntity(pos);
-            return entity instanceof HeatSink
-                    || entity instanceof AbstractFurnaceBlockEntity
-                    || HeatSinkRecipe.hasRecipeFor(level, entity);
-        }
-        return false;
-    }
-
-    static Optional<HeatSink> getHeatSink(LevelAccessor level, BlockEntity entity) {
-        if (entity instanceof HeatSink sink) {
+    static Optional<HeatSink> of(LevelAccessor level, BlockEntity entity) {
+        if (entity == null) {
+            return Optional.empty();
+        } else if (entity instanceof HeatSink sink) {
             return Optional.of(sink);
         } else if (entity instanceof AbstractFurnaceBlockEntity furnace) {
             return Optional.of(new HeatSink() {
@@ -65,8 +57,7 @@ public interface HeatSink extends Comparable<HeatSink> {
                 }
             });
         } else {
-            return HeatSinkRecipe.getRecipeFor(level, entity).flatMap(r -> r.apply(entity));
+            return HeatSinkAdapter.of(level, entity.getType()).flatMap(adapter -> adapter.apply(entity));
         }
     }
-
 }

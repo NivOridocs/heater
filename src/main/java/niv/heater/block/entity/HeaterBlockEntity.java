@@ -23,7 +23,6 @@ import niv.heater.Heater;
 import niv.heater.block.HeaterBlock;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.HeatSink;
-import niv.heater.util.HeatSource;
 import niv.heater.util.Propagator;
 
 public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatSink {
@@ -200,7 +199,7 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatS
         }
 
         if (heater.isBurning() && level.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
-            heater.burnTime = HeatSource.reduceHeat(block.getWeatherState(), heater.burnTime);
+            heater.burnTime = block.reducedHeat(heater.burnTime);
         }
 
         consumeFuel(heater);

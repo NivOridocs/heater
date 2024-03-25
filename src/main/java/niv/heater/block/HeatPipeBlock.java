@@ -147,7 +147,7 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
 
     private boolean canConnect(LevelAccessor level, BlockPos pos) {
         var block = level.getBlockState(pos).getBlock();
-        return block instanceof HeatSource || HeatSink.isHeatSink(level, pos, block);
+        return block instanceof HeatSource || HeatSink.is(level, level.getBlockEntity(pos));
     }
 
     public static boolean isConnected(BlockState state, Direction direction) {

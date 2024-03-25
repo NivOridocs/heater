@@ -38,7 +38,7 @@ public interface HeatSource {
         if (target instanceof HeaterBlock) {
             return Optional.empty();
         } else if (target instanceof BaseEntityBlock) {
-            return Optional.of(level.getBlockEntity(targetPos)).flatMap(entity -> HeatSink.getHeatSink(level, entity));
+            return HeatSink.of(level, level.getBlockEntity(targetPos));
         } else {
             return Optional.empty();
         }

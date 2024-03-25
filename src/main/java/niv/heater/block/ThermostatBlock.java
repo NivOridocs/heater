@@ -111,7 +111,7 @@ public class ThermostatBlock extends DirectionalBlock implements HeatSource {
     public Optional<HeatSink> getNeighborAsSink(LevelAccessor level, BlockPos pos, Direction direction) {
         var targetPos = pos.relative(direction);
         if (level.getBlockState(targetPos).getBlock() instanceof HeaterBlock) {
-            return HeatSink.getHeatSink(level, level.getBlockEntity(targetPos));
+            return HeatSink.of(level, level.getBlockEntity(targetPos));
         } else {
             return HeatSource.super.getNeighborAsSink(level, pos, direction);
         }
