@@ -1,6 +1,7 @@
 package niv.heater.util;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -8,6 +9,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.BlockState;
+import niv.heater.adapter.HeatSourceAdapter;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.ThermostatBlock;
 
@@ -27,7 +29,7 @@ public interface HeatSource {
         } else if (target instanceof HeatSource source) {
             return Optional.of(source);
         } else {
-            return Optional.empty();
+            return HeatSourceAdapter.of(level, target).map(Supplier::get);
         }
     }
 
@@ -61,9 +63,8 @@ public interface HeatSource {
                 heat -= 4;
                 break;
             default:
-                throw new IllegalArgumentException("Unknown oxidation level");
+                throw new IllegalArgumentException("Unknown weathering state");
         }
         return heat < 0 ? 0 : heat;
     }
-
 }
