@@ -19,7 +19,16 @@ public class Propagator implements
         Iterable<Propagator.Target>,
         Runnable {
 
-    public record Target(BlockPos pos, BlockState state, HeatSink entity) {
+    public record Target(BlockPos pos, BlockState state, HeatSink entity) implements Comparable<Target> {
+
+        @Override
+        public int compareTo(Target that) {
+            int result = this.entity().compareTo(that.entity());
+            if (result == 0) {
+                result = this.pos().compareTo(that.pos());
+            }
+            return result;
+        }
     }
 
     private record Source(BlockPos pos, BlockState state, HeatSource block, int heat) {
@@ -42,7 +51,7 @@ public class Propagator implements
         this.startingPos = startingPos;
         this.maxHeat = maxHeat;
         this.sources = new LinkedList<>();
-        this.targets = new TreeSet<>(this::compare);
+        this.targets = new TreeSet<>();
         this.visited = new HashSet<>();
     }
 
@@ -94,13 +103,4 @@ public class Propagator implements
             }
         }
     }
-
-    private int compare(Target a, Target b) {
-        int result = HeatSink.compare(a.entity(), b.entity());
-        if (result == 0) {
-            result = a.pos().compareTo(b.pos());
-        }
-        return result;
-    }
-
 }
