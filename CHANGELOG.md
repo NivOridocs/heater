@@ -6,7 +6,7 @@
 
 ### Added
 
-+ Add `heater:adapters/heat_sink` dynamic registry for better compatibily with third-party mods.
++ Add `heater:adapters/heat_sink` dynamic registry for better compatibility with third-party mods.
 
 ## [3.0] - 2024-03-17
 
