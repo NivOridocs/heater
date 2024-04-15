@@ -60,6 +60,4 @@ The Thermostat is entity-free, too.
 
 ## Planned Features
 
-In the next major version (i.e. 3.x), other than upgrading the target Minecraft version to 1.20.3+, I will try to implement a configuration file to customize some numbers that I thus far arbitrarily set and to extend the compatibility options with other mods.
-
 I plan to add dyeable Heat Pipes (and maybe Thermostats, too) with some color-matching-heat-propagation logic. However, considering that each new block has four oxidization stages and as many waxed variants, I am not so thrilled to implement SIXTEEN new blocks with all their SIXTY-FOUR variants. Double that if I decide to dye the Thermostat, too. So, I don't promise anything.
