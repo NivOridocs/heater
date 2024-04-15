@@ -31,14 +31,14 @@ public interface HeatSource {
         }
     }
 
-    default Optional<HeatSink> getNeighborAsSink(LevelAccessor world, BlockPos pos, Direction direction) {
+    default Optional<HeatSink> getNeighborAsSink(LevelAccessor level, BlockPos pos, Direction direction) {
         var targetPos = pos.relative(direction);
-        var targetState = world.getBlockState(targetPos);
+        var targetState = level.getBlockState(targetPos);
         var target = targetState.getBlock();
         if (target instanceof HeaterBlock) {
             return Optional.empty();
         } else if (target instanceof BaseEntityBlock) {
-            return Optional.of(world.getBlockEntity(targetPos)).flatMap(HeatSink::getHeatSink);
+            return HeatSink.of(level, level.getBlockEntity(targetPos));
         } else {
             return Optional.empty();
         }

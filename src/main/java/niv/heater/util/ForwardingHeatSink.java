@@ -2,8 +2,6 @@ package niv.heater.util;
 
 import java.lang.reflect.Field;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -55,32 +53,4 @@ public class ForwardingHeatSink implements HeatSink {
             throw new IllegalStateException(ex);
         }
     }
-
-    public static final boolean isForwardable(BlockEntity entity) {
-        return get(entity.getClass()).isPresent();
-    }
-
-    public static final Optional<HeatSink> getHeatSink(BlockEntity entity) {
-        return get(entity.getClass()).map(constructor -> constructor.apply(entity));
-    }
-
-    private static final Optional<Function<? super BlockEntity, HeatSink>> get(Class<?> clazz) {
-        while (clazz != null
-                && BlockEntity.class.isAssignableFrom(clazz)
-                && !clazz.getName().startsWith("net.minecraft")) {
-            try {
-                var burnTime = clazz.getDeclaredField("burnTime");
-                var fuelTime = clazz.getDeclaredField("fuelTime");
-
-                burnTime.setAccessible(true);
-                fuelTime.setAccessible(true);
-
-                return Optional.of(entry -> new ForwardingHeatSink(entry, burnTime, fuelTime));
-            } catch (NoSuchFieldException ex) {
-                clazz = clazz.getSuperclass();
-            }
-        }
-        return Optional.empty();
-    }
-
 }

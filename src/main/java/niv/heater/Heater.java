@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
@@ -23,6 +24,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityT
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -31,6 +33,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import niv.heater.adapter.HeatSinkAdapter;
 import niv.heater.block.HeatPipeBlock;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.ThermostatBlock;
@@ -40,11 +43,14 @@ import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
 import niv.heater.screen.HeaterMenu;
 
+@SuppressWarnings("java:S2440")
 public class Heater implements ModInitializer {
 
     public static final String MOD_ID;
 
     public static final Logger LOGGER = LoggerFactory.getLogger("Heater");
+
+    public static final ResourceKey<Registry<HeatSinkAdapter>> HEAT_SINK_ADAPTER;
 
     public static final Block HEATER_BLOCK;
     public static final Block EXPOSED_HEATER_BLOCK;
@@ -125,6 +131,9 @@ public class Heater implements ModInitializer {
         final var waxed = "waxed_";
 
         var id = new ResourceLocation(MOD_ID, "");
+
+        HEAT_SINK_ADAPTER = ResourceKey.createRegistryKey(id.withPath("adapters/heat_sink"));
+        DynamicRegistries.register(HEAT_SINK_ADAPTER, HeatSinkAdapter.CODEC);
 
         id = id.withPath(heater);
         HEATER_BLOCK = Registry.register(BLOCK, id,
