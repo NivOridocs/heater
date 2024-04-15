@@ -6,7 +6,6 @@ import static org.apache.commons.lang3.StringUtils.getIfBlank;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -73,8 +72,7 @@ public class HeatSinkAdapter implements Predicate<BlockEntityType<?>>, Function<
 
     public static Optional<HeatSinkAdapter> of(LevelAccessor levelAccessor, BlockEntityType<?> type) {
         if (levelAccessor instanceof Level level) {
-            return level.registryAccess().registry(Heater.HEAT_SINK_ADAPTER)
-                    .map(Registry::stream).orElseGet(Stream::empty)
+            return level.registryAccess().registry(Heater.HEAT_SINK_ADAPTER).stream().flatMap(Registry::stream)
                     .filter(adapter -> adapter.test(type)).findFirst();
         } else {
             return Optional.empty();
