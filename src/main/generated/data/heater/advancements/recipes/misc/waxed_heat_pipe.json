@@ -43,6 +43,5 @@
     "recipes": [
       "heater:waxed_heat_pipe"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

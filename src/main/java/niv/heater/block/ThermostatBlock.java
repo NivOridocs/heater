@@ -1,14 +1,27 @@
 package niv.heater.block;
 
-import java.util.Optional;
+import static net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings.copyOf;
+import static net.minecraft.world.level.block.Blocks.COPPER_BLOCK;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPOSED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.OXIDIZED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED;
 
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -20,8 +33,6 @@ import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import niv.heater.util.HeatSink;
 import niv.heater.util.HeatSource;
 
@@ -33,7 +44,31 @@ public class ThermostatBlock extends DirectionalBlock implements HeatSource {
             Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
             .apply(instance, ThermostatBlock::new));
 
-    public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
+    public static final ThermostatBlock UNAFFECTED_BLOCK = new ThermostatBlock(UNAFFECTED, copyOf(COPPER_BLOCK));
+    public static final ThermostatBlock EXPOSED_BLOCK = new ThermostatBlock(EXPOSED, copyOf(COPPER_BLOCK));
+    public static final ThermostatBlock WEATHERED_BLOCK = new ThermostatBlock(WEATHERED, copyOf(COPPER_BLOCK));
+    public static final ThermostatBlock OXIDIZED_BLOCK = new ThermostatBlock(OXIDIZED, copyOf(COPPER_BLOCK));
+
+    public static final BlockItem UNAFFECTED_ITEM = new BlockItem(UNAFFECTED_BLOCK, new FabricItemSettings());
+    public static final BlockItem EXPOSED_ITEM = new BlockItem(EXPOSED_BLOCK, new FabricItemSettings());
+    public static final BlockItem WEATHERED_ITEM = new BlockItem(WEATHERED_BLOCK, new FabricItemSettings());
+    public static final BlockItem OXIDIZED_ITEM = new BlockItem(OXIDIZED_BLOCK, new FabricItemSettings());
+
+    public static final Supplier<ImmutableMap<WeatherState, ThermostatBlock>> BLOCKS = Suppliers
+            .memoize(() -> ImmutableMap.<WeatherState, ThermostatBlock>builder()
+                    .put(UNAFFECTED, UNAFFECTED_BLOCK)
+                    .put(EXPOSED, EXPOSED_BLOCK)
+                    .put(WEATHERED, WEATHERED_BLOCK)
+                    .put(OXIDIZED, OXIDIZED_BLOCK)
+                    .build());
+
+    public static final Supplier<ImmutableMap<WeatherState, BlockItem>> ITEMS = Suppliers
+            .memoize(() -> ImmutableMap.<WeatherState, BlockItem>builder()
+                    .put(UNAFFECTED, UNAFFECTED_ITEM)
+                    .put(EXPOSED, EXPOSED_ITEM)
+                    .put(WEATHERED, WEATHERED_ITEM)
+                    .put(OXIDIZED, OXIDIZED_ITEM)
+                    .build());
 
     private static final Direction[] EMPTY_DIRECTIONS = new Direction[0];
 

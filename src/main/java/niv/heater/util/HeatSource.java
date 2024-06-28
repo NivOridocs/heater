@@ -8,6 +8,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.ThermostatBlock;
 
@@ -22,7 +23,8 @@ public interface HeatSource {
         var target = targetState.getBlock();
         if (target instanceof HeaterBlock) {
             return Optional.empty();
-        } else if (target instanceof ThermostatBlock thermostat && targetState.getValue(ThermostatBlock.POWERED).booleanValue()) {
+        } else if (target instanceof ThermostatBlock thermostat
+                && targetState.getValue(BlockStateProperties.POWERED).booleanValue()) {
             return Optional.of(thermostat);
         } else if (target instanceof HeatSource source) {
             return Optional.of(source);

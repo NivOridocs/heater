@@ -43,6 +43,5 @@
     "recipes": [
       "heater:waxed_oxidized_heater"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

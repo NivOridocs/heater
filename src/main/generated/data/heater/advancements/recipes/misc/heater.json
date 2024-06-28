@@ -43,6 +43,5 @@
     "recipes": [
       "heater:heater"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }
