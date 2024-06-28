@@ -6,13 +6,7 @@ import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPO
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.OXIDIZED;
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.DOWN;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.EAST;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.NORTH;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.SOUTH;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.UP;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WEST;
 
 import java.util.ArrayList;
 import java.util.function.Supplier;
@@ -30,6 +24,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -39,13 +34,10 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import niv.heater.util.HeatSink;
 import niv.heater.util.HeatSource;
 
-public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterloggedBlock {
+public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterloggedBlock {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<HeatPipeBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
@@ -79,28 +71,10 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
                     .put(OXIDIZED, OXIDIZED_ITEM)
                     .build());
 
-    private static final BooleanProperty[] FACING_PROPERTIES = new BooleanProperty[] {
-            DOWN, UP, NORTH, SOUTH, WEST, EAST };
-
-    private static final VoxelShape CORE;
-    private static final VoxelShape[] PIPE_ARM;
-
-    static {
-        CORE = Block.box(5, 5, 5, 11, 11, 11);
-        PIPE_ARM = new VoxelShape[] {
-                Block.box(5, 0, 5, 11, 5, 11),
-                Block.box(5, 11, 5, 11, 16, 11),
-                Block.box(5, 5, 0, 11, 11, 5),
-                Block.box(5, 5, 11, 11, 11, 16),
-                Block.box(0, 5, 5, 5, 11, 11),
-                Block.box(11, 5, 5, 16, 11, 11),
-        };
-    }
-
     private final WeatherState weatherState;
 
     public HeatPipeBlock(WeatherState weatherState, Properties settings) {
-        super(settings);
+        super(.1875F, settings);
         this.weatherState = weatherState;
         this.registerDefaultState(stateDefinition.any()
                 .setValue(DOWN, false)
@@ -124,17 +98,6 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
     @Override
     public boolean propagatesSkylightDown(BlockState state, BlockGetter getter, BlockPos pos) {
         return !state.getValue(WATERLOGGED).booleanValue();
-    }
-
-    @Override
-    public VoxelShape getShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext context) {
-        var shapes = new ArrayList<VoxelShape>(6);
-        for (var direction : Direction.values()) {
-            if (isConnected(state, direction)) {
-                shapes.add(PIPE_ARM[direction.get3DDataValue()]);
-            }
-        }
-        return Shapes.or(CORE, shapes.toArray(VoxelShape[]::new));
     }
 
     @Override
@@ -191,7 +154,7 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
     }
 
     public static BooleanProperty getProperty(Direction direction) {
-        return FACING_PROPERTIES[direction.get3DDataValue()];
+        return PROPERTY_BY_DIRECTION.get(direction);
     }
 
     @Override
