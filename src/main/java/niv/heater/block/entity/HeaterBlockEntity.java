@@ -2,6 +2,7 @@ package niv.heater.block.entity;
 
 import static net.minecraft.world.level.block.AbstractFurnaceBlock.LIT;
 
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -18,14 +19,29 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import niv.heater.Heater;
 import niv.heater.block.HeaterBlock;
+import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.HeatSink;
 import niv.heater.util.Propagator;
 
 public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatSink {
+
+    public static final String CONTAINER_NAME = "container.heater";
+
+    public static final BlockEntityType<HeaterBlockEntity> TYPE = FabricBlockEntityTypeBuilder
+            .create(HeaterBlockEntity::new,
+                    HeaterBlock.UNAFFECTED_BLOCK,
+                    HeaterBlock.EXPOSED_BLOCK,
+                    HeaterBlock.WEATHERED_BLOCK,
+                    HeaterBlock.OXIDIZED_BLOCK,
+                    WeatheringHeaterBlock.UNAFFECTED_BLOCK,
+                    WeatheringHeaterBlock.EXPOSED_BLOCK,
+                    WeatheringHeaterBlock.WEATHERED_BLOCK,
+                    WeatheringHeaterBlock.OXIDIZED_BLOCK)
+            .build();
 
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
@@ -74,7 +90,7 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatS
     };
 
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
-        super(Heater.HEATER_BLOCK_ENTITY, pos, state);
+        super(TYPE, pos, state);
         burnTime = 0;
         items = NonNullList.withSize(1, ItemStack.EMPTY);
     }
@@ -142,7 +158,7 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatS
 
     @Override
     protected Component getDefaultName() {
-        return Component.translatable("container.heater");
+        return Component.translatable(CONTAINER_NAME);
     }
 
     @Override

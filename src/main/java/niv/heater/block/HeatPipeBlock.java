@@ -1,12 +1,31 @@
 package niv.heater.block;
 
-import java.util.ArrayList;
+import static net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings.copyOf;
+import static net.minecraft.world.level.block.Blocks.COPPER_BLOCK;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPOSED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.OXIDIZED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.DOWN;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.EAST;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.NORTH;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.SOUTH;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.UP;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WEST;
 
+import java.util.ArrayList;
+import java.util.function.Supplier;
+
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
@@ -16,7 +35,6 @@ import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -35,13 +53,31 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
             Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
             .apply(instance, HeatPipeBlock::new));
 
-    public static final BooleanProperty DOWN = BlockStateProperties.DOWN;
-    public static final BooleanProperty UP = BlockStateProperties.UP;
-    public static final BooleanProperty NORTH = BlockStateProperties.NORTH;
-    public static final BooleanProperty SOUTH = BlockStateProperties.SOUTH;
-    public static final BooleanProperty WEST = BlockStateProperties.WEST;
-    public static final BooleanProperty EAST = BlockStateProperties.EAST;
-    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    public static final HeatPipeBlock UNAFFECTED_BLOCK = new HeatPipeBlock(UNAFFECTED, copyOf(COPPER_BLOCK));
+    public static final HeatPipeBlock EXPOSED_BLOCK = new HeatPipeBlock(EXPOSED, copyOf(COPPER_BLOCK));
+    public static final HeatPipeBlock WEATHERED_BLOCK = new HeatPipeBlock(WEATHERED, copyOf(COPPER_BLOCK));
+    public static final HeatPipeBlock OXIDIZED_BLOCK = new HeatPipeBlock(OXIDIZED, copyOf(COPPER_BLOCK));
+
+    public static final BlockItem UNAFFECTED_ITEM = new BlockItem(UNAFFECTED_BLOCK, new FabricItemSettings());
+    public static final BlockItem EXPOSED_ITEM = new BlockItem(EXPOSED_BLOCK, new FabricItemSettings());
+    public static final BlockItem WEATHERED_ITEM = new BlockItem(WEATHERED_BLOCK, new FabricItemSettings());
+    public static final BlockItem OXIDIZED_ITEM = new BlockItem(OXIDIZED_BLOCK, new FabricItemSettings());
+
+    public static final Supplier<ImmutableMap<WeatherState, HeatPipeBlock>> BLOCKS = Suppliers
+            .memoize(() -> ImmutableMap.<WeatherState, HeatPipeBlock>builder()
+                    .put(UNAFFECTED, UNAFFECTED_BLOCK)
+                    .put(EXPOSED, EXPOSED_BLOCK)
+                    .put(WEATHERED, WEATHERED_BLOCK)
+                    .put(OXIDIZED, OXIDIZED_BLOCK)
+                    .build());
+
+    public static final Supplier<ImmutableMap<WeatherState, BlockItem>> ITEMS = Suppliers
+            .memoize(() -> ImmutableMap.<WeatherState, BlockItem>builder()
+                    .put(UNAFFECTED, UNAFFECTED_ITEM)
+                    .put(EXPOSED, EXPOSED_ITEM)
+                    .put(WEATHERED, WEATHERED_ITEM)
+                    .put(OXIDIZED, OXIDIZED_ITEM)
+                    .build());
 
     private static final BooleanProperty[] FACING_PROPERTIES = new BooleanProperty[] {
             DOWN, UP, NORTH, SOUTH, WEST, EAST };

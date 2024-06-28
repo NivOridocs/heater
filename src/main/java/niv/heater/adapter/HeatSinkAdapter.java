@@ -12,6 +12,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -27,6 +29,9 @@ public class HeatSinkAdapter implements Predicate<BlockEntityType<?>>, Function<
             Codec.STRING.fieldOf("lit_time").forGetter(r -> r.litTime),
             Codec.STRING.fieldOf("lit_duration").forGetter(r -> r.litDuration))
             .apply(instance, HeatSinkAdapter::new));
+
+    public static final ResourceKey<Registry<HeatSinkAdapter>> REGISTRY = ResourceKey
+            .createRegistryKey(new ResourceLocation(Heater.MOD_ID, "adapters/heat_sink"));
 
     private final BlockEntityType<?> type;
 
@@ -72,7 +77,7 @@ public class HeatSinkAdapter implements Predicate<BlockEntityType<?>>, Function<
 
     public static Optional<HeatSinkAdapter> of(LevelAccessor levelAccessor, BlockEntityType<?> type) {
         if (levelAccessor instanceof Level level) {
-            return level.registryAccess().registry(Heater.HEAT_SINK_ADAPTER).stream().flatMap(Registry::stream)
+            return level.registryAccess().registry(REGISTRY).stream().flatMap(Registry::stream)
                     .filter(adapter -> adapter.test(type)).findFirst();
         } else {
             return Optional.empty();
