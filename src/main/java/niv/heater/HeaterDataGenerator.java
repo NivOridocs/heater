@@ -55,6 +55,7 @@ import niv.heater.block.WeatheringHeatPipeBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
+import niv.heater.registry.HeaterTags;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.WeatherStateExtra;
 
@@ -358,14 +359,23 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         @Override
         protected void addTags(HolderLookup.Provider arg) {
-            getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
-                    .setReplace(false)
+            getOrCreateTagBuilder(HeaterTags.HEATERS)
                     .add(WeatheringHeaterBlock.BLOCKS.get().values().toArray(WeatheringHeaterBlock[]::new))
-                    .add(HeaterBlock.BLOCKS.get().values().toArray(HeaterBlock[]::new))
+                    .add(HeaterBlock.BLOCKS.get().values().toArray(HeaterBlock[]::new));
+
+            getOrCreateTagBuilder(HeaterTags.HEAT_PIPES)
                     .add(WeatheringHeatPipeBlock.BLOCKS.get().values().toArray(WeatheringHeatPipeBlock[]::new))
-                    .add(HeatPipeBlock.BLOCKS.get().values().toArray(HeatPipeBlock[]::new))
+                    .add(HeatPipeBlock.BLOCKS.get().values().toArray(HeatPipeBlock[]::new));
+
+            getOrCreateTagBuilder(HeaterTags.THERMOSTATS)
                     .add(WeatheringThermostatBlock.BLOCKS.get().values().toArray(WeatheringThermostatBlock[]::new))
                     .add(ThermostatBlock.BLOCKS.get().values().toArray(ThermostatBlock[]::new));
+
+            getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
+                    .setReplace(false)
+                    .addTag(HeaterTags.HEATERS)
+                    .addTag(HeaterTags.HEAT_PIPES)
+                    .addTag(HeaterTags.THERMOSTATS);
         }
     }
 }
