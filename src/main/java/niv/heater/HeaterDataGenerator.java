@@ -52,7 +52,6 @@ import niv.heater.block.WeatheringHeatPipeBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
-import niv.heater.registry.HeaterTags;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.WeatherStateExtra;
 
@@ -356,37 +355,37 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         @Override
         protected void addTags(HolderLookup.Provider arg) {
-            getOrCreateTagBuilder(HeaterTags.HEATERS)
+            getOrCreateTagBuilder(Tags.HEATERS)
                     .setReplace(false)
                     .add(WeatheringHeaterBlock.BLOCKS.get().values().toArray(WeatheringHeaterBlock[]::new))
                     .add(HeaterBlock.BLOCKS.get().values().toArray(HeaterBlock[]::new));
 
-            getOrCreateTagBuilder(HeaterTags.PIPES)
+            getOrCreateTagBuilder(Tags.PIPES)
                     .setReplace(false)
                     .add(WeatheringHeatPipeBlock.BLOCKS.get().values().toArray(WeatheringHeatPipeBlock[]::new))
                     .add(HeatPipeBlock.BLOCKS.get().values().toArray(HeatPipeBlock[]::new));
 
-            getOrCreateTagBuilder(HeaterTags.THERMOSTATS)
+            getOrCreateTagBuilder(Tags.THERMOSTATS)
                     .setReplace(false)
                     .add(WeatheringThermostatBlock.BLOCKS.get().values().toArray(WeatheringThermostatBlock[]::new))
                     .add(ThermostatBlock.BLOCKS.get().values().toArray(ThermostatBlock[]::new));
 
             getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
                     .setReplace(false)
-                    .addTag(HeaterTags.HEATERS)
-                    .addTag(HeaterTags.PIPES)
-                    .addTag(HeaterTags.THERMOSTATS);
+                    .addTag(Tags.HEATERS)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS);
 
-            getOrCreateTagBuilder(HeaterTags.FURNACES)
+            getOrCreateTagBuilder(Tags.FURNACES)
                     .setReplace(false)
                     .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
 
-            getOrCreateTagBuilder(HeaterTags.Connectable.PIPES)
+            getOrCreateTagBuilder(Tags.Connectable.PIPES)
                     .setReplace(false)
-                    .addTag(HeaterTags.HEATERS)
-                    .addTag(HeaterTags.PIPES)
-                    .addTag(HeaterTags.THERMOSTATS)
-                    .addTag(HeaterTags.FURNACES);
+                    .addTag(Tags.HEATERS)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS)
+                    .addTag(Tags.FURNACES);
         }
     }
 }

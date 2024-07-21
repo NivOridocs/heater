@@ -34,7 +34,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import niv.heater.registry.HeaterTags;
+import niv.heater.Tags;
 import niv.heater.util.HeatSource;
 
 public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterloggedBlock {
@@ -143,7 +143,7 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
     }
 
     private boolean canConnect(LevelAccessor level, BlockPos pos) {
-        return level.getBlockState(pos).is(HeaterTags.Connectable.PIPES);
+        return level.getBlockState(pos).is(Tags.Connectable.PIPES);
     }
 
     public static BooleanProperty getProperty(Direction direction) {

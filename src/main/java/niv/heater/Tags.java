@@ -1,12 +1,11 @@
-package niv.heater.registry;
+package niv.heater;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
-import niv.heater.Heater;
 
-public class HeaterTags {
+public class Tags {
 
     public static final TagKey<Block> HEATERS = create("heaters");
     public static final TagKey<Block> PIPES = create("pipes");
@@ -23,7 +22,7 @@ public class HeaterTags {
 
     }
 
-    private HeaterTags() {
+    private Tags() {
     }
 
     private static final TagKey<Block> create(String name) {
