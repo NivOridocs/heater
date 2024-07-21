@@ -34,7 +34,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import niv.heater.util.HeatSink;
+import niv.heater.registry.HeaterTags;
 import niv.heater.util.HeatSource;
 
 public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterloggedBlock {
@@ -117,16 +117,14 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         var level = context.getLevel();
         var pos = context.getClickedPos();
-        var state = super.getStateForPlacement(context);
-        if (level.getFluidState(pos).is(Fluids.WATER)) {
-            state = state.setValue(WATERLOGGED, true);
-        }
-        for (var direction : Direction.values()) {
-            if (canConnect(level, pos.relative(direction))) {
-                state = state.setValue(getProperty(direction), true);
-            }
-        }
-        return state;
+        return this.defaultBlockState()
+                .trySetValue(DOWN, canConnect(level, pos.below()))
+                .trySetValue(UP, canConnect(level, pos.above()))
+                .trySetValue(NORTH, canConnect(level, pos.north()))
+                .trySetValue(SOUTH, canConnect(level, pos.south()))
+                .trySetValue(WEST, canConnect(level, pos.west()))
+                .trySetValue(EAST, canConnect(level, pos.east()))
+                .trySetValue(WATERLOGGED, level.getFluidState(pos).is(Fluids.WATER));
     }
 
     @Override
@@ -136,7 +134,7 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
         if (state.getValue(WATERLOGGED).booleanValue()) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
-        return state.setValue(getProperty(direction), canConnect(level, neighborPos));
+        return state.trySetValue(getProperty(direction), canConnect(level, neighborPos));
     }
 
     @Override
@@ -145,12 +143,7 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
     }
 
     private boolean canConnect(LevelAccessor level, BlockPos pos) {
-        var block = level.getBlockState(pos).getBlock();
-        return block instanceof HeatSource || HeatSink.is(level, level.getBlockEntity(pos));
-    }
-
-    public static boolean isConnected(BlockState state, Direction direction) {
-        return state.getValue(getProperty(direction)).booleanValue();
+        return level.getBlockState(pos).is(HeaterTags.Connectable.PIPES);
     }
 
     public static BooleanProperty getProperty(Direction direction) {
@@ -161,7 +154,7 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
     public Direction[] getConnected(BlockState state) {
         var directions = new ArrayList<>(6);
         for (var direction : Direction.values()) {
-            if (isConnected(state, direction)) {
+            if (state.getValue(getProperty(direction)).booleanValue()) {
                 directions.add(direction);
             }
         }

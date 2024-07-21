@@ -8,16 +8,26 @@ import niv.heater.Heater;
 
 public class HeaterTags {
 
-    public static final TagKey<Block> HEATERS = TagKey.create(Registries.BLOCK,
-            new ResourceLocation(Heater.MOD_ID, "heaters"));
+    public static final TagKey<Block> HEATERS = create("heaters");
+    public static final TagKey<Block> PIPES = create("pipes");
+    public static final TagKey<Block> THERMOSTATS = create("thermostats");
 
-    public static final TagKey<Block> HEAT_PIPES = TagKey.create(Registries.BLOCK,
-            new ResourceLocation(Heater.MOD_ID, "heat_pipes"));
+    public static final TagKey<Block> FURNACES = create("furnaces");
 
-    public static final TagKey<Block> THERMOSTATS = TagKey.create(Registries.BLOCK,
-            new ResourceLocation(Heater.MOD_ID, "thermostats"));
+    public static final class Connectable {
+
+        public static final TagKey<Block> PIPES = create("connectable/pipes");
+
+        private Connectable() {
+        }
+
+    }
 
     private HeaterTags() {
+    }
+
+    private static final TagKey<Block> create(String name) {
+        return TagKey.create(Registries.BLOCK, new ResourceLocation(Heater.MOD_ID, name));
     }
 
 }
