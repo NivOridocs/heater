@@ -1,5 +1,8 @@
 package niv.heater.util;
 
+import static niv.heater.util.PropagatorUtils.getConnectedNeighbors;
+import static niv.heater.util.PropagatorUtils.reduceHeat;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -10,20 +13,24 @@ import java.util.function.Supplier;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.BlockGetter;
+import niv.heater.api.Connector;
+import niv.heater.api.Furnace;
 import niv.heater.block.HeaterBlock;
+import niv.heater.util.PropagatorUtils.ConnectorResult;
+import niv.heater.util.PropagatorUtils.FurnaceResult;
+import niv.heater.util.PropagatorUtils.Result;
 
 public class Propagator implements
         Supplier<Set<Propagator.Target>>,
         Iterable<Propagator.Target>,
         Runnable {
 
-    public record Target(BlockPos pos, BlockState state, HeatSink entity) implements Comparable<Target> {
+    public record Target(BlockPos pos, Furnace entity) implements Comparable<Target> {
 
         @Override
         public int compareTo(Target that) {
-            int result = this.entity().compareTo(that.entity());
+            int result = Furnace.compare(this.entity(), that.entity());
             if (result == 0) {
                 result = this.pos().compareTo(that.pos());
             }
@@ -31,10 +38,10 @@ public class Propagator implements
         }
     }
 
-    private record Source(BlockPos pos, BlockState state, HeatSource block, int heat) {
+    private record Source(BlockPos pos, Connector block, int heat) {
     }
 
-    private final LevelAccessor level;
+    private final BlockGetter getter;
 
     private final BlockPos startingPos;
 
@@ -46,8 +53,8 @@ public class Propagator implements
 
     private final Set<BlockPos> visited;
 
-    public Propagator(LevelAccessor level, BlockPos startingPos, int maxHeat) {
-        this.level = level;
+    public Propagator(BlockGetter getter, BlockPos startingPos, int maxHeat) {
+        this.getter = getter;
         this.startingPos = startingPos;
         this.maxHeat = maxHeat;
         this.sources = new LinkedList<>();
@@ -73,33 +80,28 @@ public class Propagator implements
 
         visited.add(startingPos);
 
-        var state = level.getBlockState(startingPos);
+        var state = getter.getBlockState(startingPos);
         if (state.getBlock() instanceof HeaterBlock heater) {
-            sources.add(new Source(startingPos, state, heater, maxHeat));
+            sources.add(new Source(startingPos, heater, maxHeat));
         }
 
         while (!sources.isEmpty()) {
             var src = sources.poll();
-            for (var dir : src.block().getConnected(src.state())) {
-                visit(src, dir);
-            }
+            getConnectedNeighbors(src.block(), getter, src.pos())
+                    .forEach((dir, result) -> visit(src, dir, result));
         }
     }
 
-    private void visit(Source src, Direction dir) {
+    private void visit(Source src, Direction dir, Result result) {
         var pos = src.pos().relative(dir);
-        var heat = src.block().reducedHeat(src.heat());
+        var heat = reduceHeat(src.block(), src.heat());
         if (!visited.contains(pos) && heat > 0) {
-            var tryAsSource = src.block().getNeighborAsSource(level, src.pos(), dir);
-            if (tryAsSource.isPresent()) {
+            if (result instanceof ConnectorResult c) {
                 visited.add(pos);
-                sources.add(new Source(pos, level.getBlockState(pos), tryAsSource.get(), heat));
-                return;
-            }
-            var tryAsSink = src.block().getNeighborAsSink(level, src.pos(), dir);
-            if (tryAsSink.isPresent()) {
+                sources.add(new Source(pos, c.getConnector(), heat));
+            } else if (result instanceof FurnaceResult f) {
                 visited.add(pos);
-                targets.add(new Target(pos, level.getBlockState(pos), tryAsSink.get()));
+                targets.add(new Target(pos, f.getFurnace()));
             }
         }
     }

@@ -57,5 +57,4 @@ public class WeatherStateExtra {
     public static final Optional<WeatherState> getNext(WeatherState state) {
         return Optional.ofNullable(BI_MAP.getOrDefault(state, null));
     }
-
 }

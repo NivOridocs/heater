@@ -18,7 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
-import niv.heater.adapter.HeatSinkAdapter;
+import niv.heater.adapter.FurnaceAdapter;
 import niv.heater.block.HeatPipeBlock;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.ThermostatBlock;
@@ -59,7 +59,7 @@ public class Heater implements ModInitializer {
                 ThermostatBlock.BLOCKS.get()::get, ThermostatBlock.ITEMS.get()::get,
                 WeatheringThermostatBlock.BLOCKS.get()::get, WeatheringThermostatBlock.ITEMS.get()::get);
 
-        DynamicRegistries.register(HeatSinkAdapter.REGISTRY, HeatSinkAdapter.CODEC);
+        DynamicRegistries.register(FurnaceAdapter.REGISTRY, FurnaceAdapter.CODEC);
 
         var id = new ResourceLocation(MOD_ID, MOD_ID);
 

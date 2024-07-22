@@ -19,7 +19,16 @@ public class Tags {
 
         private Connectable() {
         }
+    }
 
+    public static final class Propagable {
+
+        public static final TagKey<Block> HEATERS = create("propagable/heaters");
+        public static final TagKey<Block> PIPES = create("propagable/pipes");
+        public static final TagKey<Block> THERMOSTATS = create("propagable/thermostats");
+
+        private Propagable() {
+        }
     }
 
     private Tags() {
@@ -28,5 +37,4 @@ public class Tags {
     private static final TagKey<Block> create(String name) {
         return TagKey.create(Registries.BLOCK, new ResourceLocation(Heater.MOD_ID, name));
     }
-
 }

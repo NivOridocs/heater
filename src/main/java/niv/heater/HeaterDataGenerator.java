@@ -355,6 +355,13 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         @Override
         protected void addTags(HolderLookup.Provider arg) {
+
+            getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
+                    .setReplace(false)
+                    .addTag(Tags.HEATERS)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS);
+
             getOrCreateTagBuilder(Tags.HEATERS)
                     .setReplace(false)
                     .add(WeatheringHeaterBlock.BLOCKS.get().values().toArray(WeatheringHeaterBlock[]::new))
@@ -370,17 +377,30 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .add(WeatheringThermostatBlock.BLOCKS.get().values().toArray(WeatheringThermostatBlock[]::new))
                     .add(ThermostatBlock.BLOCKS.get().values().toArray(ThermostatBlock[]::new));
 
-            getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
-                    .setReplace(false)
-                    .addTag(Tags.HEATERS)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS);
-
             getOrCreateTagBuilder(Tags.FURNACES)
                     .setReplace(false)
                     .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
 
             getOrCreateTagBuilder(Tags.Connectable.PIPES)
+                    .setReplace(false)
+                    .addTag(Tags.HEATERS)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS)
+                    .addTag(Tags.FURNACES);
+
+            getOrCreateTagBuilder(Tags.Propagable.HEATERS)
+                    .setReplace(false)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS)
+                    .addTag(Tags.FURNACES);
+
+            getOrCreateTagBuilder(Tags.Propagable.PIPES)
+                    .setReplace(false)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS)
+                    .addTag(Tags.FURNACES);
+
+            getOrCreateTagBuilder(Tags.Propagable.THERMOSTATS)
                     .setReplace(false)
                     .addTag(Tags.HEATERS)
                     .addTag(Tags.PIPES)

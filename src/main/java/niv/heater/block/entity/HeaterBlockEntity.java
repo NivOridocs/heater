@@ -21,13 +21,15 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import niv.heater.api.Furnace;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.screen.HeaterMenu;
-import niv.heater.util.HeatSink;
 import niv.heater.util.Propagator;
 
-public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatSink {
+import static niv.heater.util.PropagatorUtils.reduceHeat;
+
+public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furnace {
 
     public static final String CONTAINER_NAME = "container.heater";
 
@@ -215,7 +217,7 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatS
         }
 
         if (heater.isBurning() && level.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
-            heater.burnTime = block.reducedHeat(heater.burnTime);
+            heater.burnTime = reduceHeat(block, heater.burnTime);
         }
 
         consumeFuel(heater);
@@ -263,7 +265,7 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatS
 
                 var isBurning = target.entity().getBurnTime() > 0;
                 if (wasBurning != isBurning) {
-                    var state = target.state().setValue(LIT, isBurning);
+                    var state = level.getBlockState(target.pos()).setValue(LIT, isBurning);
                     level.setBlockAndUpdate(target.pos(), state);
                     setChanged(level, target.pos(), state);
                 }
@@ -292,5 +294,4 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements HeatS
             }
         }
     }
-
 }
