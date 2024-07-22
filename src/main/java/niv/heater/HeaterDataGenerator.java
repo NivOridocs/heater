@@ -43,6 +43,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.heater.block.HeatPipeBlock;
@@ -156,7 +157,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .with(Variant.variant().with(VariantProperties.MODEL, core));
             for (var direction : Direction.values()) {
                 supplier.with(
-                        Condition.condition().term(HeatPipeBlock.getProperty(direction), true),
+                        Condition.condition().term(PipeBlock.PROPERTY_BY_DIRECTION.get(direction), true),
                         Variant.variant()
                                 .with(VariantProperties.MODEL, arm)
                                 .with(

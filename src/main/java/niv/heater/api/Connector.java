@@ -14,6 +14,10 @@ public interface Connector {
     }
 
     default boolean canPropagate(BlockGetter getter, BlockPos pos) {
+        return canPropagate(getter.getBlockState(pos));
+    }
+
+    default boolean canPropagate(BlockState state) {
         return true;
     }
 }

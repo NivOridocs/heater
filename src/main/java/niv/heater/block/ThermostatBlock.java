@@ -24,7 +24,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DirectionalBlock;
@@ -106,17 +105,17 @@ public class ThermostatBlock extends DirectionalBlock implements Connector, Weat
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block sourceBlock, BlockPos sourcePos,
-            boolean notify) {
-        if (world.isClientSide) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos,
+            Block sourceBlock, BlockPos sourcePos, boolean notify) {
+        if (level.isClientSide) {
             return;
         }
-        boolean powered = state.getValue(POWERED);
-        if (powered != world.hasNeighborSignal(pos)) {
+        var powered = state.getOptionalValue(POWERED).orElse(Boolean.FALSE).booleanValue();
+        if (powered != level.hasNeighborSignal(pos)) {
             if (powered) {
-                world.scheduleTick(pos, this, 4);
+                level.scheduleTick(pos, this, 4);
             } else {
-                world.setBlock(pos, state.cycle(POWERED), 2);
+                level.setBlock(pos, state.cycle(POWERED), 2);
             }
         }
     }
@@ -138,8 +137,8 @@ public class ThermostatBlock extends DirectionalBlock implements Connector, Weat
     }
 
     @Override
-    public boolean canPropagate(BlockGetter getter, BlockPos pos) {
-        return getter.getBlockState(pos).is(Tags.Propagable.THERMOSTATS);
+    public boolean canPropagate(BlockState state) {
+        return state.is(Tags.Propagable.THERMOSTATS);
     }
 
     @Override

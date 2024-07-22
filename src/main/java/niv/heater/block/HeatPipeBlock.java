@@ -31,7 +31,6 @@ import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
@@ -131,7 +130,7 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
         if (state.getValue(WATERLOGGED).booleanValue()) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
-        return state.trySetValue(getProperty(direction), canConnect(level, neighborPos));
+        return state.trySetValue(PROPERTY_BY_DIRECTION.get(direction), canConnect(level, neighborPos));
     }
 
     @Override
@@ -139,15 +138,11 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
         builder.add(DOWN, UP, NORTH, SOUTH, WEST, EAST, WATERLOGGED);
     }
 
-    public static BooleanProperty getProperty(Direction direction) {
-        return PROPERTY_BY_DIRECTION.get(direction);
-    }
-
     @Override
     public Set<Direction> getConnected(BlockState state) {
         var directions = new HashSet<Direction>(6);
         for (var direction : Direction.values()) {
-            if (state.getValue(getProperty(direction)).booleanValue()) {
+            if (state.getValue(PROPERTY_BY_DIRECTION.get(direction)).booleanValue()) {
                 directions.add(direction);
             }
         }
@@ -155,16 +150,16 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     }
 
     @Override
-    public boolean canPropagate(BlockGetter getter, BlockPos pos) {
-        return getter.getBlockState(pos).is(Tags.Propagable.PIPES);
-    }
-
-    private boolean canConnect(BlockGetter getter, BlockPos pos) {
-        return getter.getBlockState(pos).is(Tags.Connectable.PIPES);
+    public boolean canPropagate(BlockState state) {
+        return state.is(Tags.Propagable.PIPES);
     }
 
     @Override
     public WeatherState getAge() {
         return weatherState;
+    }
+
+    private boolean canConnect(BlockGetter getter, BlockPos pos) {
+        return getter.getBlockState(pos).is(Tags.Connectable.PIPES);
     }
 }
