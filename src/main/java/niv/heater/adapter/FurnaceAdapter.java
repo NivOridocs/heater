@@ -15,7 +15,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import niv.heater.Heater;
@@ -31,7 +30,7 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
             .apply(instance, FurnaceAdapter::new));
 
     public static final ResourceKey<Registry<FurnaceAdapter>> REGISTRY = ResourceKey
-            .createRegistryKey(new ResourceLocation(Heater.MOD_ID, "adapters/heat_sink"));
+            .createRegistryKey(new ResourceLocation(Heater.MOD_ID, "adapters/furnace"));
 
     private final BlockEntityType<?> type;
 
@@ -75,10 +74,12 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
         return Optional.empty();
     }
 
-    public static Optional<FurnaceAdapter> of(LevelAccessor levelAccessor, BlockEntityType<?> type) {
-        if (levelAccessor instanceof Level level) {
-            return level.registryAccess().registry(REGISTRY).stream().flatMap(Registry::stream)
-                    .filter(adapter -> adapter.test(type)).findFirst();
+    public static Optional<Furnace> of(Level level, BlockEntity entity) {
+        if (level != null && entity != null) {
+            return level.registryAccess().registry(REGISTRY).stream()
+                    .flatMap(Registry::stream)
+                    .filter(value -> value.test(entity.getType())).findFirst()
+                    .flatMap(value -> value.apply(entity));
         } else {
             return Optional.empty();
         }

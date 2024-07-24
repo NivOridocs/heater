@@ -1,6 +1,7 @@
 package niv.heater.block.entity;
 
 import static net.minecraft.world.level.block.AbstractFurnaceBlock.LIT;
+import static niv.heater.util.WeatherStateExtra.heatReduction;
 
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
@@ -26,8 +27,6 @@ import niv.heater.block.HeaterBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.Propagator;
-
-import static niv.heater.util.PropagatorUtils.reduceHeat;
 
 public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furnace {
 
@@ -217,7 +216,7 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
         }
 
         if (heater.isBurning() && level.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
-            heater.burnTime = reduceHeat(block, heater.burnTime);
+            heater.burnTime = Math.max(0, heater.burnTime - heatReduction(block.getAge()));
         }
 
         consumeFuel(heater);
