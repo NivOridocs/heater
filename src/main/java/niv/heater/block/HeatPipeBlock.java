@@ -8,7 +8,8 @@ import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAF
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
 
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import com.google.common.base.Suppliers;
@@ -26,22 +27,21 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import niv.heater.util.HeatSink;
-import niv.heater.util.HeatSource;
+import niv.heater.Tags;
+import niv.heater.api.Connector;
 
-public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterloggedBlock {
+public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCopper, SimpleWaterloggedBlock {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<HeatPipeBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeatPipeBlock::getWeatherState),
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeatPipeBlock::getAge),
             Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
             .apply(instance, HeatPipeBlock::new));
 
@@ -86,10 +86,6 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
                 .setValue(WATERLOGGED, false));
     }
 
-    public WeatherState getWeatherState() {
-        return weatherState;
-    }
-
     @Override
     public MapCodec<? extends HeatPipeBlock> codec() {
         return CODEC;
@@ -117,16 +113,14 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         var level = context.getLevel();
         var pos = context.getClickedPos();
-        var state = super.getStateForPlacement(context);
-        if (level.getFluidState(pos).is(Fluids.WATER)) {
-            state = state.setValue(WATERLOGGED, true);
-        }
-        for (var direction : Direction.values()) {
-            if (canConnect(level, pos.relative(direction))) {
-                state = state.setValue(getProperty(direction), true);
-            }
-        }
-        return state;
+        return this.defaultBlockState()
+                .trySetValue(DOWN, canConnect(level, pos.below()))
+                .trySetValue(UP, canConnect(level, pos.above()))
+                .trySetValue(NORTH, canConnect(level, pos.north()))
+                .trySetValue(SOUTH, canConnect(level, pos.south()))
+                .trySetValue(WEST, canConnect(level, pos.west()))
+                .trySetValue(EAST, canConnect(level, pos.east()))
+                .trySetValue(WATERLOGGED, level.getFluidState(pos).is(Fluids.WATER));
     }
 
     @Override
@@ -136,7 +130,7 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
         if (state.getValue(WATERLOGGED).booleanValue()) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
-        return state.setValue(getProperty(direction), canConnect(level, neighborPos));
+        return state.trySetValue(PROPERTY_BY_DIRECTION.get(direction), canConnect(level, neighborPos));
     }
 
     @Override
@@ -144,33 +138,28 @@ public class HeatPipeBlock extends PipeBlock implements HeatSource, SimpleWaterl
         builder.add(DOWN, UP, NORTH, SOUTH, WEST, EAST, WATERLOGGED);
     }
 
-    private boolean canConnect(LevelAccessor level, BlockPos pos) {
-        var block = level.getBlockState(pos).getBlock();
-        return block instanceof HeatSource || HeatSink.is(level, level.getBlockEntity(pos));
-    }
-
-    public static boolean isConnected(BlockState state, Direction direction) {
-        return state.getValue(getProperty(direction)).booleanValue();
-    }
-
-    public static BooleanProperty getProperty(Direction direction) {
-        return PROPERTY_BY_DIRECTION.get(direction);
-    }
-
     @Override
-    public Direction[] getConnected(BlockState state) {
-        var directions = new ArrayList<>(6);
+    public Set<Direction> getConnected(BlockState state) {
+        var directions = new HashSet<Direction>(6);
         for (var direction : Direction.values()) {
-            if (isConnected(state, direction)) {
+            if (state.getValue(PROPERTY_BY_DIRECTION.get(direction)).booleanValue()) {
                 directions.add(direction);
             }
         }
-        return directions.toArray(Direction[]::new);
+        return directions;
     }
 
     @Override
-    public int reducedHeat(int heat) {
-        return HeatSource.reduceHeat(weatherState, heat);
+    public boolean canPropagate(BlockState state) {
+        return state.is(Tags.Propagable.PIPES);
     }
 
+    @Override
+    public WeatherState getAge() {
+        return weatherState;
+    }
+
+    private boolean canConnect(BlockGetter getter, BlockPos pos) {
+        return getter.getBlockState(pos).is(Tags.Connectable.PIPES);
+    }
 }

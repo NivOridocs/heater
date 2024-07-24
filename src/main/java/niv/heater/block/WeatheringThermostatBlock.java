@@ -19,17 +19,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.level.block.ChangeOverTimeBlock;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class WeatheringThermostatBlock extends ThermostatBlock implements WeatheringCopper {
+public class WeatheringThermostatBlock extends ThermostatBlock {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<WeatheringThermostatBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance
             .group(
-                    WeatherState.CODEC.fieldOf("weathering_state").forGetter(ChangeOverTimeBlock::getAge),
+                    WeatherState.CODEC.fieldOf("weathering_state").forGetter(WeatheringThermostatBlock::getAge),
                     Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
             .apply(instance, WeatheringThermostatBlock::new));
 
@@ -77,10 +76,4 @@ public class WeatheringThermostatBlock extends ThermostatBlock implements Weathe
     public boolean isRandomlyTicking(BlockState state) {
         return WeatheringCopper.getNext(state.getBlock()).isPresent();
     }
-
-    @Override
-    public WeatherState getAge() {
-        return getWeatherState();
-    }
-
 }

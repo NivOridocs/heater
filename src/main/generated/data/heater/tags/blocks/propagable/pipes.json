@@ -1,8 +1,8 @@
 {
   "replace": false,
   "values": [
-    "#heater:heaters",
     "#heater:pipes",
-    "#heater:thermostats"
+    "#heater:thermostats",
+    "#heater:furnaces"
   ]
 }

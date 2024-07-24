@@ -8,8 +8,9 @@ import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAF
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED;
 
-import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -24,23 +25,22 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import niv.heater.util.HeatSink;
-import niv.heater.util.HeatSource;
+import niv.heater.Tags;
+import niv.heater.api.Connector;
 
-public class ThermostatBlock extends DirectionalBlock implements HeatSource {
+public class ThermostatBlock extends DirectionalBlock implements Connector, WeatheringCopper {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<ThermostatBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            WeatherState.CODEC.fieldOf("weathering_state").forGetter(ThermostatBlock::getWeatherState),
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(ThermostatBlock::getAge),
             Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
             .apply(instance, ThermostatBlock::new));
 
@@ -70,17 +70,11 @@ public class ThermostatBlock extends DirectionalBlock implements HeatSource {
                     .put(OXIDIZED, OXIDIZED_ITEM)
                     .build());
 
-    private static final Direction[] EMPTY_DIRECTIONS = new Direction[0];
-
     private final WeatherState weatherState;
 
     public ThermostatBlock(WeatherState weatherState, Properties settings) {
         super(settings);
         this.weatherState = weatherState;
-    }
-
-    public WeatherState getWeatherState() {
-        return weatherState;
     }
 
     @Override
@@ -111,17 +105,17 @@ public class ThermostatBlock extends DirectionalBlock implements HeatSource {
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block sourceBlock, BlockPos sourcePos,
-            boolean notify) {
-        if (world.isClientSide) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos,
+            Block sourceBlock, BlockPos sourcePos, boolean notify) {
+        if (level.isClientSide) {
             return;
         }
-        boolean powered = state.getValue(POWERED);
-        if (powered != world.hasNeighborSignal(pos)) {
+        var powered = state.getOptionalValue(POWERED).orElse(Boolean.FALSE).booleanValue();
+        if (powered != level.hasNeighborSignal(pos)) {
             if (powered) {
-                world.scheduleTick(pos, this, 4);
+                level.scheduleTick(pos, this, 4);
             } else {
-                world.setBlock(pos, state.cycle(POWERED), 2);
+                level.setBlock(pos, state.cycle(POWERED), 2);
             }
         }
     }
@@ -134,27 +128,21 @@ public class ThermostatBlock extends DirectionalBlock implements HeatSource {
     }
 
     @Override
-    public Direction[] getConnected(BlockState state) {
+    public Set<Direction> getConnected(BlockState state) {
         if (state.getOptionalValue(POWERED).orElse(false)) {
-            return state.getOptionalValue(FACING).stream().toArray(Direction[]::new);
+            return state.getOptionalValue(FACING).stream().collect(Collectors.toSet());
         } else {
-            return EMPTY_DIRECTIONS;
+            return Set.of();
         }
     }
 
     @Override
-    public Optional<HeatSink> getNeighborAsSink(LevelAccessor level, BlockPos pos, Direction direction) {
-        var targetPos = pos.relative(direction);
-        if (level.getBlockState(targetPos).getBlock() instanceof HeaterBlock) {
-            return HeatSink.of(level, level.getBlockEntity(targetPos));
-        } else {
-            return HeatSource.super.getNeighborAsSink(level, pos, direction);
-        }
+    public boolean canPropagate(BlockState state) {
+        return state.is(Tags.Propagable.THERMOSTATS);
     }
 
     @Override
-    public int reducedHeat(int heat) {
-        return HeatSource.reduceHeat(weatherState, heat);
+    public WeatherState getAge() {
+        return weatherState;
     }
-
 }

@@ -58,4 +58,16 @@ public class WeatherStateExtra {
         return Optional.ofNullable(BI_MAP.getOrDefault(state, null));
     }
 
+    public static final int heatReduction(WeatherState state) {
+        switch (state) {
+            case OXIDIZED:
+                return 4;
+            case WEATHERED:
+                return 3;
+            case EXPOSED:
+                return 2;
+            default:
+                return 1;
+        }
+    }
 }

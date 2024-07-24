@@ -4,11 +4,6 @@ import static net.minecraft.data.models.blockstates.VariantProperties.Rotation.R
 import static net.minecraft.data.models.blockstates.VariantProperties.Rotation.R180;
 import static net.minecraft.data.models.blockstates.VariantProperties.Rotation.R270;
 import static net.minecraft.data.models.blockstates.VariantProperties.Rotation.R90;
-import static net.minecraft.world.item.Items.COBBLESTONE;
-import static net.minecraft.world.item.Items.COPPER_INGOT;
-import static net.minecraft.world.item.Items.FURNACE;
-import static net.minecraft.world.item.Items.HONEYCOMB;
-import static net.minecraft.world.item.Items.REDSTONE;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -45,7 +40,10 @@ import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.heater.block.HeatPipeBlock;
@@ -55,7 +53,6 @@ import niv.heater.block.WeatheringHeatPipeBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
-import niv.heater.registry.HeaterTags;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.WeatherStateExtra;
 
@@ -160,7 +157,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .with(Variant.variant().with(VariantProperties.MODEL, core));
             for (var direction : Direction.values()) {
                 supplier.with(
-                        Condition.condition().term(HeatPipeBlock.getProperty(direction), true),
+                        Condition.condition().term(PipeBlock.PROPERTY_BY_DIRECTION.get(direction), true),
                         Variant.variant()
                                 .with(VariantProperties.MODEL, arm)
                                 .with(
@@ -299,10 +296,10 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .pattern("ccc")
                     .pattern("cfc")
                     .pattern("ccc")
-                    .define('c', COPPER_INGOT)
-                    .define('f', FURNACE)
-                    .unlockedBy(getHasName(COPPER_INGOT), has(COPPER_INGOT))
-                    .unlockedBy(getHasName(FURNACE), has(FURNACE))
+                    .define('c', Items.COPPER_INGOT)
+                    .define('f', Items.FURNACE)
+                    .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
+                    .unlockedBy(getHasName(Items.FURNACE), has(Items.FURNACE))
                     .save(output);
 
             for (var state : WeatherState.values()) {
@@ -313,8 +310,8 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WeatheringHeatPipeBlock.UNAFFECTED_BLOCK)
                     .pattern("ccc")
-                    .define('c', COPPER_INGOT)
-                    .unlockedBy(getHasName(COPPER_INGOT), has(COPPER_INGOT))
+                    .define('c', Items.COPPER_INGOT)
+                    .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
                     .save(output);
 
             for (var state : WeatherState.values()) {
@@ -327,12 +324,12 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .pattern("ccc")
                     .pattern("#c#")
                     .pattern("#r#")
-                    .define('c', COPPER_INGOT)
-                    .define('r', REDSTONE)
-                    .define('#', COBBLESTONE)
-                    .unlockedBy(getHasName(COBBLESTONE), has(COBBLESTONE))
-                    .unlockedBy(getHasName(COPPER_INGOT), has(COPPER_INGOT))
-                    .unlockedBy(getHasName(REDSTONE), has(REDSTONE))
+                    .define('c', Items.COPPER_INGOT)
+                    .define('r', Items.REDSTONE)
+                    .define('#', Items.COBBLESTONE)
+                    .unlockedBy(getHasName(Items.COBBLESTONE), has(Items.COBBLESTONE))
+                    .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
+                    .unlockedBy(getHasName(Items.REDSTONE), has(Items.REDSTONE))
                     .save(output);
 
             for (var state : WeatherState.values()) {
@@ -344,9 +341,9 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         private void generateWaxingRecipe(RecipeOutput output, Item unwaxed, Item waxed) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, waxed)
-                    .requires(unwaxed).requires(HONEYCOMB)
+                    .requires(unwaxed).requires(Items.HONEYCOMB)
                     .unlockedBy(getHasName(unwaxed), has(unwaxed))
-                    .unlockedBy(getHasName(HONEYCOMB), has(HONEYCOMB))
+                    .unlockedBy(getHasName(Items.HONEYCOMB), has(Items.HONEYCOMB))
                     .save(output);
         }
     }
@@ -359,23 +356,57 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
         @Override
         protected void addTags(HolderLookup.Provider arg) {
-            getOrCreateTagBuilder(HeaterTags.HEATERS)
-                    .add(WeatheringHeaterBlock.BLOCKS.get().values().toArray(WeatheringHeaterBlock[]::new))
-                    .add(HeaterBlock.BLOCKS.get().values().toArray(HeaterBlock[]::new));
-
-            getOrCreateTagBuilder(HeaterTags.HEAT_PIPES)
-                    .add(WeatheringHeatPipeBlock.BLOCKS.get().values().toArray(WeatheringHeatPipeBlock[]::new))
-                    .add(HeatPipeBlock.BLOCKS.get().values().toArray(HeatPipeBlock[]::new));
-
-            getOrCreateTagBuilder(HeaterTags.THERMOSTATS)
-                    .add(WeatheringThermostatBlock.BLOCKS.get().values().toArray(WeatheringThermostatBlock[]::new))
-                    .add(ThermostatBlock.BLOCKS.get().values().toArray(ThermostatBlock[]::new));
 
             getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
                     .setReplace(false)
-                    .addTag(HeaterTags.HEATERS)
-                    .addTag(HeaterTags.HEAT_PIPES)
-                    .addTag(HeaterTags.THERMOSTATS);
+                    .addTag(Tags.HEATERS)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS);
+
+            getOrCreateTagBuilder(Tags.HEATERS)
+                    .setReplace(false)
+                    .add(WeatheringHeaterBlock.BLOCKS.get().values().toArray(WeatheringHeaterBlock[]::new))
+                    .add(HeaterBlock.BLOCKS.get().values().toArray(HeaterBlock[]::new));
+
+            getOrCreateTagBuilder(Tags.PIPES)
+                    .setReplace(false)
+                    .add(WeatheringHeatPipeBlock.BLOCKS.get().values().toArray(WeatheringHeatPipeBlock[]::new))
+                    .add(HeatPipeBlock.BLOCKS.get().values().toArray(HeatPipeBlock[]::new));
+
+            getOrCreateTagBuilder(Tags.THERMOSTATS)
+                    .setReplace(false)
+                    .add(WeatheringThermostatBlock.BLOCKS.get().values().toArray(WeatheringThermostatBlock[]::new))
+                    .add(ThermostatBlock.BLOCKS.get().values().toArray(ThermostatBlock[]::new));
+
+            getOrCreateTagBuilder(Tags.FURNACES)
+                    .setReplace(false)
+                    .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
+
+            getOrCreateTagBuilder(Tags.Connectable.PIPES)
+                    .setReplace(false)
+                    .addTag(Tags.HEATERS)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS)
+                    .addTag(Tags.FURNACES);
+
+            getOrCreateTagBuilder(Tags.Propagable.HEATERS)
+                    .setReplace(false)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS)
+                    .addTag(Tags.FURNACES);
+
+            getOrCreateTagBuilder(Tags.Propagable.PIPES)
+                    .setReplace(false)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS)
+                    .addTag(Tags.FURNACES);
+
+            getOrCreateTagBuilder(Tags.Propagable.THERMOSTATS)
+                    .setReplace(false)
+                    .addTag(Tags.HEATERS)
+                    .addTag(Tags.PIPES)
+                    .addTag(Tags.THERMOSTATS)
+                    .addTag(Tags.FURNACES);
         }
     }
 }

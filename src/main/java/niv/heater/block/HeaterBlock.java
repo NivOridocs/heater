@@ -27,22 +27,24 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
-import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import niv.heater.Tags;
+import niv.heater.api.Connector;
 import niv.heater.block.entity.HeaterBlockEntity;
-import niv.heater.util.HeatSource;
 
-public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
+public class HeaterBlock extends AbstractFurnaceBlock implements Connector, WeatheringCopper {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<HeaterBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeaterBlock::getWeatherState),
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeaterBlock::getAge),
             Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
             .apply(instance, HeaterBlock::new));
 
@@ -77,10 +79,6 @@ public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
     public HeaterBlock(WeatherState weatherState, Properties properties) {
         super(properties);
         this.weatherState = weatherState;
-    }
-
-    public WeatherState getWeatherState() {
-        return weatherState;
     }
 
     @Override
@@ -156,8 +154,12 @@ public class HeaterBlock extends AbstractFurnaceBlock implements HeatSource {
     }
 
     @Override
-    public int reducedHeat(int heat) {
-        return HeatSource.reduceHeat(weatherState, heat);
+    public boolean canPropagate(BlockGetter getter, BlockPos pos) {
+        return getter.getBlockState(pos).is(Tags.Propagable.HEATERS);
     }
 
+    @Override
+    public WeatherState getAge() {
+        return weatherState;
+    }
 }
