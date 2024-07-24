@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.getIfBlank;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -74,14 +75,17 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
         return Optional.empty();
     }
 
+    public static Stream<FurnaceAdapter> stream(Level level) {
+        return level == null ? Stream.empty()
+                : level.registryAccess().registry(REGISTRY).stream()
+                        .flatMap(Registry::stream);
+    }
+
+    public static Optional<FurnaceAdapter> of(Level level, BlockEntityType<?> type) {
+        return stream(level).filter(value -> value.test(type)).findFirst();
+    }
+
     public static Optional<Furnace> of(Level level, BlockEntity entity) {
-        if (level != null && entity != null) {
-            return level.registryAccess().registry(REGISTRY).stream()
-                    .flatMap(Registry::stream)
-                    .filter(value -> value.test(entity.getType())).findFirst()
-                    .flatMap(value -> value.apply(entity));
-        } else {
-            return Optional.empty();
-        }
+        return of(level, entity == null ? null : entity.getType()).flatMap(value -> value.apply(entity));
     }
 }
