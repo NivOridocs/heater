@@ -15,7 +15,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import niv.heater.Heater;
@@ -75,17 +75,17 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
         return Optional.empty();
     }
 
-    public static Stream<FurnaceAdapter> stream(Level level) {
+    public static Stream<FurnaceAdapter> stream(LevelReader level) {
         return level == null ? Stream.empty()
                 : level.registryAccess().registry(REGISTRY).stream()
                         .flatMap(Registry::stream);
     }
 
-    public static Optional<FurnaceAdapter> of(Level level, BlockEntityType<?> type) {
+    public static Optional<FurnaceAdapter> of(LevelReader level, BlockEntityType<?> type) {
         return stream(level).filter(value -> value.test(type)).findFirst();
     }
 
-    public static Optional<Furnace> of(Level level, BlockEntity entity) {
+    public static Optional<Furnace> of(LevelReader level, BlockEntity entity) {
         return of(level, entity == null ? null : entity.getType()).flatMap(value -> value.apply(entity));
     }
 }

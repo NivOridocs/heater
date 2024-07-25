@@ -3,6 +3,8 @@ package niv.heater.block.entity;
 import static net.minecraft.world.level.block.AbstractFurnaceBlock.LIT;
 import static niv.heater.util.WeatherStateExtra.heatReduction;
 
+import java.util.TreeSet;
+
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -26,9 +28,20 @@ import niv.heater.api.Furnace;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.screen.HeaterMenu;
-import niv.heater.util.Propagator;
+import niv.heater.util.Explorer;
 
 public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furnace {
+
+    private static record FurnaceHolder(Furnace furnace, BlockPos pos) implements Comparable<FurnaceHolder> {
+        @Override
+        public int compareTo(FurnaceHolder that) {
+            int result = Furnace.compare(this.furnace(), that.furnace());
+            if (result == 0) {
+                result = this.pos().compareTo(that.pos());
+            }
+            return result;
+        }
+    }
 
     public static final String CONTAINER_NAME = "container.heater";
 
@@ -47,7 +60,7 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
 
-    private static final int MAX_HEAT = 63;
+    private static final int MAX_HOPS = 63;
 
     private int burnTime;
 
@@ -234,9 +247,10 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
     }
 
     private static void propagateBurnTime(Level level, BlockPos pos, HeaterBlockEntity heater) {
-        var propagator = new Propagator(level, pos, MAX_HEAT);
-        propagator.run();
-        var targets = propagator.get();
+        var targets = new TreeSet<FurnaceHolder>();
+        new Explorer(level, pos, level.getBlockState(pos), MAX_HOPS)
+                .onFurnaceFound((f, p) -> targets.add(new FurnaceHolder(f, p)))
+                .run();
 
         if (targets.isEmpty()) {
             return;
@@ -248,21 +262,21 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
         }
 
         for (var target : targets) {
-            var wasBurning = target.entity().getBurnTime() > 0;
+            var wasBurning = target.furnace().getBurnTime() > 0;
 
             if (deltaBurn > heater.burnTime) {
                 deltaBurn = heater.burnTime;
             }
 
-            if (target.entity().getFuelTime() < heater.fuelTime) {
-                target.entity().setFuelTime(heater.fuelTime);
+            if (target.furnace().getFuelTime() < heater.fuelTime) {
+                target.furnace().setFuelTime(heater.fuelTime);
             }
 
-            if (target.entity().getBurnTime() + deltaBurn <= target.entity().getFuelTime()) {
+            if (target.furnace().getBurnTime() + deltaBurn <= target.furnace().getFuelTime()) {
                 heater.burnTime -= deltaBurn;
-                target.entity().setBurnTime(target.entity().getBurnTime() + deltaBurn);
+                target.furnace().setBurnTime(target.furnace().getBurnTime() + deltaBurn);
 
-                var isBurning = target.entity().getBurnTime() > 0;
+                var isBurning = target.furnace().getBurnTime() > 0;
                 if (wasBurning != isBurning) {
                     var state = level.getBlockState(target.pos()).setValue(LIT, isBurning);
                     level.setBlockAndUpdate(target.pos(), state);
