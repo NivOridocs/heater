@@ -31,6 +31,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -114,6 +115,15 @@ public class HeaterBlock extends AbstractFurnaceBlock implements Connector, Weat
                 heater.setCustomName(itemStack.getHoverName());
             }
         }
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos,
+            Block sourceBlock, BlockPos sourcePos, boolean notify) {
+        if (level.isClientSide) {
+            return;
+        }
+        level.getBlockEntity(pos, HeaterBlockEntity.TYPE).ifPresent(HeaterBlockEntity::makeDirty);
     }
 
     @Override
