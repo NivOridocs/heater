@@ -65,7 +65,7 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
 
-    private static final int MAX_HOPS = 63;
+    private static final int MAX_HOPS = 64;
 
     private final Set<BlockPos> cache;
 
