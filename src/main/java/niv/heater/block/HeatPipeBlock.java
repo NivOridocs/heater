@@ -23,6 +23,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.PipeBlock;
@@ -36,6 +37,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import niv.heater.Tags;
 import niv.heater.api.Connector;
+import niv.heater.block.entity.HeaterBlockEntity;
 
 public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCopper, SimpleWaterloggedBlock {
 
@@ -134,6 +136,25 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     }
 
     @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos,
+            Block sourceBlock, BlockPos sourcePos, boolean notify) {
+        if (level.isClientSide) {
+            return;
+        }
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
+    }
+
+    @Override
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, newState);
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
+    }
+
+    @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(DOWN, UP, NORTH, SOUTH, WEST, EAST, WATERLOGGED);
     }
@@ -142,7 +163,8 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     public Set<Direction> getConnected(BlockState state) {
         var directions = new HashSet<Direction>(6);
         for (var direction : Direction.values()) {
-            if (state.getValue(PROPERTY_BY_DIRECTION.get(direction)).booleanValue()) {
+            if (state.getOptionalValue(PROPERTY_BY_DIRECTION.get(direction))
+                    .orElse(false).booleanValue()) {
                 directions.add(direction);
             }
         }
@@ -150,8 +172,8 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     }
 
     @Override
-    public boolean canPropagate(BlockState state) {
-        return state.is(Tags.Propagable.PIPES);
+    public boolean canPropagate(LevelAccessor level, BlockPos pos, BlockState state, Direction direction) {
+        return level.getBlockState(pos.relative(direction)).is(Tags.Propagable.PIPES);
     }
 
     @Override

@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
@@ -38,7 +39,7 @@ public class Explorer implements Runnable {
     private record ConnectorHolder(Connector connector, BlockPos pos, int hops) {
     }
 
-    private final LevelReader level;
+    private final LevelAccessor level;
 
     private final BlockPos posZero;
 
@@ -54,7 +55,7 @@ public class Explorer implements Runnable {
 
     private BiConsumer<HeaterBlock, BlockPos> onHeaterCallback = null;
 
-    public Explorer(LevelReader level, BlockPos pos, BlockState state, int hops) {
+    public Explorer(LevelAccessor level, BlockPos pos, BlockState state, int hops) {
         this.level = level;
         this.posZero = pos;
         this.stateZero = state;
@@ -118,11 +119,11 @@ public class Explorer implements Runnable {
     }
 
     private static final Map<Direction, Result> getConnectedNeighbors(Connector connector,
-            LevelReader level, BlockPos pos) {
+            LevelAccessor level, BlockPos pos) {
         var results = new EnumMap<Direction, Result>(Direction.class);
         for (var direction : connector.getConnected(level.getBlockState(pos))) {
             var relative = pos.relative(direction);
-            if (connector.canPropagate(level, relative)) {
+            if (connector.canPropagate(level, pos, level.getBlockState(pos), direction)) {
                 Optional.<Result>empty()
                         .or(() -> asFurnace(level, relative))
                         .or(() -> asForwardingFurnace(level, relative))
@@ -136,7 +137,7 @@ public class Explorer implements Runnable {
         return results;
     }
 
-    private static Optional<Result> asFurnace(BlockGetter getter, BlockPos pos) {
+    private static Optional<FurnaceResult> asFurnace(BlockGetter getter, BlockPos pos) {
         var entity = getter.getBlockEntity(pos);
         if (entity != null && entity instanceof Furnace furnace) {
             return Optional.of(new FurnaceResult(furnace));
@@ -145,7 +146,7 @@ public class Explorer implements Runnable {
         }
     }
 
-    private static Optional<Result> asForwardingFurnace(LevelReader level, BlockPos pos) {
+    private static Optional<FurnaceResult> asForwardingFurnace(LevelReader level, BlockPos pos) {
         var entity = level.getBlockEntity(pos);
         if (entity != null) {
             return FurnaceAdapter.of(level, entity).map(FurnaceResult::new);
@@ -154,7 +155,7 @@ public class Explorer implements Runnable {
         }
     }
 
-    private static Optional<Result> asConnector(BlockGetter getter, BlockPos pos) {
+    private static Optional<ConnectorResult> asConnector(BlockGetter getter, BlockPos pos) {
         var block = getter.getBlockState(pos).getBlock();
         if (block instanceof Connector connector) {
             return Optional.of(new ConnectorResult(connector));
@@ -163,12 +164,19 @@ public class Explorer implements Runnable {
         }
     }
 
-    private static Optional<Result> asHeater(BlockGetter getter, BlockPos pos) {
+    private static Optional<HeaterResult> asHeater(BlockGetter getter, BlockPos pos) {
         var block = getter.getBlockState(pos).getBlock();
         if (block instanceof HeaterBlock heater) {
             return Optional.of(new HeaterResult(heater));
         } else {
             return Optional.empty();
         }
+    }
+
+    public static Optional<Furnace> getOptionalFurnace(LevelReader reader, BlockPos pos) {
+        return Optional.<FurnaceResult>empty()
+                .or(() -> asFurnace(reader, pos))
+                .or(() -> asForwardingFurnace(reader, pos))
+                .map(FurnaceResult::furnace);
     }
 }

@@ -6,11 +6,8 @@ import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPO
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.OXIDIZED;
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED;
 
-import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -20,11 +17,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
@@ -35,6 +31,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import niv.heater.Tags;
 import niv.heater.api.Connector;
+import niv.heater.block.entity.HeaterBlockEntity;
 
 public class ThermostatBlock extends DirectionalBlock implements Connector, WeatheringCopper {
 
@@ -84,7 +81,7 @@ public class ThermostatBlock extends DirectionalBlock implements Connector, Weat
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, POWERED);
+        builder.add(FACING);
     }
 
     @Override
@@ -100,8 +97,7 @@ public class ThermostatBlock extends DirectionalBlock implements Connector, Weat
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return this.defaultBlockState()
-                .setValue(FACING, context.getNearestLookingDirection().getOpposite())
-                .setValue(POWERED, context.getLevel().hasNeighborSignal(context.getClickedPos()));
+                .setValue(FACING, context.getNearestLookingDirection().getOpposite());
     }
 
     @Override
@@ -110,35 +106,24 @@ public class ThermostatBlock extends DirectionalBlock implements Connector, Weat
         if (level.isClientSide) {
             return;
         }
-        var powered = state.getOptionalValue(POWERED).orElse(Boolean.FALSE).booleanValue();
-        if (powered != level.hasNeighborSignal(pos)) {
-            if (powered) {
-                level.scheduleTick(pos, this, 4);
-            } else {
-                level.setBlock(pos, state.cycle(POWERED), 2);
-            }
-        }
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, level.getBlockState(pos));
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
-        if (state.getValue(POWERED).booleanValue() && !world.hasNeighborSignal(pos)) {
-            world.setBlock(pos, state.cycle(POWERED), 2);
-        }
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, newState);
     }
 
     @Override
-    public Set<Direction> getConnected(BlockState state) {
-        if (state.getOptionalValue(POWERED).orElse(false)) {
-            return state.getOptionalValue(FACING).stream().collect(Collectors.toSet());
-        } else {
-            return Set.of();
-        }
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
     }
 
     @Override
-    public boolean canPropagate(BlockState state) {
-        return state.is(Tags.Propagable.THERMOSTATS);
+    public boolean canPropagate(LevelAccessor level, BlockPos pos, BlockState state, Direction direction) {
+        return level.hasNeighborSignal(pos)
+                && state.getOptionalValue(FACING).filter(direction::equals).isPresent()
+                && level.getBlockState(pos.relative(direction)).is(Tags.Propagable.THERMOSTATS);
     }
 
     @Override
