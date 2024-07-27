@@ -145,8 +145,8 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     }
 
     @Override
-    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
-        HeaterBlockEntity.updateConnectedHeaters(level, pos, newState);
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moved) {
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
     }
 
     @Override
@@ -163,8 +163,7 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     public Set<Direction> getConnected(BlockState state) {
         var directions = new HashSet<Direction>(6);
         for (var direction : Direction.values()) {
-            if (state.getOptionalValue(PROPERTY_BY_DIRECTION.get(direction))
-                    .orElse(false).booleanValue()) {
+            if (state.getValue(PROPERTY_BY_DIRECTION.get(direction)).booleanValue()) {
                 directions.add(direction);
             }
         }

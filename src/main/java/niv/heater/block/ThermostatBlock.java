@@ -110,8 +110,8 @@ public class ThermostatBlock extends DirectionalBlock implements Connector, Weat
     }
 
     @Override
-    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
-        HeaterBlockEntity.updateConnectedHeaters(level, pos, newState);
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moved) {
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
     }
 
     @Override

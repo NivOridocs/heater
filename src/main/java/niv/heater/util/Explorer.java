@@ -36,7 +36,7 @@ public class Explorer implements Runnable {
     private static record HeaterResult(HeaterBlock heater) implements Result {
     }
 
-    private record ConnectorHolder(Connector connector, BlockPos pos, int hops) {
+    private record ConnectorHolder(Connector connector, BlockPos pos, BlockState state, int hops) {
     }
 
     private final LevelAccessor level;
@@ -80,13 +80,13 @@ public class Explorer implements Runnable {
         visited.clear();
 
         if (stateZero.getBlock() instanceof Connector connector) {
-            connectors.add(new ConnectorHolder(connector, posZero, hopsZero));
+            connectors.add(new ConnectorHolder(connector, posZero, stateZero, hopsZero));
             visited.add(posZero);
         }
 
         while (!connectors.isEmpty()) {
             var src = connectors.poll();
-            getConnectedNeighbors(src.connector(), level, src.pos())
+            getConnectedNeighbors(src.connector(), level, src.pos(), src.state())
                     .forEach((dir, result) -> visit(src, dir, result));
         }
     }
@@ -103,7 +103,7 @@ public class Explorer implements Runnable {
         if (!visited.contains(pos) && hops > 0) {
             if (result instanceof ConnectorResult r) {
                 visited.add(pos);
-                connectors.add(new ConnectorHolder(r.connector(), pos, hops));
+                connectors.add(new ConnectorHolder(r.connector(), pos, level.getBlockState(pos), hops));
             } else if (result instanceof FurnaceResult r) {
                 if (onFurnaceCallback != null) {
                     visited.add(pos);
@@ -119,9 +119,9 @@ public class Explorer implements Runnable {
     }
 
     private static final Map<Direction, Result> getConnectedNeighbors(Connector connector,
-            LevelAccessor level, BlockPos pos) {
+            LevelAccessor level, BlockPos pos, BlockState state) {
         var results = new EnumMap<Direction, Result>(Direction.class);
-        for (var direction : connector.getConnected(level.getBlockState(pos))) {
+        for (var direction : connector.getConnected(state)) {
             var relative = pos.relative(direction);
             if (connector.canPropagate(level, pos, level.getBlockState(pos), direction)) {
                 Optional.<Result>empty()
