@@ -3,6 +3,12 @@ package niv.heater.block.entity;
 import static net.minecraft.world.level.block.AbstractFurnaceBlock.LIT;
 import static niv.heater.util.WeatherStateExtra.heatReduction;
 
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -17,6 +23,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
@@ -26,9 +33,20 @@ import niv.heater.api.Furnace;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.screen.HeaterMenu;
-import niv.heater.util.Propagator;
+import niv.heater.util.Explorer;
 
 public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furnace {
+
+    private static record FurnaceHolder(Furnace furnace, BlockPos pos) implements Comparable<FurnaceHolder> {
+        @Override
+        public int compareTo(FurnaceHolder that) {
+            int result = Furnace.compare(this.furnace(), that.furnace());
+            if (result == 0) {
+                result = this.pos().compareTo(that.pos());
+            }
+            return result;
+        }
+    }
 
     public static final String CONTAINER_NAME = "container.heater";
 
@@ -47,7 +65,11 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
 
-    private static final int MAX_HEAT = 63;
+    private static final int MAX_HOPS = 64;
+
+    private final Set<BlockPos> cache;
+
+    private final AtomicBoolean dirty;
 
     private int burnTime;
 
@@ -94,6 +116,8 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
         super(TYPE, pos, state);
         burnTime = 0;
         items = NonNullList.withSize(1, ItemStack.EMPTY);
+        cache = new HashSet<>();
+        dirty = new AtomicBoolean(true);
     }
 
     public NonNullList<ItemStack> getItems() {
@@ -198,6 +222,10 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
         fuelTime = value;
     }
 
+    public void makeDirty() {
+        this.dirty.set(true);
+    }
+
     private boolean isBurning() {
         return burnTime > 0;
     }
@@ -212,7 +240,13 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
         var wasBurning = heater.isBurning();
 
         if (heater.isBurning()) {
-            propagateBurnTime(level, pos, heater);
+            if (heater.dirty.compareAndSet(true, false)) {
+                heater.cache.clear();
+                new Explorer(level, pos, level.getBlockState(pos), MAX_HOPS)
+                        .onFurnaceFound((f, p) -> heater.cache.add(p))
+                        .run();
+            }
+            propagateBurnTime(level, heater);
         }
 
         if (heater.isBurning() && level.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
@@ -233,10 +267,13 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
         }
     }
 
-    private static void propagateBurnTime(Level level, BlockPos pos, HeaterBlockEntity heater) {
-        var propagator = new Propagator(level, pos, MAX_HEAT);
-        propagator.run();
-        var targets = propagator.get();
+    private static void propagateBurnTime(Level level, HeaterBlockEntity heater) {
+        var targets = new TreeSet<FurnaceHolder>();
+        heater.cache.stream()
+                .map(pos -> Explorer.getOptionalFurnace(level, pos)
+                        .map(furnace -> new FurnaceHolder(furnace, pos)))
+                .flatMap(Optional::stream)
+                .forEach(targets::add);
 
         if (targets.isEmpty()) {
             return;
@@ -248,21 +285,21 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
         }
 
         for (var target : targets) {
-            var wasBurning = target.entity().getBurnTime() > 0;
+            var wasBurning = target.furnace().getBurnTime() > 0;
 
             if (deltaBurn > heater.burnTime) {
                 deltaBurn = heater.burnTime;
             }
 
-            if (target.entity().getFuelTime() < heater.fuelTime) {
-                target.entity().setFuelTime(heater.fuelTime);
+            if (target.furnace().getFuelTime() < heater.fuelTime) {
+                target.furnace().setFuelTime(heater.fuelTime);
             }
 
-            if (target.entity().getBurnTime() + deltaBurn <= target.entity().getFuelTime()) {
+            if (target.furnace().getBurnTime() + deltaBurn <= target.furnace().getFuelTime()) {
                 heater.burnTime -= deltaBurn;
-                target.entity().setBurnTime(target.entity().getBurnTime() + deltaBurn);
+                target.furnace().setBurnTime(target.furnace().getBurnTime() + deltaBurn);
 
-                var isBurning = target.entity().getBurnTime() > 0;
+                var isBurning = target.furnace().getBurnTime() > 0;
                 if (wasBurning != isBurning) {
                     var state = level.getBlockState(target.pos()).setValue(LIT, isBurning);
                     level.setBlockAndUpdate(target.pos(), state);
@@ -292,5 +329,12 @@ public class HeaterBlockEntity extends BaseContainerBlockEntity implements Furna
                 heater.fuelTime = heater.burnTime = fuelTime;
             }
         }
+    }
+
+    public static final void updateConnectedHeaters(LevelAccessor level, BlockPos pos, BlockState state) {
+        new Explorer(level, pos, state, MAX_HOPS)
+                .onHeaterFound((h, p) -> level.getBlockEntity(p, TYPE)
+                        .ifPresent(HeaterBlockEntity::makeDirty))
+                .run();
     }
 }
