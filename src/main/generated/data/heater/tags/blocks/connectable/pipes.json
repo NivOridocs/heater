@@ -4,6 +4,7 @@
     "#heater:heaters",
     "#heater:pipes",
     "#heater:thermostats",
-    "#heater:furnaces"
+    "#c:furnaces",
+    "#c:player_workstations/furnaces"
   ]
 }

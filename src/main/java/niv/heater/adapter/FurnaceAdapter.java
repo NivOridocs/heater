@@ -45,6 +45,11 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
         this.litDuration = requireNonNull(getIfBlank(litDuration, () -> null));
     }
 
+    @SuppressWarnings("java:S1452")
+    public BlockEntityType<?> getType() {
+        return type;
+    }
+
     @Override
     public boolean test(BlockEntityType<?> type) {
         return this.type == type;
@@ -87,5 +92,9 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
 
     public static Optional<Furnace> of(LevelReader level, BlockEntity entity) {
         return of(level, entity == null ? null : entity.getType()).flatMap(value -> value.apply(entity));
+    }
+
+    public static boolean is(LevelReader level, BlockEntityType<?> type) {
+        return stream(level).anyMatch(value -> value.test(type));
     }
 }

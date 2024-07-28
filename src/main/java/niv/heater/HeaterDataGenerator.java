@@ -363,6 +363,14 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS);
 
+            getOrCreateTagBuilder(Tags.COMMUNITY_FURNACES)
+                    .setReplace(false)
+                    .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
+
+            getOrCreateTagBuilder(Tags.COMMON_FURNACES)
+                    .setReplace(false)
+                    .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
+
             getOrCreateTagBuilder(Tags.HEATERS)
                     .setReplace(false)
                     .add(WeatheringHeaterBlock.BLOCKS.get().values().toArray(WeatheringHeaterBlock[]::new))
@@ -378,35 +386,35 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .add(WeatheringThermostatBlock.BLOCKS.get().values().toArray(WeatheringThermostatBlock[]::new))
                     .add(ThermostatBlock.BLOCKS.get().values().toArray(ThermostatBlock[]::new));
 
-            getOrCreateTagBuilder(Tags.FURNACES)
-                    .setReplace(false)
-                    .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
-
             getOrCreateTagBuilder(Tags.Connectable.PIPES)
                     .setReplace(false)
                     .addTag(Tags.HEATERS)
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
-                    .addTag(Tags.FURNACES);
+                    .addTag(Tags.COMMUNITY_FURNACES)
+                    .addTag(Tags.COMMON_FURNACES);
 
             getOrCreateTagBuilder(Tags.Propagable.HEATERS)
                     .setReplace(false)
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
-                    .addTag(Tags.FURNACES);
+                    .addTag(Tags.COMMUNITY_FURNACES)
+                    .addTag(Tags.COMMON_FURNACES);
 
             getOrCreateTagBuilder(Tags.Propagable.PIPES)
                     .setReplace(false)
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
-                    .addTag(Tags.FURNACES);
+                    .addTag(Tags.COMMUNITY_FURNACES)
+                    .addTag(Tags.COMMON_FURNACES);
 
             getOrCreateTagBuilder(Tags.Propagable.THERMOSTATS)
                     .setReplace(false)
                     .addTag(Tags.HEATERS)
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
-                    .addTag(Tags.FURNACES);
+                    .addTag(Tags.COMMUNITY_FURNACES)
+                    .addTag(Tags.COMMON_FURNACES);
         }
     }
 }
