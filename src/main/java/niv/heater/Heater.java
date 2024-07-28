@@ -1,7 +1,6 @@
 package niv.heater;
 
 import static net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE;
-import static net.minecraft.core.registries.BuiltInRegistries.CREATIVE_MODE_TAB;
 import static net.minecraft.core.registries.BuiltInRegistries.MENU;
 
 import java.util.function.Function;
@@ -10,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.Registry;
@@ -27,6 +27,7 @@ import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
 import niv.heater.screen.HeaterMenu;
+import niv.heater.util.FurnacesBinder;
 import niv.heater.util.WeatherStateExtra;
 
 @SuppressWarnings("java:S2440")
@@ -65,7 +66,8 @@ public class Heater implements ModInitializer {
 
         Registry.register(BLOCK_ENTITY_TYPE, id, HeaterBlockEntity.TYPE);
         Registry.register(MENU, id, HeaterMenu.TYPE);
-        Registry.register(CREATIVE_MODE_TAB, id.withPath("tab"), HeaterMenu.TAB);
+
+        CommonLifecycleEvents.TAGS_LOADED.register(new FurnacesBinder());
     }
 
     private static final void registerAll(String name,
