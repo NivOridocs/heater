@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed
+
++ Rename `heater:adapters/heat_sink` dynamic registry to `heater:adapters/furnace`.
+
++ Update connection and propagation logic through tags.
+
+### Fixed
+
++ Optimize heat propagation through caching.
+
++ Optimize Heater container logic through Fabric Transfer API for Items.
+
 ## [3.1] - 2024-04-15
 
 ### Added
