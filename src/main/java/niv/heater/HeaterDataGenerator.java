@@ -53,7 +53,6 @@ import niv.heater.block.WeatheringHeatPipeBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
-import niv.heater.screen.HeaterMenu;
 import niv.heater.util.WeatherStateExtra;
 
 public class HeaterDataGenerator implements DataGeneratorEntrypoint {
@@ -253,7 +252,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     ThermostatBlock.BLOCKS.get()::get, WeatheringThermostatBlock.BLOCKS.get()::get);
 
             builder.add(HeaterBlockEntity.CONTAINER_NAME, Heater.MOD_NAME);
-            builder.add(HeaterMenu.TAB_NAME, Heater.MOD_NAME);
+            builder.add(Heater.TAB_NAME, Heater.MOD_NAME);
         }
 
         @SuppressWarnings("java:S1643")
