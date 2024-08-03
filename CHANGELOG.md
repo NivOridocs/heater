@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [3.2] - 2024-08-03
+
 ### Changed
 
 + Rename `heater:adapters/heat_sink` dynamic registry to `heater:adapters/furnace`.
@@ -68,6 +70,7 @@
 
 Initial release.
 
+[3.2]: https://github.com/NivOridocs/heater/releases/tag/3.2
 [3.1]: https://github.com/NivOridocs/heater/releases/tag/3.1
 [3.0]: https://github.com/NivOridocs/heater/releases/tag/3.0
 [2.0]: https://github.com/NivOridocs/heater/releases/tag/2.0
