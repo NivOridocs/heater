@@ -12,7 +12,7 @@ Here's what they do.
 
 ### Heater
 
-As its namesake block, the **Heater** is this mod's core. Its role is to burn fuel and propagate the generated heat to nearby compatible blocks, such as Furnaces, Blast Furnaces, and Smokers for vanilla Minecraft, but also [Haunt Furnaces](https://modrinth.com/mod/haunt-furnace), [Kilns](https://modrinth.com/mod/embers-kiln), and probably others.
+As its namesake block, the **Heater** is this mod's core. Its role is to burn fuel and propagate the generated heat to nearby compatible blocks, such as Furnaces, Blast Furnaces, and Smokers from vanilla Minecraft, but also many other furnace variants from other mods if they are interoperable (see [below](#interoperability)).
 
 <details>
 <summary>Heater Interface</summary>
@@ -58,6 +58,50 @@ The Thermostat is also the only block that can "push" heat into a Heater, doubli
 
 The Thermostat is entity-free, too.
 
-## Planned Features
+## Interoperability
 
-I plan to add dyeable Heat Pipes (and maybe Thermostats, too) with some color-matching-heat-propagation logic. However, considering that each new block has four oxidization stages and as many waxed variants, I am not so thrilled to implement SIXTEEN new blocks with all their SIXTY-FOUR variants. Double that if I decide to dye the Thermostat, too. So, I don't promise anything.
+If you don't want to read on, for it does become a bit technical, but found a furnace-like block that you feel Heater should propagate heat to but doesn't, then I invite you to check if an [issue](https://github.com/NivOridocs/heater/issues) regarding said block already exists or, if it doesn't, to open a new one. If you open a new one, I ask you to specify the mod name and possibly a source-code link, the furnace-like block or blocks, and the Minecraft version. Note that if a mod isn't open source, I can do close to nothing to make it compatible.
+
+That said, Heater should be automatically interoperable with any 3rd party mod's block whose entity extends the `AbstractFurnaceBlockEntity` (as from Mojang mappings) class.
+
+This is because every entity extending such a class has the `litTime` and `litDuration` (as from Mojang mappings) fields, which this mod interacts with to propagate heat.
+
+However, some mods (like Heater, paradoxically) don't extend said class for the furnace-like blocks they add but still have two fields that work the same as `litTime` and `litDuration`.
+
+To make such blocks interoperable, you can create a data pack containing one or more furnace adapters, as in the following examples.
+
+<details>
+<summary>Data Pack Structure</summary>
+
+```tree
+<datapack>.zip
+├── data
+│   └── <datapack>
+│       └── heater
+│           └── adapters
+│               └── furnace
+│                   └── <block_entity_type_1>.json (content example below)
+│                   └── <block_entity_type_2>.json
+│                   └── ...
+├── pack.mcmeta
+└── pack.png (optional)
+```
+
+</details>
+
+<details>
+<summary>JSON File Content</summary>
+
+```json
+// custom_furnace.json
+{
+    // The id of the 3rd party mod's furnace-like block's entity' type
+    "type": "example_mod:custom_furnace_entity_type",
+    // The name of the field corresponding in function to `litTime`
+    "litTime": "burnTime",
+    // The name of the field corresponding in function to `litDuration`
+    "litDuration": "fuelTime"
+}
+```
+
+</details>
