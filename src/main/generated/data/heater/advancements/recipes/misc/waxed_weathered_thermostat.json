@@ -43,6 +43,5 @@
     "recipes": [
       "heater:waxed_weathered_thermostat"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

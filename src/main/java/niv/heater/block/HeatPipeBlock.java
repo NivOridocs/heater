@@ -1,70 +1,82 @@
 package niv.heater.block;
 
-import java.util.ArrayList;
+import static net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings.copyOf;
+import static net.minecraft.world.level.block.Blocks.COPPER_BLOCK;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPOSED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.OXIDIZED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
+import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Supplier;
+
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import niv.heater.util.HeatSink;
-import niv.heater.util.HeatSource;
+import niv.heater.Tags;
+import niv.heater.api.Connector;
+import niv.heater.block.entity.HeaterBlockEntity;
 
-public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterloggedBlock {
+public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCopper, SimpleWaterloggedBlock {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<HeatPipeBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeatPipeBlock::getWeatherState),
+            WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeatPipeBlock::getAge),
             Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
             .apply(instance, HeatPipeBlock::new));
 
-    public static final BooleanProperty DOWN = BlockStateProperties.DOWN;
-    public static final BooleanProperty UP = BlockStateProperties.UP;
-    public static final BooleanProperty NORTH = BlockStateProperties.NORTH;
-    public static final BooleanProperty SOUTH = BlockStateProperties.SOUTH;
-    public static final BooleanProperty WEST = BlockStateProperties.WEST;
-    public static final BooleanProperty EAST = BlockStateProperties.EAST;
-    public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    public static final HeatPipeBlock UNAFFECTED_BLOCK = new HeatPipeBlock(UNAFFECTED, copyOf(COPPER_BLOCK));
+    public static final HeatPipeBlock EXPOSED_BLOCK = new HeatPipeBlock(EXPOSED, copyOf(COPPER_BLOCK));
+    public static final HeatPipeBlock WEATHERED_BLOCK = new HeatPipeBlock(WEATHERED, copyOf(COPPER_BLOCK));
+    public static final HeatPipeBlock OXIDIZED_BLOCK = new HeatPipeBlock(OXIDIZED, copyOf(COPPER_BLOCK));
 
-    private static final BooleanProperty[] FACING_PROPERTIES = new BooleanProperty[] {
-            DOWN, UP, NORTH, SOUTH, WEST, EAST };
+    public static final BlockItem UNAFFECTED_ITEM = new BlockItem(UNAFFECTED_BLOCK, new FabricItemSettings());
+    public static final BlockItem EXPOSED_ITEM = new BlockItem(EXPOSED_BLOCK, new FabricItemSettings());
+    public static final BlockItem WEATHERED_ITEM = new BlockItem(WEATHERED_BLOCK, new FabricItemSettings());
+    public static final BlockItem OXIDIZED_ITEM = new BlockItem(OXIDIZED_BLOCK, new FabricItemSettings());
 
-    private static final VoxelShape CORE;
-    private static final VoxelShape[] PIPE_ARM;
+    public static final Supplier<ImmutableMap<WeatherState, HeatPipeBlock>> BLOCKS = Suppliers
+            .memoize(() -> ImmutableMap.<WeatherState, HeatPipeBlock>builder()
+                    .put(UNAFFECTED, UNAFFECTED_BLOCK)
+                    .put(EXPOSED, EXPOSED_BLOCK)
+                    .put(WEATHERED, WEATHERED_BLOCK)
+                    .put(OXIDIZED, OXIDIZED_BLOCK)
+                    .build());
 
-    static {
-        CORE = Block.box(5, 5, 5, 11, 11, 11);
-        PIPE_ARM = new VoxelShape[] {
-                Block.box(5, 0, 5, 11, 5, 11),
-                Block.box(5, 11, 5, 11, 16, 11),
-                Block.box(5, 5, 0, 11, 11, 5),
-                Block.box(5, 5, 11, 11, 11, 16),
-                Block.box(0, 5, 5, 5, 11, 11),
-                Block.box(11, 5, 5, 16, 11, 11),
-        };
-    }
+    public static final Supplier<ImmutableMap<WeatherState, BlockItem>> ITEMS = Suppliers
+            .memoize(() -> ImmutableMap.<WeatherState, BlockItem>builder()
+                    .put(UNAFFECTED, UNAFFECTED_ITEM)
+                    .put(EXPOSED, EXPOSED_ITEM)
+                    .put(WEATHERED, WEATHERED_ITEM)
+                    .put(OXIDIZED, OXIDIZED_ITEM)
+                    .build());
 
     private final WeatherState weatherState;
 
     public HeatPipeBlock(WeatherState weatherState, Properties settings) {
-        super(settings);
+        super(.1875F, settings);
         this.weatherState = weatherState;
         this.registerDefaultState(stateDefinition.any()
                 .setValue(DOWN, false)
@@ -76,10 +88,6 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
                 .setValue(WATERLOGGED, false));
     }
 
-    public WeatherState getWeatherState() {
-        return weatherState;
-    }
-
     @Override
     public MapCodec<? extends HeatPipeBlock> codec() {
         return CODEC;
@@ -88,17 +96,6 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
     @Override
     public boolean propagatesSkylightDown(BlockState state, BlockGetter getter, BlockPos pos) {
         return !state.getValue(WATERLOGGED).booleanValue();
-    }
-
-    @Override
-    public VoxelShape getShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext context) {
-        var shapes = new ArrayList<VoxelShape>(6);
-        for (var direction : Direction.values()) {
-            if (isConnected(state, direction)) {
-                shapes.add(PIPE_ARM[direction.get3DDataValue()]);
-            }
-        }
-        return Shapes.or(CORE, shapes.toArray(VoxelShape[]::new));
     }
 
     @Override
@@ -118,16 +115,14 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         var level = context.getLevel();
         var pos = context.getClickedPos();
-        var state = super.getStateForPlacement(context);
-        if (level.getFluidState(pos).is(Fluids.WATER)) {
-            state = state.setValue(WATERLOGGED, true);
-        }
-        for (var direction : Direction.values()) {
-            if (canConnect(level, pos.relative(direction))) {
-                state = state.setValue(getProperty(direction), true);
-            }
-        }
-        return state;
+        return this.defaultBlockState()
+                .trySetValue(DOWN, canConnect(level, pos.below()))
+                .trySetValue(UP, canConnect(level, pos.above()))
+                .trySetValue(NORTH, canConnect(level, pos.north()))
+                .trySetValue(SOUTH, canConnect(level, pos.south()))
+                .trySetValue(WEST, canConnect(level, pos.west()))
+                .trySetValue(EAST, canConnect(level, pos.east()))
+                .trySetValue(WATERLOGGED, level.getFluidState(pos).is(Fluids.WATER));
     }
 
     @Override
@@ -137,7 +132,26 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
         if (state.getValue(WATERLOGGED).booleanValue()) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
-        return state.setValue(getProperty(direction), canConnect(level, neighborPos));
+        return state.trySetValue(PROPERTY_BY_DIRECTION.get(direction), canConnect(level, neighborPos));
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos,
+            Block sourceBlock, BlockPos sourcePos, boolean notify) {
+        if (level.isClientSide) {
+            return;
+        }
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
+    }
+
+    @Override
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moved) {
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
+        HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
     }
 
     @Override
@@ -145,33 +159,28 @@ public class HeatPipeBlock extends Block implements HeatSource, SimpleWaterlogge
         builder.add(DOWN, UP, NORTH, SOUTH, WEST, EAST, WATERLOGGED);
     }
 
-    private boolean canConnect(LevelAccessor level, BlockPos pos) {
-        var block = level.getBlockState(pos).getBlock();
-        return block instanceof HeatSource || HeatSink.is(level, level.getBlockEntity(pos));
-    }
-
-    public static boolean isConnected(BlockState state, Direction direction) {
-        return state.getValue(getProperty(direction)).booleanValue();
-    }
-
-    public static BooleanProperty getProperty(Direction direction) {
-        return FACING_PROPERTIES[direction.get3DDataValue()];
-    }
-
     @Override
-    public Direction[] getConnected(BlockState state) {
-        var directions = new ArrayList<>(6);
+    public Set<Direction> getConnected(BlockState state) {
+        var directions = new HashSet<Direction>(6);
         for (var direction : Direction.values()) {
-            if (isConnected(state, direction)) {
+            if (state.getValue(PROPERTY_BY_DIRECTION.get(direction)).booleanValue()) {
                 directions.add(direction);
             }
         }
-        return directions.toArray(Direction[]::new);
+        return directions;
     }
 
     @Override
-    public int reducedHeat(int heat) {
-        return HeatSource.reduceHeat(weatherState, heat);
+    public boolean canPropagate(LevelAccessor level, BlockPos pos, BlockState state, Direction direction) {
+        return level.getBlockState(pos.relative(direction)).is(Tags.Propagable.PIPES);
     }
 
+    @Override
+    public WeatherState getAge() {
+        return weatherState;
+    }
+
+    private boolean canConnect(BlockGetter getter, BlockPos pos) {
+        return getter.getBlockState(pos).is(Tags.Connectable.PIPES);
+    }
 }

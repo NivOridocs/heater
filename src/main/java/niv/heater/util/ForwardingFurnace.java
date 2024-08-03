@@ -4,15 +4,16 @@ import java.lang.reflect.Field;
 import java.util.Objects;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
+import niv.heater.api.Furnace;
 
 @SuppressWarnings("java:S3011")
-public class ForwardingHeatSink implements HeatSink {
+public class ForwardingFurnace implements Furnace {
 
     private final BlockEntity target;
     private final Field burnTime;
     private final Field fuelTime;
 
-    public ForwardingHeatSink(BlockEntity target, Field burnTime, Field fuelTime) {
+    public ForwardingFurnace(BlockEntity target, Field burnTime, Field fuelTime) {
         this.target = Objects.requireNonNull(target);
         this.burnTime = Objects.requireNonNull(burnTime);
         this.fuelTime = Objects.requireNonNull(fuelTime);

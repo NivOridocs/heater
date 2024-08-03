@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "heater:heater",
+    "heater:exposed_heater",
+    "heater:weathered_heater",
+    "heater:oxidized_heater",
+    "heater:waxed_heater",
+    "heater:waxed_exposed_heater",
+    "heater:waxed_weathered_heater",
+    "heater:waxed_oxidized_heater"
+  ]
+}

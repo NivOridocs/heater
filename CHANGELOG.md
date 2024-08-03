@@ -2,11 +2,25 @@
 
 ## [Unreleased]
 
+## [3.2] - 2024-08-03
+
+### Changed
+
++ Rename `heater:adapters/heat_sink` dynamic registry to `heater:adapters/furnace`.
+
++ Update connection and propagation logic through tags.
+
+### Fixed
+
++ Optimize heat propagation through caching.
+
++ Optimize Heater container logic through Fabric Transfer API for Items.
+
 ## [3.1] - 2024-04-15
 
 ### Added
 
-+ Add `heater:adapters/heat_sink` dynamic registry for better compatibily with third-party mods.
++ Add `heater:adapters/heat_sink` dynamic registry for better compatibility with third-party mods.
 
 ## [3.0] - 2024-03-17
 
@@ -56,6 +70,7 @@
 
 Initial release.
 
+[3.2]: https://github.com/NivOridocs/heater/releases/tag/3.2
 [3.1]: https://github.com/NivOridocs/heater/releases/tag/3.1
 [3.0]: https://github.com/NivOridocs/heater/releases/tag/3.0
 [2.0]: https://github.com/NivOridocs/heater/releases/tag/2.0
