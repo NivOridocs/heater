@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -82,6 +83,8 @@ public class Heater implements ModInitializer {
                     WeatheringHeatPipeBlock.ITEMS.get().values().forEach(output::accept);
                     HeatPipeBlock.ITEMS.get().values().forEach(output::accept);
                 }).build());
+
+        ItemStorage.SIDED.registerForBlockEntity(HeaterBlockEntity::getInventoryStorage, HeaterBlockEntity.TYPE);
 
         CommonLifecycleEvents.TAGS_LOADED.register(new FurnacesBinder());
     }

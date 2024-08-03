@@ -134,7 +134,7 @@ public class HeaterBlock extends AbstractFurnaceBlock implements Connector, Weat
         var entity = level.getBlockEntity(pos);
         if (entity instanceof HeaterBlockEntity heater) {
             if (level instanceof ServerLevel) {
-                Containers.dropContents(level, pos, heater.getItems());
+                Containers.dropContents(level, pos, heater.getContainer());
             }
             level.updateNeighbourForOutputSignal(pos, this);
         }
