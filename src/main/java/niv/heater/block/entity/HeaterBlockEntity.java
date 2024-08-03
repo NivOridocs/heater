@@ -18,7 +18,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
-import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.LockCode;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.Nameable;
@@ -61,8 +60,9 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
 
-    private static final String CUSTOM_NAME_TAG = "CustomName";
     private static final String BURN_TIME_TAG = "BurnTime";
+    private static final String CUSTOM_NAME_TAG = "CustomName";
+    private static final String ITEM_TAG = "Item";
 
     private static final int MAX_HOPS = 64;
 
@@ -147,7 +147,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         if (compoundTag.contains(CUSTOM_NAME_TAG, 8)) {
             this.name = Component.Serializer.fromJson(compoundTag.getString(CUSTOM_NAME_TAG));
         }
-        ContainerHelper.loadAllItems(compoundTag, this.container.getItems());
+        this.container.setItem(0, ItemStack.of(compoundTag.getCompound(ITEM_TAG)));
         this.burnTime = compoundTag.getShort(BURN_TIME_TAG);
         this.fuelTime = this.getFuelTime(this.container.getItem(0));
     }
@@ -159,8 +159,8 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         if (this.name != null) {
             compoundTag.putString(CUSTOM_NAME_TAG, Component.Serializer.toJson(this.name));
         }
+        compoundTag.put(ITEM_TAG, this.container.getItem(0).save(new CompoundTag()));
         compoundTag.putShort(BURN_TIME_TAG, (short) this.burnTime);
-        ContainerHelper.saveAllItems(compoundTag, this.container.getItems());
     }
 
     // For {@link MenuProvider}
