@@ -8,21 +8,30 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.fabricmc.fabric.mixin.lookup.BlockEntityTypeAccessor;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import niv.heater.Heater;
 import niv.heater.api.Furnace;
+import niv.heater.util.Accessor;
 import niv.heater.util.ForwardingFurnace;
 
 public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<BlockEntity, Optional<Furnace>> {
+
+    private static record Accessors(Accessor burnTime, Accessor fuelTime) {
+    }
 
     public static final Codec<FurnaceAdapter> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             BuiltInRegistries.BLOCK_ENTITY_TYPE.byNameCodec().fieldOf("type").forGetter(r -> r.type),
@@ -39,10 +48,14 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
 
     private final String litDuration;
 
+    private final Optional<Accessors> accessors;
+
     public FurnaceAdapter(BlockEntityType<?> type, String litTime, String litDuration) {
         this.type = requireNonNull(type);
         this.litTime = requireNonNull(getIfBlank(litTime, () -> null));
         this.litDuration = requireNonNull(getIfBlank(litDuration, () -> null));
+
+        this.accessors = genAccessors();
     }
 
     @SuppressWarnings("java:S1452")
@@ -57,24 +70,26 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
 
     @Override
     public Optional<Furnace> apply(BlockEntity entity) {
-        return get(entity.getClass()).map(constructor -> constructor.apply(entity));
+        return accessors.map(value -> new ForwardingFurnace(entity, value.burnTime(), value.fuelTime()));
     }
 
-    @SuppressWarnings("java:S3011")
-    private Optional<Function<? super BlockEntity, Furnace>> get(Class<?> clazz) {
-        while (clazz != null
-                && BlockEntity.class.isAssignableFrom(clazz)
-                && !clazz.getName().startsWith("net.minecraft")) {
-            try {
-                var litTimeField = clazz.getDeclaredField(this.litTime);
-                var litDurationField = clazz.getDeclaredField(this.litDuration);
+    private Optional<Accessors> genAccessors() {
+        Class<?> clazz = ((BlockEntityTypeAccessor) this.type).getBlocks()
+                .stream().findAny()
+                .map(Block::defaultBlockState)
+                .map(state -> this.type.create(BlockPos.ZERO, state).getClass())
+                .orElse(null);
+        if (clazz != null) {
+            var litTimeField = Optional.ofNullable(FieldUtils
+                    .getField(clazz, this.litTime, true))
+                    .flatMap(Accessor::of);
 
-                litTimeField.setAccessible(true);
-                litDurationField.setAccessible(true);
+            var litDurationField = Optional.ofNullable(FieldUtils
+                    .getField(clazz, this.litDuration, true))
+                    .flatMap(Accessor::of);
 
-                return Optional.of(entry -> new ForwardingFurnace(entry, litTimeField, litDurationField));
-            } catch (NoSuchFieldException ex) {
-                clazz = clazz.getSuperclass();
+            if (litTimeField.isPresent() && litDurationField.isPresent()) {
+                return Optional.of(new Accessors(litTimeField.get(), litDurationField.get()));
             }
         }
         return Optional.empty();

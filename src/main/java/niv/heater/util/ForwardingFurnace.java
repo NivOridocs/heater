@@ -1,19 +1,16 @@
 package niv.heater.util;
 
-import java.lang.reflect.Field;
 import java.util.Objects;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
 import niv.heater.api.Furnace;
 
-@SuppressWarnings("java:S3011")
 public class ForwardingFurnace implements Furnace {
-
     private final BlockEntity target;
-    private final Field burnTime;
-    private final Field fuelTime;
+    private final Accessor burnTime;
+    private final Accessor fuelTime;
 
-    public ForwardingFurnace(BlockEntity target, Field burnTime, Field fuelTime) {
+    public ForwardingFurnace(BlockEntity target, Accessor burnTime, Accessor fuelTime) {
         this.target = Objects.requireNonNull(target);
         this.burnTime = Objects.requireNonNull(burnTime);
         this.fuelTime = Objects.requireNonNull(fuelTime);
@@ -22,7 +19,7 @@ public class ForwardingFurnace implements Furnace {
     @Override
     public int getBurnTime() {
         try {
-            return burnTime.getInt(target);
+            return burnTime.get(target);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new IllegalStateException(ex);
         }
@@ -31,7 +28,7 @@ public class ForwardingFurnace implements Furnace {
     @Override
     public void setBurnTime(int value) {
         try {
-            burnTime.setInt(target, value);
+            burnTime.set(target, value);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new IllegalStateException(ex);
         }
@@ -40,7 +37,7 @@ public class ForwardingFurnace implements Furnace {
     @Override
     public int getFuelTime() {
         try {
-            return fuelTime.getInt(target);
+            return fuelTime.get(target);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new IllegalStateException(ex);
         }
@@ -49,7 +46,7 @@ public class ForwardingFurnace implements Furnace {
     @Override
     public void setFuelTime(int value) {
         try {
-            fuelTime.setInt(target, value);
+            fuelTime.set(target, value);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new IllegalStateException(ex);
         }
