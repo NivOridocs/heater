@@ -40,7 +40,7 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
             .apply(instance, FurnaceAdapter::new));
 
     public static final ResourceKey<Registry<FurnaceAdapter>> REGISTRY = ResourceKey
-            .createRegistryKey(new ResourceLocation(Heater.MOD_ID, "adapters/furnace"));
+            .createRegistryKey(ResourceLocation.tryBuild(Heater.MOD_ID, "adapters/furnace"));
 
     private final BlockEntityType<?> type;
 

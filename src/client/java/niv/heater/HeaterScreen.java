@@ -13,7 +13,7 @@ import niv.heater.screen.HeaterMenu;
 
 @Environment(EnvType.CLIENT)
 public class HeaterScreen extends AbstractContainerScreen<HeaterMenu> {
-    private static final ResourceLocation BACKGROUND = new ResourceLocation(MOD_ID, "textures/gui/container/heater.png");
+    private static final ResourceLocation BACKGROUND = ResourceLocation.tryBuild(MOD_ID, "textures/gui/container/heater.png");
 
     public HeaterScreen(HeaterMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);

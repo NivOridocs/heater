@@ -49,10 +49,10 @@ public class Tags {
     }
 
     private static final TagKey<Block> createTag(String name) {
-        return TagKey.create(Registries.BLOCK, new ResourceLocation(Heater.MOD_ID, name));
+        return TagKey.create(Registries.BLOCK, ResourceLocation.tryBuild(Heater.MOD_ID, name));
     }
 
     private static final TagKey<Block> createCommonTag(String name) {
-        return TagKey.create(Registries.BLOCK, new ResourceLocation("c", name));
+        return TagKey.create(Registries.BLOCK, ResourceLocation.tryBuild("c", name));
     }
 }

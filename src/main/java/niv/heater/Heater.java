@@ -68,7 +68,7 @@ public class Heater implements ModInitializer {
 
         DynamicRegistries.register(FurnaceAdapter.REGISTRY, FurnaceAdapter.CODEC);
 
-        var id = new ResourceLocation(MOD_ID, MOD_ID);
+        var id = ResourceLocation.tryBuild(MOD_ID, MOD_ID);
 
         Registry.register(BLOCK_ENTITY_TYPE, id, HeaterBlockEntity.TYPE);
         Registry.register(MENU, id, HeaterMenu.TYPE);
@@ -92,7 +92,7 @@ public class Heater implements ModInitializer {
     private static final void registerAll(String name,
             Function<WeatherState, Block> blocks, Function<WeatherState, Item> items,
             Function<WeatherState, Block> weatheringBlocks, Function<WeatherState, Item> weatheringItems) {
-        var id = new ResourceLocation(Heater.MOD_ID, "");
+        var id = ResourceLocation.tryBuild(Heater.MOD_ID, "");
         for (var state : WeatherState.values()) {
 
             id = id.withPath(name).withPrefix(WeatherStateExtra.toPath(state));
