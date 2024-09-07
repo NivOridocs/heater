@@ -33,7 +33,6 @@
 			"niv.heater.HeaterDataGenerator"
 		]
 	},
-    "accessWidener" : "heater.accesswidener",
 	"mixins": [
         "heater.mixins.json"
 	],
