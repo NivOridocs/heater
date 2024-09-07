@@ -39,6 +39,7 @@ import niv.heater.block.HeaterBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.Explorer;
+import niv.heater.util.FurnaceExtra;
 import niv.heater.util.HeaterContainer;
 
 public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable, Furnace {
@@ -198,18 +199,13 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     // For {@link Furnace}
 
     @Override
-    public int getBurnTime() {
-        return burnTime;
+    public boolean isBurning() {
+        return burnTime > 0;
     }
 
     @Override
-    public void setBurnTime(int value) {
-        burnTime = value;
-    }
-
-    @Override
-    public int getFuelTime() {
-        return fuelTime;
+    public void addBurnTime(int value) {
+        burnTime += value;
     }
 
     @Override
@@ -217,14 +213,25 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         fuelTime = value;
     }
 
+    @Override
+    public int compareFuelTime(int value) {
+        return Integer.compare(fuelTime, value);
+    }
+
+    @Override
+    public int compareDeltaTime(int value) {
+        return Integer.compare(fuelTime - burnTime, value);
+    }
+
+    @Override
+    public Number getComparable() {
+        return this.burnTime;
+    }
+
     // Non-static
 
     public void makeDirty() {
         this.dirty.set(true);
-    }
-
-    private boolean isBurning() {
-        return burnTime > 0;
     }
 
     private int getFuelTime(ItemStack fuel) {
@@ -278,7 +285,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     private static record FurnaceHolder(Furnace furnace, BlockPos pos) implements Comparable<FurnaceHolder> {
         @Override
         public int compareTo(FurnaceHolder that) {
-            int result = Furnace.compare(this.furnace(), that.furnace());
+            int result = FurnaceExtra.compare(this.furnace(), that.furnace());
             if (result == 0) {
                 result = this.pos().compareTo(that.pos());
             }
@@ -304,21 +311,21 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         }
 
         for (var target : targets) {
-            var wasBurning = target.furnace().getBurnTime() > 0;
+            var wasBurning = target.furnace().isBurning();
 
             if (deltaBurn > heater.burnTime) {
                 deltaBurn = heater.burnTime;
             }
 
-            if (target.furnace().getFuelTime() < heater.fuelTime) {
+            if (target.furnace().compareFuelTime(heater.fuelTime) < 0) {
                 target.furnace().setFuelTime(heater.fuelTime);
             }
 
-            if (target.furnace().getBurnTime() + deltaBurn <= target.furnace().getFuelTime()) {
+            if (target.furnace().compareDeltaTime(deltaBurn) >= 0) {
                 heater.burnTime -= deltaBurn;
-                target.furnace().setBurnTime(target.furnace().getBurnTime() + deltaBurn);
+                target.furnace().addBurnTime(deltaBurn);
 
-                var isBurning = target.furnace().getBurnTime() > 0;
+                var isBurning = target.furnace().isBurning();
                 if (wasBurning != isBurning) {
                     var state = level.getBlockState(target.pos()).setValue(LIT, isBurning);
                     level.setBlockAndUpdate(target.pos(), state);

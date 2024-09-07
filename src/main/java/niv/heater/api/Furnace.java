@@ -2,15 +2,15 @@ package niv.heater.api;
 
 public interface Furnace {
 
-    int getBurnTime();
+    boolean isBurning();
 
-    void setBurnTime(int value);
-
-    int getFuelTime();
+    void addBurnTime(int value);
 
     void setFuelTime(int value);
 
-    static int compare(Furnace f1, Furnace f2) {
-        return Integer.compare(f2.getBurnTime(), f1.getBurnTime());
-    }
+    int compareFuelTime(int value);
+
+    int compareDeltaTime(int value);
+
+    Number getComparable();
 }

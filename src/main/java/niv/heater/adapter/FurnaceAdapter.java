@@ -25,12 +25,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import niv.heater.Heater;
 import niv.heater.api.Furnace;
-import niv.heater.util.Accessor;
 import niv.heater.util.ForwardingFurnace;
+import niv.heater.util.FurnaceField;
 
 public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<BlockEntity, Optional<Furnace>> {
 
-    private static record Accessors(Accessor burnTime, Accessor fuelTime) {
+    private static record Fields(FurnaceField burnTime, FurnaceField fuelTime) {
     }
 
     public static final Codec<FurnaceAdapter> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -48,14 +48,14 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
 
     private final String litDuration;
 
-    private final Optional<Accessors> accessors;
+    private final Optional<Fields> fields;
 
     public FurnaceAdapter(BlockEntityType<?> type, String litTime, String litDuration) {
         this.type = requireNonNull(type);
         this.litTime = requireNonNull(getIfBlank(litTime, () -> null));
         this.litDuration = requireNonNull(getIfBlank(litDuration, () -> null));
 
-        this.accessors = genAccessors();
+        this.fields = getFields();
     }
 
     @SuppressWarnings("java:S1452")
@@ -70,10 +70,10 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
 
     @Override
     public Optional<Furnace> apply(BlockEntity entity) {
-        return accessors.map(value -> new ForwardingFurnace(entity, value.burnTime(), value.fuelTime()));
+        return fields.map(value -> new ForwardingFurnace(entity, value.burnTime(), value.fuelTime()));
     }
 
-    private Optional<Accessors> genAccessors() {
+    private Optional<Fields> getFields() {
         Class<?> clazz = ((BlockEntityTypeAccessor) this.type).getBlocks()
                 .stream().findAny()
                 .map(Block::defaultBlockState)
@@ -82,14 +82,14 @@ public class FurnaceAdapter implements Predicate<BlockEntityType<?>>, Function<B
         if (clazz != null) {
             var litTimeField = Optional.ofNullable(FieldUtils
                     .getField(clazz, this.litTime, true))
-                    .flatMap(Accessor::of);
+                    .flatMap(FurnaceField::of);
 
             var litDurationField = Optional.ofNullable(FieldUtils
                     .getField(clazz, this.litDuration, true))
-                    .flatMap(Accessor::of);
+                    .flatMap(FurnaceField::of);
 
             if (litTimeField.isPresent() && litDurationField.isPresent()) {
-                return Optional.of(new Accessors(litTimeField.get(), litDurationField.get()));
+                return Optional.of(new Fields(litTimeField.get(), litDurationField.get()));
             }
         }
         return Optional.empty();
