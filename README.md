@@ -98,9 +98,9 @@ To make such blocks interoperable, you can create a data pack containing one or 
     // The id of the 3rd party mod's furnace-like block's entity' type
     "type": "example_mod:custom_furnace_entity_type",
     // The name of the field corresponding in function to `litTime`
-    "litTime": "burnTime",
+    "lit_time": "burnTime",
     // The name of the field corresponding in function to `litDuration`
-    "litDuration": "fuelTime"
+    "lit_duration": "fuelTime"
 }
 ```
 

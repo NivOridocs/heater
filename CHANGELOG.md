@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [3.3] - 2024-09-07
+
+### Fixed
+
++ Fix interoperability with Variant Furnaces and hopefully with other 3rd party mods, too ([#5](https://github.com/NivOridocs/heater/issues/5)).
+
 ## [3.2] - 2024-08-03
 
 ### Changed
@@ -70,6 +76,7 @@
 
 Initial release.
 
+[3.3]: https://github.com/NivOridocs/heater/releases/tag/3.3
 [3.2]: https://github.com/NivOridocs/heater/releases/tag/3.2
 [3.1]: https://github.com/NivOridocs/heater/releases/tag/3.1
 [3.0]: https://github.com/NivOridocs/heater/releases/tag/3.0
