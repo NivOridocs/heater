@@ -11,6 +11,7 @@ import static niv.heater.Heater.MOD_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -97,6 +98,15 @@ public class HeaterBlocks {
                 .put(OXIDIZED, OXIDIZED_HEATER)
                 .build();
 
+        OxidizableBlocksRegistry.registerWaxableBlockPair(HEATER, WAXED_HEATER);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(EXPOSED_HEATER, WAXED_EXPOSED_HEATER);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(WEATHERED_HEATER, WAXED_WEATHERED_HEATER);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(OXIDIZED_HEATER, WAXED_OXIDIZED_HEATER);
+
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(HEATER, EXPOSED_HEATER);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(EXPOSED_HEATER, WEATHERED_HEATER);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(WEATHERED_HEATER, OXIDIZED_HEATER);
+
         WAXED_HEAT_PIPE = register(new HeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
         WAXED_EXPOSED_HEAT_PIPE = register(new HeatPipeBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
         WAXED_WEATHERED_HEAT_PIPE = register(new HeatPipeBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
@@ -121,6 +131,15 @@ public class HeaterBlocks {
                 .put(OXIDIZED, OXIDIZED_HEAT_PIPE)
                 .build();
 
+        OxidizableBlocksRegistry.registerWaxableBlockPair(HEAT_PIPE, WAXED_HEAT_PIPE);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(EXPOSED_HEAT_PIPE, WAXED_EXPOSED_HEAT_PIPE);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(WEATHERED_HEAT_PIPE, WAXED_WEATHERED_HEAT_PIPE);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(OXIDIZED_HEAT_PIPE, WAXED_OXIDIZED_HEAT_PIPE);
+
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(HEAT_PIPE, EXPOSED_HEAT_PIPE);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(EXPOSED_HEAT_PIPE, WEATHERED_HEAT_PIPE);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(WEATHERED_HEAT_PIPE, OXIDIZED_HEAT_PIPE);
+
         WAXED_THERMOSTAT = register(new ThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
         WAXED_EXPOSED_THERMOSTAT = register(new ThermostatBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
         WAXED_WEATHERED_THERMOSTAT = register(new ThermostatBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
@@ -144,6 +163,15 @@ public class HeaterBlocks {
                 .put(WEATHERED, WEATHERED_THERMOSTAT)
                 .put(OXIDIZED, OXIDIZED_THERMOSTAT)
                 .build();
+
+        OxidizableBlocksRegistry.registerWaxableBlockPair(THERMOSTAT, WAXED_THERMOSTAT);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(EXPOSED_THERMOSTAT, WAXED_EXPOSED_THERMOSTAT);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(WEATHERED_THERMOSTAT, WAXED_WEATHERED_THERMOSTAT);
+        OxidizableBlocksRegistry.registerWaxableBlockPair(OXIDIZED_THERMOSTAT, WAXED_OXIDIZED_THERMOSTAT);
+
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(THERMOSTAT, EXPOSED_THERMOSTAT);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(EXPOSED_THERMOSTAT, WEATHERED_THERMOSTAT);
+        OxidizableBlocksRegistry.registerOxidizableBlockPair(WEATHERED_THERMOSTAT, OXIDIZED_THERMOSTAT);
     }
 
     private static final <T extends Block & Worded> T register(T block) {
