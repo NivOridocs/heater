@@ -74,9 +74,9 @@ public class HeaterBlocks {
 
     static {
         WAXED_HEATER = register(new HeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
-        WAXED_EXPOSED_HEATER = register(new HeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
-        WAXED_WEATHERED_HEATER = register(new HeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
-        WAXED_OXIDIZED_HEATER = register(new HeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
+        WAXED_EXPOSED_HEATER = register(new HeaterBlock(EXPOSED, ofFullCopy(FURNACE)));
+        WAXED_WEATHERED_HEATER = register(new HeaterBlock(WEATHERED, ofFullCopy(FURNACE)));
+        WAXED_OXIDIZED_HEATER = register(new HeaterBlock(OXIDIZED, ofFullCopy(FURNACE)));
 
         WAXED_HEATERS = ImmutableMap.<WeatherState, HeaterBlock>builder()
                 .put(UNAFFECTED, WAXED_HEATER)
@@ -86,9 +86,9 @@ public class HeaterBlocks {
                 .build();
 
         HEATER = register(new WeatheringHeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
-        EXPOSED_HEATER = register(new WeatheringHeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
-        WEATHERED_HEATER = register(new WeatheringHeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
-        OXIDIZED_HEATER = register(new WeatheringHeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
+        EXPOSED_HEATER = register(new WeatheringHeaterBlock(EXPOSED, ofFullCopy(FURNACE)));
+        WEATHERED_HEATER = register(new WeatheringHeaterBlock(WEATHERED, ofFullCopy(FURNACE)));
+        OXIDIZED_HEATER = register(new WeatheringHeaterBlock(OXIDIZED, ofFullCopy(FURNACE)));
 
         HEATERS = ImmutableMap.<WeatherState, WeatheringHeaterBlock>builder()
                 .put(UNAFFECTED, HEATER)
@@ -98,9 +98,9 @@ public class HeaterBlocks {
                 .build();
 
         WAXED_HEAT_PIPE = register(new HeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_EXPOSED_HEAT_PIPE = register(new HeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_WEATHERED_HEAT_PIPE = register(new HeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_OXIDIZED_HEAT_PIPE = register(new HeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
+        WAXED_EXPOSED_HEAT_PIPE = register(new HeatPipeBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
+        WAXED_WEATHERED_HEAT_PIPE = register(new HeatPipeBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
+        WAXED_OXIDIZED_HEAT_PIPE = register(new HeatPipeBlock(OXIDIZED, ofFullCopy(COPPER_BLOCK)));
 
         WAXED_HEAT_PIPES = ImmutableMap.<WeatherState, HeatPipeBlock>builder()
                 .put(UNAFFECTED, WAXED_HEAT_PIPE)
@@ -110,9 +110,9 @@ public class HeaterBlocks {
                 .build();
 
         HEAT_PIPE = register(new WeatheringHeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        EXPOSED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WEATHERED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        OXIDIZED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
+        EXPOSED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
+        WEATHERED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
+        OXIDIZED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(OXIDIZED, ofFullCopy(COPPER_BLOCK)));
 
         HEAT_PIPES = ImmutableMap.<WeatherState, WeatheringHeatPipeBlock>builder()
                 .put(UNAFFECTED, HEAT_PIPE)
@@ -122,9 +122,9 @@ public class HeaterBlocks {
                 .build();
 
         WAXED_THERMOSTAT = register(new ThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_EXPOSED_THERMOSTAT = register(new ThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_WEATHERED_THERMOSTAT = register(new ThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_OXIDIZED_THERMOSTAT = register(new ThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
+        WAXED_EXPOSED_THERMOSTAT = register(new ThermostatBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
+        WAXED_WEATHERED_THERMOSTAT = register(new ThermostatBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
+        WAXED_OXIDIZED_THERMOSTAT = register(new ThermostatBlock(OXIDIZED, ofFullCopy(COPPER_BLOCK)));
 
         WAXED_THERMOSTATS = ImmutableMap.<WeatherState, ThermostatBlock>builder()
                 .put(UNAFFECTED, WAXED_THERMOSTAT)
@@ -134,9 +134,9 @@ public class HeaterBlocks {
                 .build();
 
         THERMOSTAT = register(new WeatheringThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        EXPOSED_THERMOSTAT = register(new WeatheringThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WEATHERED_THERMOSTAT = register(new WeatheringThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        OXIDIZED_THERMOSTAT = register(new WeatheringThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
+        EXPOSED_THERMOSTAT = register(new WeatheringThermostatBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
+        WEATHERED_THERMOSTAT = register(new WeatheringThermostatBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
+        OXIDIZED_THERMOSTAT = register(new WeatheringThermostatBlock(OXIDIZED, ofFullCopy(COPPER_BLOCK)));
 
         THERMOSTATS = ImmutableMap.<WeatherState, WeatheringThermostatBlock>builder()
                 .put(UNAFFECTED, THERMOSTAT)
