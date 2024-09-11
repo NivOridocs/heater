@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
++ Updated target Minecraft version to 1.21, with 1.21.1 compatibility.
++ Replaced local `c:player_workstations/furnaces` common tag with the Fabric-provided one of the same name.
+
+### Removed
+
++ Removed references to the obsolete `c:furnaces` common tag.
+
 ## [3.3] - 2024-09-07
 
 ### Fixed
