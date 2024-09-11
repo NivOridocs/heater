@@ -151,7 +151,9 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         if (this.name != null) {
             compoundTag.putString(CUSTOM_NAME_TAG, Component.Serializer.toJson(this.name, provider));
         }
-        compoundTag.put(ITEM_TAG, this.container.getItem(0).save(provider, new CompoundTag()));
+        if (!this.container.getItem(0).isEmpty()) {
+            compoundTag.put(ITEM_TAG, this.container.getItem(0).save(provider, new CompoundTag()));
+        }
         compoundTag.putShort(BURN_TIME_TAG, (short) this.burnTime);
     }
 
