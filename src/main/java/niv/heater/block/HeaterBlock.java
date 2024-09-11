@@ -3,18 +3,17 @@ package niv.heater.block;
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -98,24 +97,25 @@ public class HeaterBlock extends AbstractFurnaceBlock implements Connector, Word
         }
     }
 
-    public void randomDisplayTick(BlockState state, Level level, BlockPos pos, Random random) {
+    @Override
+    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         if (state.getValue(LIT).booleanValue()) {
-            var x = pos.getX() + .5d;
-            var y = pos.getY();
-            var z = pos.getZ() + .5d;
-            if (random.nextDouble() < .1d) {
+            double x = pos.getX() + .5d;
+            double y = pos.getY() + .0d;
+            double z = pos.getZ() + .5d;
+            if (random.nextDouble() < 0.1) {
                 level.playLocalSound(x, y, z,
                         SoundEvents.BLASTFURNACE_FIRE_CRACKLE,
-                        SoundSource.BLOCKS, 1f, 1f, false);
+                        SoundSource.BLOCKS,
+                        1.0F, 1.0F, false);
             }
-            var direction = state.getValue(FACING);
-            var axis = direction.getAxis();
-            var c = .52d;
-            var r = random.nextDouble() * .6d - .3d;
-            var dx = axis == Axis.X ? direction.getStepX() * c : r;
-            var dy = random.nextDouble() * 9d / 16d;
-            var dz = axis == Axis.Z ? direction.getStepY() * c : r;
-            level.addParticle(ParticleTypes.SMOKE, x + dx, y + dy, z + dz, .0, .0, .0);
+            Direction direction = state.getValue(FACING);
+            Direction.Axis axis = direction.getAxis();
+            double r = random.nextDouble() * .6d - .3d;
+            double dx = axis == Direction.Axis.X ? direction.getStepX() * .52d : r;
+            double dy = random.nextDouble() * 9.0d / 16.0d;
+            double dz = axis == Direction.Axis.Z ? direction.getStepZ() * .52d : r;
+            level.addParticle(ParticleTypes.SMOKE, x + dx, y + dy, z + dz, .0d, .0d, .0d);
         }
     }
 
