@@ -11,10 +11,14 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
+import org.jetbrains.annotations.Nullable;
+
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.core.component.DataComponentMap.Builder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
@@ -26,17 +30,17 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.heater.api.Furnace;
 import niv.heater.block.HeaterBlock;
-import niv.heater.block.WeatheringHeaterBlock;
+import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.Explorer;
 import niv.heater.util.FurnaceExtra;
@@ -45,18 +49,6 @@ import niv.heater.util.HeaterContainer;
 public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable, Furnace {
 
     public static final String CONTAINER_NAME = "container.heater";
-
-    public static final BlockEntityType<HeaterBlockEntity> TYPE = FabricBlockEntityTypeBuilder
-            .create(HeaterBlockEntity::new,
-                    HeaterBlock.UNAFFECTED_BLOCK,
-                    HeaterBlock.EXPOSED_BLOCK,
-                    HeaterBlock.WEATHERED_BLOCK,
-                    HeaterBlock.OXIDIZED_BLOCK,
-                    WeatheringHeaterBlock.UNAFFECTED_BLOCK,
-                    WeatheringHeaterBlock.EXPOSED_BLOCK,
-                    WeatheringHeaterBlock.WEATHERED_BLOCK,
-                    WeatheringHeaterBlock.OXIDIZED_BLOCK)
-            .build();
 
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
@@ -73,6 +65,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     private LockCode lock = LockCode.NO_LOCK;
 
+    @Nullable
     private Component name;
 
     private int burnTime;
@@ -129,7 +122,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     };
 
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
-        super(TYPE, pos, state);
+        super(HeaterBlockEntityTypes.HEATER, pos, state);
         burnTime = 0;
         cache = new HashSet<>();
         dirty = new AtomicBoolean(true);
@@ -142,26 +135,42 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     // For {@link BlockEntity}
 
     @Override
-    public void load(CompoundTag compoundTag) {
-        super.load(compoundTag);
+    protected void loadAdditional(CompoundTag compoundTag, Provider provider) {
         this.lock = LockCode.fromTag(compoundTag);
         if (compoundTag.contains(CUSTOM_NAME_TAG, 8)) {
-            this.name = Component.Serializer.fromJson(compoundTag.getString(CUSTOM_NAME_TAG));
+            this.name = Component.Serializer.fromJson(compoundTag.getString(CUSTOM_NAME_TAG), provider);
         }
-        this.container.setItem(0, ItemStack.of(compoundTag.getCompound(ITEM_TAG)));
+        this.container.setItem(0, ItemStack.parseOptional(provider, compoundTag.getCompound(ITEM_TAG)));
         this.burnTime = compoundTag.getShort(BURN_TIME_TAG);
         this.fuelTime = this.getFuelTime(this.container.getItem(0));
     }
 
     @Override
-    public void saveAdditional(CompoundTag compoundTag) {
-        super.saveAdditional(compoundTag);
+    protected void saveAdditional(CompoundTag compoundTag, Provider provider) {
         this.lock.addToTag(compoundTag);
         if (this.name != null) {
-            compoundTag.putString(CUSTOM_NAME_TAG, Component.Serializer.toJson(this.name));
+            compoundTag.putString(CUSTOM_NAME_TAG, Component.Serializer.toJson(this.name, provider));
         }
-        compoundTag.put(ITEM_TAG, this.container.getItem(0).save(new CompoundTag()));
+        compoundTag.put(ITEM_TAG, this.container.getItem(0).save(provider, new CompoundTag()));
         compoundTag.putShort(BURN_TIME_TAG, (short) this.burnTime);
+    }
+
+    @Override
+    protected void applyImplicitComponents(DataComponentInput input) {
+        super.applyImplicitComponents(input);
+        this.name = input.get(DataComponents.CUSTOM_NAME);
+        this.lock = input.getOrDefault(DataComponents.LOCK, LockCode.NO_LOCK);
+        input.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyInto(this.container.getItems());
+    }
+
+    @Override
+    protected void collectImplicitComponents(Builder builder) {
+        super.collectImplicitComponents(builder);
+        builder.set(DataComponents.CUSTOM_NAME, this.name);
+        if (!this.lock.equals(LockCode.NO_LOCK)) {
+			builder.set(DataComponents.LOCK, this.lock);
+		}
+        builder.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(this.container.getItems()));
     }
 
     // For {@link MenuProvider}
@@ -363,7 +372,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     public static final void updateConnectedHeaters(LevelAccessor level, BlockPos pos, BlockState state) {
         new Explorer(level, pos, state, MAX_HOPS)
-                .onHeaterFound((h, p) -> level.getBlockEntity(p, TYPE)
+                .onHeaterFound((h, p) -> level.getBlockEntity(p, HeaterBlockEntityTypes.HEATER)
                         .ifPresent(HeaterBlockEntity::makeDirty))
                 .run();
     }

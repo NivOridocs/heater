@@ -19,6 +19,7 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider.BlockTagProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.models.BlockModelGenerators;
 import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.blockstates.Condition;
@@ -53,6 +54,8 @@ import niv.heater.block.WeatheringHeatPipeBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
+import niv.heater.registry.HeaterBlocks;
+import niv.heater.registry.HeaterTabs;
 import niv.heater.util.WeatherStateExtra;
 
 public class HeaterDataGenerator implements DataGeneratorEntrypoint {
@@ -87,17 +90,17 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             super(output);
             coreHeatPipeBlock = new ModelTemplate(
                     Optional.of(ModelLocationUtils
-                            .getModelLocation(WeatheringHeatPipeBlock.UNAFFECTED_BLOCK, "_base_core")),
+                            .getModelLocation(HeaterBlocks.HEAT_PIPE, "_base_core")),
                     Optional.empty(), TextureSlot.TEXTURE);
 
             armHeatPipeBlock = new ModelTemplate(
                     Optional.of(ModelLocationUtils
-                            .getModelLocation(WeatheringHeatPipeBlock.UNAFFECTED_BLOCK, "_base_arm")),
+                            .getModelLocation(HeaterBlocks.HEAT_PIPE, "_base_arm")),
                     Optional.empty(), TextureSlot.TEXTURE);
 
             coreHeatPipeItem = new ModelTemplate(
                     Optional.of(ModelLocationUtils
-                            .getModelLocation(WeatheringHeatPipeBlock.UNAFFECTED_ITEM, "_core")),
+                            .getModelLocation(HeaterBlocks.HEAT_PIPE, "_core")),
                     Optional.empty(), TextureSlot.TEXTURE);
         }
 
@@ -106,16 +109,16 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
             for (var state : WeatherState.values()) {
                 generateHeaters(generator,
-                        WeatheringHeaterBlock.BLOCKS.get().get(state),
-                        HeaterBlock.BLOCKS.get().get(state));
+                        HeaterBlocks.HEATERS.get(state),
+                        HeaterBlocks.WAXED_HEATERS.get(state));
 
                 generatePipes(generator,
-                        WeatheringHeatPipeBlock.BLOCKS.get().get(state),
-                        HeatPipeBlock.BLOCKS.get().get(state));
+                        HeaterBlocks.HEAT_PIPES.get(state),
+                        HeaterBlocks.WAXED_HEAT_PIPES.get(state));
 
                 generateThermostats(generator,
-                        WeatheringThermostatBlock.BLOCKS.get().get(state),
-                        ThermostatBlock.BLOCKS.get().get(state));
+                        HeaterBlocks.THERMOSTATS.get(state),
+                        HeaterBlocks.WAXED_THERMOSTATS.get(state));
             }
         }
 
@@ -203,25 +206,25 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
         public void generateItemModels(ItemModelGenerators generator) {
 
             for (var state : WeatherState.values()) {
-                var model = toModelTemplate(WeatheringHeaterBlock.BLOCKS.get().get(state));
-                generator.generateFlatItem(WeatheringHeaterBlock.ITEMS.get().get(state), model);
-                generator.generateFlatItem(HeaterBlock.ITEMS.get().get(state), model);
+                var model = toModelTemplate(HeaterBlocks.HEATERS.get(state));
+                generator.generateFlatItem(HeaterBlocks.HEATERS.get(state).asItem(), model);
+                generator.generateFlatItem(HeaterBlocks.WAXED_HEATERS.get(state).asItem(), model);
             }
 
             for (var state : WeatherState.values()) {
-                var mapping = TextureMapping.defaultTexture(WeatheringHeatPipeBlock.BLOCKS.get().get(state));
+                var mapping = TextureMapping.defaultTexture(HeaterBlocks.HEAT_PIPES.get(state));
                 coreHeatPipeItem.create(
-                        ModelLocationUtils.getModelLocation(WeatheringHeatPipeBlock.ITEMS.get().get(state)),
+                        ModelLocationUtils.getModelLocation(HeaterBlocks.HEAT_PIPES.get(state).asItem()),
                         mapping, generator.output);
                 coreHeatPipeItem.create(
-                        ModelLocationUtils.getModelLocation(HeatPipeBlock.ITEMS.get().get(state)),
+                        ModelLocationUtils.getModelLocation(HeaterBlocks.WAXED_HEAT_PIPES.get(state).asItem()),
                         mapping, generator.output);
             }
 
             for (var state : WeatherState.values()) {
-                var model = toModelTemplate(WeatheringThermostatBlock.BLOCKS.get().get(state), INVENTORY);
-                generator.generateFlatItem(WeatheringThermostatBlock.ITEMS.get().get(state), model);
-                generator.generateFlatItem(ThermostatBlock.ITEMS.get().get(state), model);
+                var model = toModelTemplate(HeaterBlocks.THERMOSTATS.get(state), INVENTORY);
+                generator.generateFlatItem(HeaterBlocks.THERMOSTATS.get(state).asItem(), model);
+                generator.generateFlatItem(HeaterBlocks.WAXED_THERMOSTATS.get(state).asItem(), model);
             }
         }
 
@@ -236,23 +239,23 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
     private static class EnglishLanguageProvider extends FabricLanguageProvider {
 
-        private EnglishLanguageProvider(FabricDataOutput dataOutput) {
-            super(dataOutput, "en_us");
+        private EnglishLanguageProvider(FabricDataOutput dataOutput, CompletableFuture<Provider> registryLookup) {
+            super(dataOutput, registryLookup);
         }
 
         @Override
-        public void generateTranslations(TranslationBuilder builder) {
+        public void generateTranslations(Provider registryLookup, TranslationBuilder builder) {
             addAll(builder, "Heater",
-                    HeaterBlock.BLOCKS.get()::get, WeatheringHeaterBlock.BLOCKS.get()::get);
+                    HeaterBlocks.WAXED_HEATERS::get, HeaterBlocks.HEATERS::get);
 
             addAll(builder, "Heat Pipe",
-                    HeatPipeBlock.BLOCKS.get()::get, WeatheringHeatPipeBlock.BLOCKS.get()::get);
+                    HeaterBlocks.WAXED_HEAT_PIPES::get, HeaterBlocks.HEAT_PIPES::get);
 
             addAll(builder, "Thermostat",
-                    ThermostatBlock.BLOCKS.get()::get, WeatheringThermostatBlock.BLOCKS.get()::get);
+                    HeaterBlocks.WAXED_THERMOSTATS::get, HeaterBlocks.THERMOSTATS::get);
 
             builder.add(HeaterBlockEntity.CONTAINER_NAME, Heater.MOD_NAME);
-            builder.add(Heater.TAB_NAME, Heater.MOD_NAME);
+            builder.add(HeaterTabs.TAB_NAME, Heater.MOD_NAME);
         }
 
         @SuppressWarnings("java:S1643")
@@ -268,30 +271,30 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
     private static class LootTableProvider extends FabricBlockLootTableProvider {
 
-        private LootTableProvider(FabricDataOutput dataOutput) {
-            super(dataOutput);
+        private LootTableProvider(FabricDataOutput dataOutput, CompletableFuture<Provider> registryLookup) {
+            super(dataOutput, registryLookup);
         }
 
         @Override
         public void generate() {
-            WeatheringHeaterBlock.BLOCKS.get().values().forEach(this::dropSelf);
-            HeaterBlock.BLOCKS.get().values().forEach(this::dropSelf);
-            WeatheringThermostatBlock.BLOCKS.get().values().forEach(this::dropSelf);
-            ThermostatBlock.BLOCKS.get().values().forEach(this::dropSelf);
-            WeatheringHeatPipeBlock.BLOCKS.get().values().forEach(this::dropSelf);
-            HeatPipeBlock.BLOCKS.get().values().forEach(this::dropSelf);
+            HeaterBlocks.HEATERS.values().forEach(this::dropSelf);
+            HeaterBlocks.WAXED_HEATERS.values().forEach(this::dropSelf);
+            HeaterBlocks.THERMOSTATS.values().forEach(this::dropSelf);
+            HeaterBlocks.WAXED_THERMOSTATS.values().forEach(this::dropSelf);
+            HeaterBlocks.HEAT_PIPES.values().forEach(this::dropSelf);
+            HeaterBlocks.WAXED_HEAT_PIPES.values().forEach(this::dropSelf);
         }
     }
 
     private static class RecipeProvider extends FabricRecipeProvider {
 
-        private RecipeProvider(FabricDataOutput output) {
-            super(output);
+        private RecipeProvider(FabricDataOutput output, CompletableFuture<Provider> registriesFuture) {
+            super(output, registriesFuture);
         }
 
         @Override
         public void buildRecipes(RecipeOutput output) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WeatheringHeaterBlock.UNAFFECTED_BLOCK)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeaterBlocks.HEATER)
                     .pattern("ccc")
                     .pattern("cfc")
                     .pattern("ccc")
@@ -303,11 +306,11 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
             for (var state : WeatherState.values()) {
                 generateWaxingRecipe(output,
-                        WeatheringHeaterBlock.ITEMS.get().get(state),
-                        HeaterBlock.ITEMS.get().get(state));
+                        HeaterBlocks.HEATERS.get(state).asItem(),
+                        HeaterBlocks.WAXED_HEATERS.get(state).asItem());
             }
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WeatheringHeatPipeBlock.UNAFFECTED_BLOCK)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeaterBlocks.HEAT_PIPE)
                     .pattern("ccc")
                     .define('c', Items.COPPER_INGOT)
                     .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
@@ -315,11 +318,11 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
             for (var state : WeatherState.values()) {
                 generateWaxingRecipe(output,
-                        WeatheringHeatPipeBlock.ITEMS.get().get(state),
-                        HeatPipeBlock.ITEMS.get().get(state));
+                        HeaterBlocks.HEAT_PIPES.get(state).asItem(),
+                        HeaterBlocks.WAXED_HEAT_PIPES.get(state).asItem());
             }
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WeatheringThermostatBlock.UNAFFECTED_BLOCK)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeaterBlocks.THERMOSTAT)
                     .pattern("ccc")
                     .pattern("#c#")
                     .pattern("#r#")
@@ -333,8 +336,8 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
             for (var state : WeatherState.values()) {
                 generateWaxingRecipe(output,
-                        WeatheringThermostatBlock.ITEMS.get().get(state),
-                        ThermostatBlock.ITEMS.get().get(state));
+                        HeaterBlocks.THERMOSTATS.get(state).asItem(),
+                        HeaterBlocks.WAXED_THERMOSTATS.get(state).asItem());
             }
         }
 
@@ -372,18 +375,18 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
             getOrCreateTagBuilder(Tags.HEATERS)
                     .setReplace(false)
-                    .add(WeatheringHeaterBlock.BLOCKS.get().values().toArray(WeatheringHeaterBlock[]::new))
-                    .add(HeaterBlock.BLOCKS.get().values().toArray(HeaterBlock[]::new));
+                    .add(HeaterBlocks.HEATERS.values().toArray(WeatheringHeaterBlock[]::new))
+                    .add(HeaterBlocks.WAXED_HEATERS.values().toArray(HeaterBlock[]::new));
 
             getOrCreateTagBuilder(Tags.PIPES)
                     .setReplace(false)
-                    .add(WeatheringHeatPipeBlock.BLOCKS.get().values().toArray(WeatheringHeatPipeBlock[]::new))
-                    .add(HeatPipeBlock.BLOCKS.get().values().toArray(HeatPipeBlock[]::new));
+                    .add(HeaterBlocks.HEAT_PIPES.values().toArray(WeatheringHeatPipeBlock[]::new))
+                    .add(HeaterBlocks.WAXED_HEAT_PIPES.values().toArray(HeatPipeBlock[]::new));
 
             getOrCreateTagBuilder(Tags.THERMOSTATS)
                     .setReplace(false)
-                    .add(WeatheringThermostatBlock.BLOCKS.get().values().toArray(WeatheringThermostatBlock[]::new))
-                    .add(ThermostatBlock.BLOCKS.get().values().toArray(ThermostatBlock[]::new));
+                    .add(HeaterBlocks.THERMOSTATS.values().toArray(WeatheringThermostatBlock[]::new))
+                    .add(HeaterBlocks.WAXED_THERMOSTATS.values().toArray(ThermostatBlock[]::new));
 
             getOrCreateTagBuilder(Tags.Connectable.PIPES)
                     .setReplace(false)

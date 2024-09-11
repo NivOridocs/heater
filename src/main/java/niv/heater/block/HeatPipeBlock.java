@@ -1,26 +1,17 @@
 package niv.heater.block;
 
-import static net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings.copyOf;
-import static net.minecraft.world.level.block.Blocks.COPPER_BLOCK;
-import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPOSED;
-import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.OXIDIZED;
 import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
-import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Supplier;
 
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -37,41 +28,16 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import niv.heater.Tags;
 import niv.heater.api.Connector;
+import niv.heater.api.Worded;
 import niv.heater.block.entity.HeaterBlockEntity;
 
-public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCopper, SimpleWaterloggedBlock {
+public class HeatPipeBlock extends PipeBlock implements Connector, Worded, WeatheringCopper, SimpleWaterloggedBlock {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<HeatPipeBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             WeatherState.CODEC.fieldOf("weathering_state").forGetter(HeatPipeBlock::getAge),
             Properties.CODEC.fieldOf("properties").forGetter(BlockBehaviour::properties))
             .apply(instance, HeatPipeBlock::new));
-
-    public static final HeatPipeBlock UNAFFECTED_BLOCK = new HeatPipeBlock(UNAFFECTED, copyOf(COPPER_BLOCK));
-    public static final HeatPipeBlock EXPOSED_BLOCK = new HeatPipeBlock(EXPOSED, copyOf(COPPER_BLOCK));
-    public static final HeatPipeBlock WEATHERED_BLOCK = new HeatPipeBlock(WEATHERED, copyOf(COPPER_BLOCK));
-    public static final HeatPipeBlock OXIDIZED_BLOCK = new HeatPipeBlock(OXIDIZED, copyOf(COPPER_BLOCK));
-
-    public static final BlockItem UNAFFECTED_ITEM = new BlockItem(UNAFFECTED_BLOCK, new FabricItemSettings());
-    public static final BlockItem EXPOSED_ITEM = new BlockItem(EXPOSED_BLOCK, new FabricItemSettings());
-    public static final BlockItem WEATHERED_ITEM = new BlockItem(WEATHERED_BLOCK, new FabricItemSettings());
-    public static final BlockItem OXIDIZED_ITEM = new BlockItem(OXIDIZED_BLOCK, new FabricItemSettings());
-
-    public static final Supplier<ImmutableMap<WeatherState, HeatPipeBlock>> BLOCKS = Suppliers
-            .memoize(() -> ImmutableMap.<WeatherState, HeatPipeBlock>builder()
-                    .put(UNAFFECTED, UNAFFECTED_BLOCK)
-                    .put(EXPOSED, EXPOSED_BLOCK)
-                    .put(WEATHERED, WEATHERED_BLOCK)
-                    .put(OXIDIZED, OXIDIZED_BLOCK)
-                    .build());
-
-    public static final Supplier<ImmutableMap<WeatherState, BlockItem>> ITEMS = Suppliers
-            .memoize(() -> ImmutableMap.<WeatherState, BlockItem>builder()
-                    .put(UNAFFECTED, UNAFFECTED_ITEM)
-                    .put(EXPOSED, EXPOSED_ITEM)
-                    .put(WEATHERED, WEATHERED_ITEM)
-                    .put(OXIDIZED, OXIDIZED_ITEM)
-                    .build());
 
     private final WeatherState weatherState;
 
@@ -107,7 +73,7 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     }
 
     @Override
-    public boolean isPathfindable(BlockState state, BlockGetter getter, BlockPos pos, PathComputationType type) {
+    protected boolean isPathfindable(BlockState state, PathComputationType type) {
         return false;
     }
 
@@ -178,6 +144,18 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     @Override
     public WeatherState getAge() {
         return weatherState;
+    }
+
+    @Override
+    public String[] getWords() {
+        var result = new ArrayList<String>(4);
+        result.add("waxed");
+        if (getAge() != UNAFFECTED) {
+            result.add(getAge().name().toLowerCase());
+        }
+        result.add("heat");
+        result.add("pipe");
+        return result.toArray(String[]::new);
     }
 
     private boolean canConnect(BlockGetter getter, BlockPos pos) {
