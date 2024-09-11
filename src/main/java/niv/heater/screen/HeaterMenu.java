@@ -4,19 +4,16 @@ import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.FurnaceFuelSlot;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import niv.heater.registry.HeaterMenus;
 
 public class HeaterMenu extends AbstractContainerMenu {
-
-    public static final MenuType<HeaterMenu> TYPE = new MenuType<>(HeaterMenu::new, FeatureFlags.VANILLA_SET);
 
     public static final int SLOT_COUNT = 1;
 
@@ -29,7 +26,7 @@ public class HeaterMenu extends AbstractContainerMenu {
 
     public HeaterMenu(int syncId, Inventory inventory,
             Container container, ContainerData containerData) {
-        super(TYPE, syncId);
+        super(HeaterMenus.HEATER, syncId);
         checkContainerSize(container, 1);
         checkContainerDataCount(containerData, 2);
         this.container = container;
