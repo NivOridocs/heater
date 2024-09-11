@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider.BlockTagProvider;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
@@ -62,6 +63,9 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {
+        HeaterBlocks.initialize();
+        HeaterTabs.initialize();
+
         var pack = fabricDataGenerator.createPack();
 
         pack.addProvider(BlockModelProvider::new);
@@ -100,7 +104,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
             coreHeatPipeItem = new ModelTemplate(
                     Optional.of(ModelLocationUtils
-                            .getModelLocation(HeaterBlocks.HEAT_PIPE, "_core")),
+                            .getModelLocation(HeaterBlocks.HEAT_PIPE.asItem(), "_core")),
                     Optional.empty(), TextureSlot.TEXTURE);
         }
 
@@ -122,7 +126,8 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             }
         }
 
-        private void generateHeaters(BlockModelGenerators generator, Block weathering, Block waxed) {
+        private void generateHeaters(BlockModelGenerators generator,
+                WeatheringHeaterBlock weathering, HeaterBlock waxed) {
             var unlit = TexturedModel.ORIENTABLE_ONLY_TOP.create(weathering, generator.modelOutput);
 
             var lit = TexturedModel.ORIENTABLE_ONLY_TOP.get(weathering)
@@ -144,7 +149,8 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                             .createHorizontalFacingDispatch()));
         }
 
-        private void generatePipes(BlockModelGenerators generator, Block weathering, Block waxed) {
+        private void generatePipes(BlockModelGenerators generator,
+                WeatheringHeatPipeBlock weathering, HeatPipeBlock waxed) {
             var coreId = coreHeatPipeBlock.createWithSuffix(weathering, "_core",
                     TextureMapping.defaultTexture(weathering), generator.modelOutput);
             var armId = armHeatPipeBlock.createWithSuffix(weathering, "_arm",
@@ -153,8 +159,8 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             generatePipe(generator, waxed, coreId, armId);
         }
 
-        private void generatePipe(BlockModelGenerators generator, Block pipe, ResourceLocation core,
-                ResourceLocation arm) {
+        private void generatePipe(BlockModelGenerators generator, HeatPipeBlock pipe,
+                ResourceLocation core, ResourceLocation arm) {
             var supplier = MultiPartGenerator.multiPart(pipe)
                     .with(Variant.variant().with(VariantProperties.MODEL, core));
             for (var direction : Direction.values()) {
@@ -170,7 +176,8 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
             generator.blockStateOutput.accept(supplier);
         }
 
-        private void generateThermostats(BlockModelGenerators generator, Block weathering, Block waxed) {
+        private void generateThermostats(BlockModelGenerators generator,
+                WeatheringThermostatBlock weathering, ThermostatBlock waxed) {
             var off = THERMOSTAT.create(weathering, generator.modelOutput);
 
             THERMOSTAT_INVENTORY.createWithSuffix(weathering, INVENTORY, generator.modelOutput);
@@ -365,11 +372,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS);
 
-            getOrCreateTagBuilder(Tags.COMMUNITY_FURNACES)
-                    .setReplace(false)
-                    .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
-
-            getOrCreateTagBuilder(Tags.COMMON_FURNACES)
+            getOrCreateTagBuilder(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES)
                     .setReplace(false)
                     .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
 
@@ -393,30 +396,26 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .addTag(Tags.HEATERS)
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
-                    .addTag(Tags.COMMUNITY_FURNACES)
-                    .addTag(Tags.COMMON_FURNACES);
+                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
 
             getOrCreateTagBuilder(Tags.Propagable.HEATERS)
                     .setReplace(false)
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
-                    .addTag(Tags.COMMUNITY_FURNACES)
-                    .addTag(Tags.COMMON_FURNACES);
+                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
 
             getOrCreateTagBuilder(Tags.Propagable.PIPES)
                     .setReplace(false)
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
-                    .addTag(Tags.COMMUNITY_FURNACES)
-                    .addTag(Tags.COMMON_FURNACES);
+                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
 
             getOrCreateTagBuilder(Tags.Propagable.THERMOSTATS)
                     .setReplace(false)
                     .addTag(Tags.HEATERS)
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
-                    .addTag(Tags.COMMUNITY_FURNACES)
-                    .addTag(Tags.COMMON_FURNACES);
+                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
         }
     }
 }

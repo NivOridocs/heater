@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import com.mojang.datafixers.util.Pair;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents.TagsLoaded;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
 import net.fabricmc.fabric.mixin.lookup.BlockEntityTypeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -100,7 +101,7 @@ public class FurnacesBinder implements TagsLoaded {
 
     private boolean byTags(Block block) {
         var state = block.defaultBlockState();
-        return !(state.is(Tags.HEATERS) || state.is(Tags.COMMON_FURNACES) || state.is(Tags.COMMUNITY_FURNACES));
+        return !(state.is(Tags.HEATERS) || state.is(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES));
     }
 
     private Stream<BlockEntity> toEntity(Block block) {
