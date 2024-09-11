@@ -1,0 +1,8 @@
+{
+  "values": [
+    "#heater:heaters",
+    "#heater:pipes",
+    "#heater:thermostats",
+    "#c:player_workstations/furnaces"
+  ]
+}
