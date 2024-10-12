@@ -122,7 +122,7 @@ public class Explorer implements Runnable {
             var relative = pos.relative(direction);
             if (connector.canPropagate(level, pos, level.getBlockState(pos), direction)) {
                 Optional.<Result>empty()
-                        .or(() -> asBurningStorage(level, pos))
+                        .or(() -> asBurningStorage(level, relative, direction))
                         .or(() -> asConnector(level, relative))
                         .ifPresent(result -> results.put(direction, result));
             } else if (level.getBlockState(relative).getBlock() instanceof HeaterBlock heater) {
@@ -132,8 +132,8 @@ public class Explorer implements Runnable {
         return results;
     }
 
-    private static Optional<BurningStorageResult> asBurningStorage(Level level, BlockPos pos) {
-        return Optional.ofNullable(BurningStorage.SIDED.find(level, pos, null))
+    private static Optional<BurningStorageResult> asBurningStorage(Level level, BlockPos pos, Direction direction) {
+        return Optional.ofNullable(BurningStorage.SIDED.find(level, pos, direction.getOpposite()))
                 .map(BurningStorageResult::new);
     }
 

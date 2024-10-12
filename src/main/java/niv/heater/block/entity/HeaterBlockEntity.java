@@ -266,6 +266,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     private static void propagateBurnTime(Level level, HeaterBlockEntity heater, Transaction transaction) {
         var storages = heater.cache.stream()
                 .map(pos -> BurningStorage.SIDED.find(level, pos, null))
+                .filter(BurningStorage::supportsInsertion)
                 .sorted((a, b) -> Double.compare(a.getBurning().getReverseValue(), b.getBurning().getReverseValue()))
                 .limit(heater.burning.getCurrentBurning())
                 .toArray(BurningStorage[]::new);
