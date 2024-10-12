@@ -303,6 +303,11 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         return entity.getWrappers().get(direction);
     }
 
+    @SuppressWarnings("java:S1172")
+    public static BurningStorage getBurningStorage(HeaterBlockEntity entity, Direction direction) {
+        return entity.burning;
+    }
+
     public static final void updateConnectedHeaters(Level level, BlockPos pos, BlockState state) {
         new Explorer(level, pos, state, MAX_HOPS)
                 .onHeaterFound((h, p) -> level.getBlockEntity(p, HeaterBlockEntityTypes.HEATER)

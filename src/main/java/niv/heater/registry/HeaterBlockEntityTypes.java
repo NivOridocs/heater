@@ -7,6 +7,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import niv.burning.api.BurningStorage;
 import niv.heater.block.entity.HeaterBlockEntity;
 
 public class HeaterBlockEntityTypes {
@@ -30,6 +31,7 @@ public class HeaterBlockEntityTypes {
                         .build());
 
         ItemStorage.SIDED.registerForBlockEntity(HeaterBlockEntity::getInventoryStorage, HEATER);
+        BurningStorage.SIDED.registerForBlockEntity(HeaterBlockEntity::getBurningStorage, HEATER);
     }
 
     public static final void initialize() {
