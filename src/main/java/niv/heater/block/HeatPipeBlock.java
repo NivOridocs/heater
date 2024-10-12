@@ -137,11 +137,6 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
     }
 
     @Override
-    public boolean canPropagate(LevelAccessor level, BlockPos pos, BlockState state, Direction direction) {
-        return level.getBlockState(pos.relative(direction)).is(Tags.Propagable.PIPES);
-    }
-
-    @Override
     public WeatherState getAge() {
         return weatherState;
     }

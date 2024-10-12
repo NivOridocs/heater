@@ -11,7 +11,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
@@ -20,7 +19,6 @@ import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import niv.heater.Tags;
 import niv.heater.api.Connector;
 import niv.heater.api.Worded;
 import niv.heater.block.entity.HeaterBlockEntity;
@@ -86,10 +84,10 @@ public class ThermostatBlock extends DirectionalBlock implements Connector, Word
     }
 
     @Override
-    public boolean canPropagate(LevelAccessor level, BlockPos pos, BlockState state, Direction direction) {
+    public boolean canPropagate(Level level, BlockPos pos, BlockState state, Direction direction) {
         return level.hasNeighborSignal(pos)
                 && state.getOptionalValue(FACING).filter(direction::equals).isPresent()
-                && level.getBlockState(pos.relative(direction)).is(Tags.Propagable.THERMOSTATS);
+                && (Connector.isConnector(level, pos, direction) || Connector.isBurningStorage(level, pos, direction));
     }
 
     @Override

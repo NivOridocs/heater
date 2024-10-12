@@ -397,25 +397,6 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .addTag(Tags.PIPES)
                     .addTag(Tags.THERMOSTATS)
                     .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
-
-            getOrCreateTagBuilder(Tags.Propagable.HEATERS)
-                    .setReplace(false)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS)
-                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
-
-            getOrCreateTagBuilder(Tags.Propagable.PIPES)
-                    .setReplace(false)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS)
-                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
-
-            getOrCreateTagBuilder(Tags.Propagable.THERMOSTATS)
-                    .setReplace(false)
-                    .addTag(Tags.HEATERS)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS)
-                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
         }
     }
 }

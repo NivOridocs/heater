@@ -28,20 +28,6 @@ public class Tags {
         }
     }
 
-    public static final class Propagable {
-
-        public static final TagKey<Block> HEATERS = createTag("propagable/heaters");
-        public static final TagKey<Block> PIPES = createTag("propagable/pipes");
-        public static final TagKey<Block> THERMOSTATS = createTag("propagable/thermostats");
-
-        public static final Supplier<ImmutableList<TagKey<Block>>> ALL = Suppliers
-                .memoize(() -> ImmutableList.<TagKey<Block>>builderWithExpectedSize(3)
-                        .add(Propagable.HEATERS).add(Propagable.PIPES).add(Propagable.THERMOSTATS).build());
-
-        private Propagable() {
-        }
-    }
-
     private Tags() {
     }
 

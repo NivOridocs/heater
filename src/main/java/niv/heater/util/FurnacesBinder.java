@@ -63,11 +63,6 @@ public class FurnacesBinder implements TagsLoaded {
             map.putAll(furnaces);
             tags.put(tag, map.values().stream().toList());
         }
-        for (var tag : Tags.Propagable.ALL.get()) {
-            var map = toHolderMap(blocks, tags.getOrDefault(tag, List.of()));
-            map.putAll(furnaces);
-            tags.put(tag, map.values().stream().toList());
-        }
 
         blocks.bindTags(tags);
     }
