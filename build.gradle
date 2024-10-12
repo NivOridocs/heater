@@ -98,10 +98,13 @@ publishing {
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
     projectId = "${project.project_id}"
+	versionName = "Heater ${project.mod_version}"
+	changelog = "sh CHANGELOG.sh".execute().text
     gameVersions = ["1.21", "1.21.1"]
-    uploadFile = remapJar
-    syncBodyFrom = rootProject.file("README.md").text
-        dependencies {
+	uploadFile = remapJar
+	syncBodyFrom = "sh README.sh".execute().text
+    dependencies {
         required.project "fabric-api"
     }
+    // debugMode = true
 }
