@@ -4,14 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import niv.heater.adapter.FurnaceAdapter;
 import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.registry.HeaterBlocks;
 import niv.heater.registry.HeaterMenus;
 import niv.heater.registry.HeaterTabs;
-import niv.heater.util.FurnacesBinder;
 
 @SuppressWarnings("java:S2440")
 public class Heater implements ModInitializer {
@@ -37,7 +35,5 @@ public class Heater implements ModInitializer {
         HeaterTabs.initialize();
 
         DynamicRegistries.register(FurnaceAdapter.REGISTRY, FurnaceAdapter.CODEC);
-
-        CommonLifecycleEvents.TAGS_LOADED.register(new FurnacesBinder());
     }
 }

@@ -16,7 +16,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.burning.api.BurningStorage;
-import niv.heater.Tags;
 import niv.heater.api.Connector;
 import niv.heater.block.HeaterBlock;
 
@@ -126,9 +125,8 @@ public class Explorer implements Runnable {
                         .or(() -> asBurningStorage(level, pos))
                         .or(() -> asConnector(level, relative))
                         .ifPresent(result -> results.put(direction, result));
-            } else if (level.getBlockState(relative).is(Tags.HEATERS)) {
-                asHeater(level, relative)
-                        .ifPresent(result -> results.put(direction, result));
+            } else if (level.getBlockState(relative).getBlock() instanceof HeaterBlock heater) {
+                results.put(direction, new HeaterResult(heater));
             }
         }
         return results;
@@ -143,15 +141,6 @@ public class Explorer implements Runnable {
         var block = getter.getBlockState(pos).getBlock();
         if (block instanceof Connector connector) {
             return Optional.of(new ConnectorResult(connector));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private static Optional<HeaterResult> asHeater(BlockGetter getter, BlockPos pos) {
-        var block = getter.getBlockState(pos).getBlock();
-        if (block instanceof HeaterBlock heater) {
-            return Optional.of(new HeaterResult(heater));
         } else {
             return Optional.empty();
         }
