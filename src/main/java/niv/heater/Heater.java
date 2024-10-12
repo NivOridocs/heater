@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
-import niv.heater.adapter.FurnaceAdapter;
 import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.registry.HeaterBlocks;
 import niv.heater.registry.HeaterMenus;
@@ -33,7 +31,5 @@ public class Heater implements ModInitializer {
         HeaterBlockEntityTypes.initialize();
         HeaterMenus.initialize();
         HeaterTabs.initialize();
-
-        DynamicRegistries.register(FurnaceAdapter.REGISTRY, FurnaceAdapter.CODEC);
     }
 }
