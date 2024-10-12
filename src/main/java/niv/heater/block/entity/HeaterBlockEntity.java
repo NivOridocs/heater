@@ -30,7 +30,6 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -248,7 +247,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
                 if (heater.dirty.compareAndSet(true, false)) {
                     heater.cache.clear();
                     new Explorer(level, pos, level.getBlockState(pos), MAX_HOPS)
-                            .onFurnaceFound((f, p) -> heater.cache.add(p))
+                            .onBurningStorageCallback((s, p) -> heater.cache.add(p))
                             .run();
                 }
                 propagateBurnTime(level, heater, transaction);
@@ -304,7 +303,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         return entity.getWrappers().get(direction);
     }
 
-    public static final void updateConnectedHeaters(LevelAccessor level, BlockPos pos, BlockState state) {
+    public static final void updateConnectedHeaters(Level level, BlockPos pos, BlockState state) {
         new Explorer(level, pos, state, MAX_HOPS)
                 .onHeaterFound((h, p) -> level.getBlockEntity(p, HeaterBlockEntityTypes.HEATER)
                         .ifPresent(HeaterBlockEntity::makeDirty))
