@@ -1,19 +1,17 @@
 package niv.heater.block.entity;
 
-import static net.minecraft.world.level.block.AbstractFurnaceBlock.LIT;
-import static niv.heater.util.WeatherStateExtra.heatReduction;
+import static niv.heater.util.WeatherStateExtra.burningReduction;
 
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jetbrains.annotations.Nullable;
 
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
@@ -33,20 +31,21 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import niv.heater.api.Furnace;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import niv.burning.api.Burning;
+import niv.burning.api.BurningStorage;
 import niv.heater.block.HeaterBlock;
 import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.Explorer;
-import niv.heater.util.FurnaceExtra;
 import niv.heater.util.HeaterContainer;
+import niv.heater.util.HeaterStorage;
 
-public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable, Furnace {
+public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable {
 
     public static final String CONTAINER_NAME = "container.heater";
 
@@ -58,19 +57,6 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     private static final String ITEM_TAG = "Item";
 
     private static final int MAX_HOPS = 64;
-
-    private final Set<BlockPos> cache;
-
-    private final AtomicBoolean dirty;
-
-    private LockCode lock = LockCode.NO_LOCK;
-
-    @Nullable
-    private Component name;
-
-    private int burnTime;
-
-    private int fuelTime;
 
     private final HeaterContainer container = new HeaterContainer() {
         @Override
@@ -84,7 +70,21 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         }
     };
 
-    private final EnumMap<Direction, InventoryStorage> wrappers = new EnumMap<>(Direction.class);
+    private final HeaterStorage burning = new HeaterStorage() {
+        @Override
+        protected void onFinalCommit() {
+            var pos = HeaterBlockEntity.this.worldPosition;
+            var level = HeaterBlockEntity.this.level;
+            var state = level.getBlockState(pos);
+            var wasBurning = state.getValue(BlockStateProperties.LIT).booleanValue();
+            var isBurning = this.getCurrentBurning() > 0;
+            if (wasBurning != isBurning) {
+                state = state.setValue(BlockStateProperties.LIT, isBurning);
+                level.setBlockAndUpdate(pos, state);
+                BlockEntity.setChanged(level, pos, state);
+            }
+        }
+    };
 
     private final ContainerData containerData = new ContainerData() {
 
@@ -92,9 +92,9 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         public int get(int index) {
             switch (index) {
                 case 0:
-                    return HeaterBlockEntity.this.burnTime;
+                    return HeaterBlockEntity.this.burning.getCurrentBurning();
                 case 1:
-                    return HeaterBlockEntity.this.fuelTime;
+                    return HeaterBlockEntity.this.burning.getMaxBurning();
                 default:
                     return 0;
             }
@@ -104,10 +104,10 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         public void set(int index, int value) {
             switch (index) {
                 case 0:
-                    HeaterBlockEntity.this.burnTime = value;
+                    HeaterBlockEntity.this.burning.setCurrentBurning(value);
                     break;
                 case 1:
-                    HeaterBlockEntity.this.fuelTime = value;
+                    HeaterBlockEntity.this.burning.setMaxBurning(value);
                     break;
                 default:
                     break;
@@ -118,14 +118,21 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         public int getCount() {
             return 2;
         }
-
     };
+
+    private final EnumMap<Direction, InventoryStorage> wrappers = new EnumMap<>(Direction.class);
+
+    private final Set<BlockPos> cache = new HashSet<>();
+
+    private final AtomicBoolean dirty = new AtomicBoolean(true);
+
+    private LockCode lock = LockCode.NO_LOCK;
+
+    @Nullable
+    private Component name;
 
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
         super(HeaterBlockEntityTypes.HEATER, pos, state);
-        burnTime = 0;
-        cache = new HashSet<>();
-        dirty = new AtomicBoolean(true);
     }
 
     public HeaterContainer getContainer() {
@@ -141,8 +148,8 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
             this.name = Component.Serializer.fromJson(compoundTag.getString(CUSTOM_NAME_TAG), provider);
         }
         this.container.setItem(0, ItemStack.parseOptional(provider, compoundTag.getCompound(ITEM_TAG)));
-        this.burnTime = compoundTag.getShort(BURN_TIME_TAG);
-        this.fuelTime = this.getFuelTime(this.container.getItem(0));
+        this.burning.setMaxBurning(this.getFuelTime(this.container.getItem(0)));
+        this.burning.setCurrentBurning(compoundTag.getInt(BURN_TIME_TAG));
     }
 
     @Override
@@ -154,7 +161,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         if (!this.container.getItem(0).isEmpty()) {
             compoundTag.put(ITEM_TAG, this.container.getItem(0).save(provider, new CompoundTag()));
         }
-        compoundTag.putShort(BURN_TIME_TAG, (short) this.burnTime);
+        compoundTag.putInt(BURN_TIME_TAG, this.burning.getCurrentBurning());
     }
 
     @Override
@@ -170,8 +177,8 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         super.collectImplicitComponents(builder);
         builder.set(DataComponents.CUSTOM_NAME, this.name);
         if (!this.lock.equals(LockCode.NO_LOCK)) {
-			builder.set(DataComponents.LOCK, this.lock);
-		}
+            builder.set(DataComponents.LOCK, this.lock);
+        }
         builder.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(this.container.getItems()));
     }
 
@@ -207,39 +214,11 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         this.name = name;
     }
 
-    // For {@link Furnace}
-
-    @Override
-    public boolean isBurning() {
-        return burnTime > 0;
-    }
-
-    @Override
-    public void addBurnTime(int value) {
-        burnTime += value;
-    }
-
-    @Override
-    public void setFuelTime(int value) {
-        fuelTime = value;
-    }
-
-    @Override
-    public int compareFuelTime(int value) {
-        return Integer.compare(fuelTime, value);
-    }
-
-    @Override
-    public int compareDeltaTime(int value) {
-        return Integer.compare(fuelTime - burnTime, value);
-    }
-
-    @Override
-    public Number getComparable() {
-        return this.burnTime;
-    }
-
     // Non-static
+
+    public boolean isBurning() {
+        return this.burning.getCurrentBurning() > 0;
+    }
 
     public void makeDirty() {
         this.dirty.set(true);
@@ -263,107 +242,60 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     // Static
 
     public static void tick(Level level, BlockPos pos, BlockState state, HeaterBlockEntity heater) {
-        var wasBurning = heater.isBurning();
+        try (var transaction = Transaction.openOuter()) {
 
-        if (heater.isBurning()) {
-            if (heater.dirty.compareAndSet(true, false)) {
-                heater.cache.clear();
-                new Explorer(level, pos, level.getBlockState(pos), MAX_HOPS)
-                        .onFurnaceFound((f, p) -> heater.cache.add(p))
-                        .run();
-            }
-            propagateBurnTime(level, heater);
-        }
-
-        if (heater.isBurning() && level.getBlockState(pos).getBlock() instanceof HeaterBlock block) {
-            heater.burnTime = Math.max(0, heater.burnTime - heatReduction(block.getAge()));
-        }
-
-        consumeFuel(heater);
-
-        var changed = false;
-        if (wasBurning != heater.isBurning()) {
-            changed = true;
-            state = state.setValue(AbstractFurnaceBlock.LIT, heater.isBurning());
-            level.setBlockAndUpdate(pos, state);
-        }
-
-        if (changed) {
-            setChanged(level, pos, state);
-        }
-    }
-
-    private static record FurnaceHolder(Furnace furnace, BlockPos pos) implements Comparable<FurnaceHolder> {
-        @Override
-        public int compareTo(FurnaceHolder that) {
-            int result = FurnaceExtra.compare(this.furnace(), that.furnace());
-            if (result == 0) {
-                result = this.pos().compareTo(that.pos());
-            }
-            return result;
-        }
-    }
-
-    private static void propagateBurnTime(Level level, HeaterBlockEntity heater) {
-        var targets = new TreeSet<FurnaceHolder>();
-        heater.cache.stream()
-                .map(pos -> Explorer.getOptionalFurnace(level, pos)
-                        .map(furnace -> new FurnaceHolder(furnace, pos)))
-                .flatMap(Optional::stream)
-                .forEach(targets::add);
-
-        if (targets.isEmpty()) {
-            return;
-        }
-
-        var deltaBurn = heater.burnTime / targets.size();
-        if (heater.burnTime % targets.size() > 0) {
-            deltaBurn += 1;
-        }
-
-        for (var target : targets) {
-            var wasBurning = target.furnace().isBurning();
-
-            if (deltaBurn > heater.burnTime) {
-                deltaBurn = heater.burnTime;
-            }
-
-            if (target.furnace().compareFuelTime(heater.fuelTime) < 0) {
-                target.furnace().setFuelTime(heater.fuelTime);
-            }
-
-            if (target.furnace().compareDeltaTime(deltaBurn) >= 0) {
-                heater.burnTime -= deltaBurn;
-                target.furnace().addBurnTime(deltaBurn);
-
-                var isBurning = target.furnace().isBurning();
-                if (wasBurning != isBurning) {
-                    var state = level.getBlockState(target.pos()).setValue(LIT, isBurning);
-                    level.setBlockAndUpdate(target.pos(), state);
-                    setChanged(level, target.pos(), state);
+            if (heater.isBurning()) {
+                if (heater.dirty.compareAndSet(true, false)) {
+                    heater.cache.clear();
+                    new Explorer(level, pos, level.getBlockState(pos), MAX_HOPS)
+                            .onFurnaceFound((f, p) -> heater.cache.add(p))
+                            .run();
                 }
+                propagateBurnTime(level, heater, transaction);
+            }
 
-                if (heater.burnTime <= 0) {
-                    heater.burnTime = 0;
+            if (heater.isBurning() && state.getBlock() instanceof HeaterBlock block) {
+                heater.burning.extract(burningReduction(block.getAge()), transaction);
+            }
+
+            consumeFuel(heater, transaction);
+
+            transaction.commit();
+        }
+    }
+
+    private static void propagateBurnTime(Level level, HeaterBlockEntity heater, Transaction transaction) {
+        var storages = heater.cache.stream()
+                .map(pos -> BurningStorage.SIDED.find(level, pos, null))
+                .sorted((a, b) -> Double.compare(a.getBurning().getReverseValue(), b.getBurning().getReverseValue()))
+                .limit(heater.burning.getCurrentBurning())
+                .toArray(BurningStorage[]::new);
+
+        if (storages.length > 0) {
+            var deltaBurning = heater.burning.getBurning()
+                    .withValue(Math.round(heater.burning.getCurrentBurning() * 1f / storages.length));
+
+            for (var storage : storages) {
+                BurningStorage.transfer(heater.burning, storage, deltaBurning, transaction);
+                if (!heater.isBurning()) {
                     break;
                 }
             }
         }
     }
 
-    private static void consumeFuel(HeaterBlockEntity heater) {
+    private static void consumeFuel(HeaterBlockEntity heater, Transaction transaction) {
         var fuelStack = heater.container.getItem(0);
-        var hasFuel = !fuelStack.isEmpty();
-        if (!heater.isBurning() && hasFuel) {
-            var fuelTime = heater.getFuelTime(fuelStack);
-            if (fuelTime > 0) {
-                var fuelItem = fuelStack.getItem();
+        if (!heater.isBurning() && !fuelStack.isEmpty()) {
+            var fuelItem = fuelStack.getItem();
+            var burning = Burning.of(fuelItem);
+            if (burning != null) {
                 fuelStack.shrink(1);
                 if (fuelStack.isEmpty()) {
                     var bucketItem = fuelItem.getCraftingRemainingItem();
                     heater.container.setItem(0, bucketItem == null ? ItemStack.EMPTY : new ItemStack(bucketItem));
                 }
-                heater.fuelTime = heater.burnTime = fuelTime;
+                heater.burning.insert(burning.one(), transaction);
             }
         }
     }

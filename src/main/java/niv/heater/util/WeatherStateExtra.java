@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.collect.ImmutableBiMap;
 
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import niv.burning.api.Burning;
 
 public class WeatherStateExtra {
 
@@ -69,5 +70,24 @@ public class WeatherStateExtra {
             default:
                 return 1;
         }
+    }
+
+    public static final Burning burningReduction(WeatherState state) {
+        var burning = Burning.MIN_VALUE;
+        switch (state) {
+            case OXIDIZED:
+                burning = burning.withValue(4);
+                break;
+            case WEATHERED:
+                burning = burning.withValue(3);
+                break;
+            case EXPOSED:
+                burning = burning.withValue(2);
+                break;
+            default:
+                burning = burning.withValue(1);
+                break;
+        }
+        return burning;
     }
 }
