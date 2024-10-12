@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -58,12 +57,6 @@ public class FurnacesBinder implements TagsLoaded {
         var tags = blocks.getTags().collect(groupingBy(Pair::getFirst,
                 flatMapping(pair -> pair.getSecond().stream(), toList())));
 
-        for (var tag : Tags.Connectable.ALL.get()) {
-            var map = toHolderMap(blocks, tags.getOrDefault(tag, List.of()));
-            map.putAll(furnaces);
-            tags.put(tag, map.values().stream().toList());
-        }
-
         blocks.bindTags(tags);
     }
 
@@ -109,13 +102,5 @@ public class FurnacesBinder implements TagsLoaded {
 
     private Stream<Block> toBlocks(BlockEntityType<?> type) {
         return ((BlockEntityTypeAccessor) type).getBlocks().stream();
-    }
-
-    private Map<ResourceLocation, Holder<Block>> toHolderMap(
-            Registry<Block> blocks, List<Holder<Block>> list) {
-        return list == null ? Map.of()
-                : list.stream().map(Holder::value)
-                        .collect(toMap(blocks::getKey, blocks::wrapAsHolder,
-                                (a, b) -> a, HashMap::new));
     }
 }

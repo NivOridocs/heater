@@ -4,6 +4,7 @@ import java.util.Set;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.burning.api.BurningStorage;
@@ -20,11 +21,11 @@ public interface Connector {
                 && (isConnector(level, pos, direction) || isBurningStorage(level, pos, direction));
     }
 
-    static boolean isHeater(Level level, BlockPos pos, Direction direction) {
+    static boolean isHeater(BlockGetter level, BlockPos pos, Direction direction) {
         return level.getBlockState(pos.relative(direction)).getBlock() instanceof HeaterBlock;
     }
 
-    static boolean isConnector(Level level, BlockPos pos, Direction direction) {
+    static boolean isConnector(BlockGetter level, BlockPos pos, Direction direction) {
         return level.getBlockState(pos.relative(direction)).getBlock() instanceof Connector;
     }
 

@@ -390,13 +390,6 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
                     .setReplace(false)
                     .add(HeaterBlocks.THERMOSTATS.values().toArray(WeatheringThermostatBlock[]::new))
                     .add(HeaterBlocks.WAXED_THERMOSTATS.values().toArray(ThermostatBlock[]::new));
-
-            getOrCreateTagBuilder(Tags.Connectable.PIPES)
-                    .setReplace(false)
-                    .addTag(Tags.HEATERS)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS)
-                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
         }
     }
 }
