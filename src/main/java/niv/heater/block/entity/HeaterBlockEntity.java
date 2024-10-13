@@ -19,7 +19,6 @@ import net.minecraft.core.component.DataComponentMap.Builder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.Container;
 import net.minecraft.world.LockCode;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.Nameable;
@@ -57,19 +56,9 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     private static final int MAX_HOPS = 64;
 
-    private final HeaterContainer container = new HeaterContainer() {
-        @Override
-        public boolean stillValid(Player player) {
-            return Container.stillValidBlockEntity(HeaterBlockEntity.this, player);
-        }
+    private final HeaterContainer container;
 
-        @Override
-        public void setChanged() {
-            HeaterBlockEntity.this.setChanged();
-        }
-    };
-
-    private final HeaterStorage burning = new HeaterStorage() {
+    private final HeaterStorage burningStorage = new HeaterStorage() {
         @Override
         protected void onFinalCommit() {
             var pos = HeaterBlockEntity.this.worldPosition;
@@ -85,15 +74,15 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         }
     };
 
-    private final ContainerData containerData = new ContainerData() {
+    private final ContainerData burningData = new ContainerData() {
 
         @Override
         public int get(int index) {
             switch (index) {
                 case 0:
-                    return HeaterBlockEntity.this.burning.getCurrentBurning();
+                    return HeaterBlockEntity.this.burningStorage.getCurrentBurning();
                 case 1:
-                    return HeaterBlockEntity.this.burning.getMaxBurning();
+                    return HeaterBlockEntity.this.burningStorage.getMaxBurning();
                 default:
                     return 0;
             }
@@ -103,10 +92,10 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         public void set(int index, int value) {
             switch (index) {
                 case 0:
-                    HeaterBlockEntity.this.burning.setCurrentBurning(value);
+                    HeaterBlockEntity.this.burningStorage.setCurrentBurning(value);
                     break;
                 case 1:
-                    HeaterBlockEntity.this.burning.setMaxBurning(value);
+                    HeaterBlockEntity.this.burningStorage.setMaxBurning(value);
                     break;
                 default:
                     break;
@@ -132,6 +121,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
         super(HeaterBlockEntityTypes.HEATER, pos, state);
+        this.container = HeaterContainer.getForBlockEntity(this);
     }
 
     public HeaterContainer getContainer() {
@@ -147,8 +137,8 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
             this.name = Component.Serializer.fromJson(compoundTag.getString(CUSTOM_NAME_TAG), provider);
         }
         this.container.setItem(0, ItemStack.parseOptional(provider, compoundTag.getCompound(ITEM_TAG)));
-        this.burning.setMaxBurning(this.getFuelTime(this.container.getItem(0)));
-        this.burning.setCurrentBurning(compoundTag.getInt(BURN_TIME_TAG));
+        this.burningStorage.setMaxBurning(this.getFuelTime(this.container.getItem(0)));
+        this.burningStorage.setCurrentBurning(compoundTag.getInt(BURN_TIME_TAG));
     }
 
     @Override
@@ -160,7 +150,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         if (!this.container.getItem(0).isEmpty()) {
             compoundTag.put(ITEM_TAG, this.container.getItem(0).save(provider, new CompoundTag()));
         }
-        compoundTag.putInt(BURN_TIME_TAG, this.burning.getCurrentBurning());
+        compoundTag.putInt(BURN_TIME_TAG, this.burningStorage.getCurrentBurning());
     }
 
     @Override
@@ -191,7 +181,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     @Override
     public AbstractContainerMenu createMenu(int syncId, Inventory inventory, Player player) {
         if (BaseContainerBlockEntity.canUnlock(player, this.lock, this.getDisplayName())) {
-            return new HeaterMenu(syncId, inventory, container, containerData);
+            return new HeaterMenu(syncId, inventory, container, burningData);
         } else {
             return null;
         }
@@ -216,7 +206,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     // Non-static
 
     public boolean isBurning() {
-        return this.burning.getCurrentBurning() > 0;
+        return this.burningStorage.getCurrentBurning() > 0;
     }
 
     public void makeDirty() {
@@ -254,7 +244,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
             }
 
             if (heater.isBurning() && state.getBlock() instanceof HeaterBlock block) {
-                heater.burning.extract(burningReduction(heater.burning.getBurning(), block.getAge()), transaction);
+                heater.burningStorage.extract(burningReduction(heater.burningStorage.getBurning(), block.getAge()), transaction);
             }
 
             consumeFuel(heater, transaction);
@@ -268,15 +258,15 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
                 .map(pos -> BurningStorage.SIDED.find(level, pos, null))
                 .filter(BurningStorage::supportsInsertion)
                 .sorted((a, b) -> Double.compare(a.getBurning().getReverseValue(), b.getBurning().getReverseValue()))
-                .limit(heater.burning.getCurrentBurning())
+                .limit(heater.burningStorage.getCurrentBurning())
                 .toArray(BurningStorage[]::new);
 
         if (storages.length > 0) {
-            var deltaBurning = heater.burning.getBurning()
-                    .withValue(Math.round(heater.burning.getCurrentBurning() * 1f / storages.length));
+            var deltaBurning = heater.burningStorage.getBurning()
+                    .withValue(Math.round(heater.burningStorage.getCurrentBurning() * 1f / storages.length));
 
             for (var storage : storages) {
-                BurningStorage.transfer(heater.burning, storage, deltaBurning, transaction);
+                BurningStorage.transfer(heater.burningStorage, storage, deltaBurning, transaction);
                 if (!heater.isBurning()) {
                     break;
                 }
@@ -295,7 +285,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
                     var bucketItem = fuelItem.getCraftingRemainingItem();
                     heater.container.setItem(0, bucketItem == null ? ItemStack.EMPTY : new ItemStack(bucketItem));
                 }
-                heater.burning.insert(burning.one(), transaction);
+                heater.burningStorage.insert(burning.one(), transaction);
             }
         }
     }
@@ -306,7 +296,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     @SuppressWarnings("java:S1172")
     public static BurningStorage getBurningStorage(HeaterBlockEntity entity, Direction direction) {
-        return entity.burning;
+        return entity.burningStorage;
     }
 
     public static final void updateConnectedHeaters(Level level, BlockPos pos, BlockState state) {

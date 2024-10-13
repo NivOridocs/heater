@@ -1,11 +1,14 @@
 package niv.heater.util;
 
 import net.minecraft.core.Direction;
+import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class HeaterContainer extends SimpleContainer implements WorldlyContainer {
 
@@ -41,5 +44,19 @@ public class HeaterContainer extends SimpleContainer implements WorldlyContainer
     @Override
     public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction face) {
         return face != Direction.DOWN || stack.is(Items.WATER_BUCKET) || stack.is(Items.BUCKET);
+    }
+
+    public static final HeaterContainer getForBlockEntity(BlockEntity blockEntity) {
+        return new HeaterContainer() {
+            @Override
+            public boolean stillValid(Player player) {
+                return Container.stillValidBlockEntity(blockEntity, player);
+            }
+
+            @Override
+            public void setChanged() {
+                blockEntity.setChanged();
+            }
+        };
     }
 }
