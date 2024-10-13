@@ -254,7 +254,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
             }
 
             if (heater.isBurning() && state.getBlock() instanceof HeaterBlock block) {
-                heater.burning.extract(burningReduction(block.getAge()), transaction);
+                heater.burning.extract(burningReduction(heater.burning.getBurning(), block.getAge()), transaction);
             }
 
             consumeFuel(heater, transaction);

@@ -72,22 +72,7 @@ public class WeatherStateExtra {
         }
     }
 
-    public static final Burning burningReduction(WeatherState state) {
-        var burning = Burning.MIN_VALUE;
-        switch (state) {
-            case OXIDIZED:
-                burning = burning.withValue(4);
-                break;
-            case WEATHERED:
-                burning = burning.withValue(3);
-                break;
-            case EXPOSED:
-                burning = burning.withValue(2);
-                break;
-            default:
-                burning = burning.withValue(1);
-                break;
-        }
-        return burning;
+    public static final Burning burningReduction(Burning burning, WeatherState state) {
+        return burning.withValue(heatReduction(state));
     }
 }
