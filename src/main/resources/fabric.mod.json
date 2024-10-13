@@ -33,6 +33,6 @@
 		"minecraft": "~1.21",
 		"java": ">=21",
 		"fabric-api": "*",
-		"burning": ">=0.2"
+		"burning": "*"
 	}
 }

@@ -4,7 +4,6 @@ import static niv.heater.util.WeatherStateExtra.burningReduction;
 
 import java.util.EnumMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,19 +28,17 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
+import niv.burning.api.base.SimpleBurningStorage;
 import niv.heater.block.HeaterBlock;
 import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.Explorer;
 import niv.heater.util.HeaterContainer;
-import niv.heater.util.HeaterStorage;
 
 public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable {
 
@@ -50,7 +47,6 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     public static final int BURN_TIME_PROPERTY_INDEX = 0;
     public static final int FUEL_TIME_PROPERTY_INDEX = 1;
 
-    private static final String BURN_TIME_TAG = "BurnTime";
     private static final String CUSTOM_NAME_TAG = "CustomName";
     private static final String ITEM_TAG = "Item";
 
@@ -58,63 +54,17 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     private final HeaterContainer container;
 
-    private final HeaterStorage burningStorage = new HeaterStorage() {
-        @Override
-        protected void onFinalCommit() {
-            var pos = HeaterBlockEntity.this.worldPosition;
-            var level = HeaterBlockEntity.this.level;
-            var state = level.getBlockState(pos);
-            var wasBurning = state.getValue(BlockStateProperties.LIT).booleanValue();
-            var isBurning = this.getCurrentBurning() > 0;
-            if (wasBurning != isBurning) {
-                state = state.setValue(BlockStateProperties.LIT, isBurning);
-                level.setBlockAndUpdate(pos, state);
-                BlockEntity.setChanged(level, pos, state);
-            }
-        }
-    };
+    private final SimpleBurningStorage burningStorage;
 
-    private final ContainerData burningData = new ContainerData() {
+    private final ContainerData burningData;
 
-        @Override
-        public int get(int index) {
-            switch (index) {
-                case 0:
-                    return HeaterBlockEntity.this.burningStorage.getCurrentBurning();
-                case 1:
-                    return HeaterBlockEntity.this.burningStorage.getMaxBurning();
-                default:
-                    return 0;
-            }
-        }
+    private final EnumMap<Direction, InventoryStorage> wrappers;
 
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case 0:
-                    HeaterBlockEntity.this.burningStorage.setCurrentBurning(value);
-                    break;
-                case 1:
-                    HeaterBlockEntity.this.burningStorage.setMaxBurning(value);
-                    break;
-                default:
-                    break;
-            }
-        }
+    private final Set<BlockPos> cache;
 
-        @Override
-        public int getCount() {
-            return 2;
-        }
-    };
+    private final AtomicBoolean dirty;
 
-    private final EnumMap<Direction, InventoryStorage> wrappers = new EnumMap<>(Direction.class);
-
-    private final Set<BlockPos> cache = new HashSet<>();
-
-    private final AtomicBoolean dirty = new AtomicBoolean(true);
-
-    private LockCode lock = LockCode.NO_LOCK;
+    private LockCode lock;
 
     @Nullable
     private Component name;
@@ -122,10 +72,25 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
         super(HeaterBlockEntityTypes.HEATER, pos, state);
         this.container = HeaterContainer.getForBlockEntity(this);
+        this.burningStorage = SimpleBurningStorage.getForBlockEntity(this);
+        this.burningData = SimpleBurningStorage.getDefaultContainerData(this.burningStorage);
+        this.wrappers = new EnumMap<>(Direction.class);
+        this.cache = new HashSet<>();
+        this.dirty = new AtomicBoolean(true);
+        this.lock = LockCode.NO_LOCK;
+        this.name = null;
     }
 
     public HeaterContainer getContainer() {
         return container;
+    }
+
+    public boolean isBurning() {
+        return this.burningStorage.getCurrentBurning() > 0;
+    }
+
+    public void makeDirty() {
+        this.dirty.set(true);
     }
 
     // For {@link BlockEntity}
@@ -137,8 +102,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
             this.name = Component.Serializer.fromJson(compoundTag.getString(CUSTOM_NAME_TAG), provider);
         }
         this.container.setItem(0, ItemStack.parseOptional(provider, compoundTag.getCompound(ITEM_TAG)));
-        this.burningStorage.setMaxBurning(this.getFuelTime(this.container.getItem(0)));
-        this.burningStorage.setCurrentBurning(compoundTag.getInt(BURN_TIME_TAG));
+        this.burningStorage.load(compoundTag, provider);
     }
 
     @Override
@@ -150,7 +114,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         if (!this.container.getItem(0).isEmpty()) {
             compoundTag.put(ITEM_TAG, this.container.getItem(0).save(provider, new CompoundTag()));
         }
-        compoundTag.putInt(BURN_TIME_TAG, this.burningStorage.getCurrentBurning());
+        this.burningStorage.save(compoundTag, provider);
     }
 
     @Override
@@ -203,31 +167,6 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         this.name = name;
     }
 
-    // Non-static
-
-    public boolean isBurning() {
-        return this.burningStorage.getCurrentBurning() > 0;
-    }
-
-    public void makeDirty() {
-        this.dirty.set(true);
-    }
-
-    private int getFuelTime(ItemStack fuel) {
-        return fuel.isEmpty() ? 0
-                : AbstractFurnaceBlockEntity.getFuel()
-                        .getOrDefault(fuel.getItem(), 0);
-    }
-
-    private Map<Direction, InventoryStorage> getWrappers() {
-        if (wrappers.isEmpty()) {
-            for (var direction : Direction.values()) {
-                wrappers.put(direction, InventoryStorage.of(container, direction));
-            }
-        }
-        return wrappers;
-    }
-
     // Static
 
     public static void tick(Level level, BlockPos pos, BlockState state, HeaterBlockEntity heater) {
@@ -244,7 +183,9 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
             }
 
             if (heater.isBurning() && state.getBlock() instanceof HeaterBlock block) {
-                heater.burningStorage.extract(burningReduction(heater.burningStorage.getBurning(), block.getAge()), transaction);
+                heater.burningStorage.extract(
+                        burningReduction(heater.burningStorage.getBurning(), block.getAge()),
+                        transaction);
             }
 
             consumeFuel(heater, transaction);
@@ -290,12 +231,13 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         }
     }
 
-    public static InventoryStorage getInventoryStorage(HeaterBlockEntity entity, Direction direction) {
-        return entity.getWrappers().get(direction);
+    public static InventoryStorage getInventoryStorage(
+            HeaterBlockEntity entity, Direction direction) {
+        return entity.wrappers.computeIfAbsent(direction, key -> InventoryStorage.of(entity.container, key));
     }
 
-    @SuppressWarnings("java:S1172")
-    public static BurningStorage getBurningStorage(HeaterBlockEntity entity, Direction direction) {
+    public static BurningStorage getBurningStorage(
+            HeaterBlockEntity entity, @SuppressWarnings("java:S1172") Direction direction) {
         return entity.burningStorage;
     }
 
