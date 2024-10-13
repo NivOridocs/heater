@@ -26,7 +26,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import niv.heater.Tags;
 import niv.heater.api.Connector;
 import niv.heater.api.Worded;
 import niv.heater.block.entity.HeaterBlockEntity;
@@ -82,12 +81,12 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
         var level = context.getLevel();
         var pos = context.getClickedPos();
         return this.defaultBlockState()
-                .trySetValue(DOWN, canConnect(level, pos.below()))
-                .trySetValue(UP, canConnect(level, pos.above()))
-                .trySetValue(NORTH, canConnect(level, pos.north()))
-                .trySetValue(SOUTH, canConnect(level, pos.south()))
-                .trySetValue(WEST, canConnect(level, pos.west()))
-                .trySetValue(EAST, canConnect(level, pos.east()))
+                .trySetValue(DOWN, canConnect(level, pos, Direction.DOWN))
+                .trySetValue(UP, canConnect(level, pos, Direction.UP))
+                .trySetValue(NORTH, canConnect(level, pos, Direction.NORTH))
+                .trySetValue(SOUTH, canConnect(level, pos, Direction.SOUTH))
+                .trySetValue(WEST, canConnect(level, pos, Direction.WEST))
+                .trySetValue(EAST, canConnect(level, pos, Direction.EAST))
                 .trySetValue(WATERLOGGED, level.getFluidState(pos).is(Fluids.WATER));
     }
 
@@ -98,7 +97,11 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
         if (state.getValue(WATERLOGGED).booleanValue()) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
-        return state.trySetValue(PROPERTY_BY_DIRECTION.get(direction), canConnect(level, neighborPos));
+        if (level instanceof Level world) {
+            return state.trySetValue(PROPERTY_BY_DIRECTION.get(direction), canConnect(world, pos, direction));
+        } else {
+            return state;
+        }
     }
 
     @Override
@@ -137,11 +140,6 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
     }
 
     @Override
-    public boolean canPropagate(LevelAccessor level, BlockPos pos, BlockState state, Direction direction) {
-        return level.getBlockState(pos.relative(direction)).is(Tags.Propagable.PIPES);
-    }
-
-    @Override
     public WeatherState getAge() {
         return weatherState;
     }
@@ -158,7 +156,7 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
         return result.toArray(String[]::new);
     }
 
-    private boolean canConnect(BlockGetter getter, BlockPos pos) {
-        return getter.getBlockState(pos).is(Tags.Connectable.PIPES);
+    private boolean canConnect(Level level, BlockPos pos, Direction direction) {
+        return Connector.isConnector(level, pos, direction) || Connector.isBurningStorage(level, pos, direction);
     }
 }

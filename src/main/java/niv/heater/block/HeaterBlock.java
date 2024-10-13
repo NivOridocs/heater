@@ -17,7 +17,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper;
@@ -26,7 +25,6 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import niv.heater.Tags;
 import niv.heater.api.Connector;
 import niv.heater.api.Worded;
 import niv.heater.block.entity.HeaterBlockEntity;
@@ -117,11 +115,6 @@ public class HeaterBlock extends AbstractFurnaceBlock implements Connector, Word
             double dz = axis == Direction.Axis.Z ? direction.getStepZ() * .52d : r;
             level.addParticle(ParticleTypes.SMOKE, x + dx, y + dy, z + dz, .0d, .0d, .0d);
         }
-    }
-
-    @Override
-    public boolean canPropagate(LevelAccessor level, BlockPos pos, BlockState state, Direction direction) {
-        return level.getBlockState(pos.relative(direction)).is(Tags.Propagable.HEATERS);
     }
 
     @Override

@@ -17,7 +17,6 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider.BlockTagProvider;
-import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
@@ -44,7 +43,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -368,54 +366,15 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
 
             getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
                     .setReplace(false)
-                    .addTag(Tags.HEATERS)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS);
-
-            getOrCreateTagBuilder(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES)
-                    .setReplace(false)
-                    .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER);
-
-            getOrCreateTagBuilder(Tags.HEATERS)
-                    .setReplace(false)
+                    // Heaters
                     .add(HeaterBlocks.HEATERS.values().toArray(WeatheringHeaterBlock[]::new))
-                    .add(HeaterBlocks.WAXED_HEATERS.values().toArray(HeaterBlock[]::new));
-
-            getOrCreateTagBuilder(Tags.PIPES)
-                    .setReplace(false)
+                    .add(HeaterBlocks.WAXED_HEATERS.values().toArray(HeaterBlock[]::new))
+                    // Heat Pipes
                     .add(HeaterBlocks.HEAT_PIPES.values().toArray(WeatheringHeatPipeBlock[]::new))
-                    .add(HeaterBlocks.WAXED_HEAT_PIPES.values().toArray(HeatPipeBlock[]::new));
-
-            getOrCreateTagBuilder(Tags.THERMOSTATS)
-                    .setReplace(false)
+                    .add(HeaterBlocks.WAXED_HEAT_PIPES.values().toArray(HeatPipeBlock[]::new))
+                    // Thermostats
                     .add(HeaterBlocks.THERMOSTATS.values().toArray(WeatheringThermostatBlock[]::new))
                     .add(HeaterBlocks.WAXED_THERMOSTATS.values().toArray(ThermostatBlock[]::new));
-
-            getOrCreateTagBuilder(Tags.Connectable.PIPES)
-                    .setReplace(false)
-                    .addTag(Tags.HEATERS)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS)
-                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
-
-            getOrCreateTagBuilder(Tags.Propagable.HEATERS)
-                    .setReplace(false)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS)
-                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
-
-            getOrCreateTagBuilder(Tags.Propagable.PIPES)
-                    .setReplace(false)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS)
-                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
-
-            getOrCreateTagBuilder(Tags.Propagable.THERMOSTATS)
-                    .setReplace(false)
-                    .addTag(Tags.HEATERS)
-                    .addTag(Tags.PIPES)
-                    .addTag(Tags.THERMOSTATS)
-                    .addTag(ConventionalBlockTags.PLAYER_WORKSTATIONS_FURNACES);
         }
     }
 }
