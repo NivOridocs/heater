@@ -1,5 +1,6 @@
 package niv.heater;
 
+import static net.minecraft.resources.ResourceLocation.tryBuild;
 import static niv.heater.Heater.MOD_ID;
 
 import net.fabricmc.api.EnvType;
@@ -8,12 +9,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import niv.heater.screen.HeaterMenu;
 
 @Environment(EnvType.CLIENT)
 public class HeaterScreen extends AbstractContainerScreen<HeaterMenu> {
-    private static final ResourceLocation BACKGROUND = ResourceLocation.tryBuild(MOD_ID, "textures/gui/container/heater.png");
+    private static final ResourceLocation LIT_PROGRESS_SPRITE = tryBuild(MOD_ID, "container/heater/lit_progress");
+    private static final ResourceLocation TEXTURE = tryBuild(MOD_ID, "textures/gui/container/heater.png");
 
     public HeaterScreen(HeaterMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -22,18 +25,17 @@ public class HeaterScreen extends AbstractContainerScreen<HeaterMenu> {
     @Override
     public void init() {
         super.init();
-        titleLabelX = (imageWidth - font.width(title)) / 2;
+        this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
     }
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float delta, int mouseX, int mouseY) {
-        int i = this.leftPos;
-        int j = this.topPos;
-        guiGraphics.blit(BACKGROUND, i, j, 0, 0, this.imageWidth, this.imageHeight);
-        if (menu.isBurning()) {
-            int k = menu.getFuelProgress();
-            guiGraphics.blit(BACKGROUND, i + 80, j + 39 - k, 176, 12 - k, 14, k + 1);
+        int x = this.leftPos;
+        int y = this.topPos;
+        guiGraphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight);
+        if (this.menu.isLit()) {
+            int h = Mth.ceil(this.menu.getLitProgress() * 13.0F) + 1;
+            guiGraphics.blitSprite(LIT_PROGRESS_SPRITE, 14, 14, 0, 14 - h, x + 80, y + 42 - h, 14, h);
         }
     }
-
 }

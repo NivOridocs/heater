@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [4.0] - 2024-10-13
+
+### Added
+
++ Now using `burning` for transferring ~~heat~~ burning fuel between furnace-like blocks.
+
+### Changed
+
++ Update target Minecraft version to 1.21, with 1.21.1 compatibility.
+
+### Removed
+
++ Remove all the logic regarding tags.
+
 ## [3.3] - 2024-09-07
 
 ### Fixed
@@ -76,6 +90,7 @@
 
 Initial release.
 
+[4.0]: https://github.com/NivOridocs/heater/releases/tag/4.0
 [3.3]: https://github.com/NivOridocs/heater/releases/tag/3.3
 [3.2]: https://github.com/NivOridocs/heater/releases/tag/3.2
 [3.1]: https://github.com/NivOridocs/heater/releases/tag/3.1

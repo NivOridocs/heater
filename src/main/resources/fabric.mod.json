@@ -14,11 +14,6 @@
 		"homepage": "https://modrinth.com/mod/heater",
 		"sources": "https://github.com/NivOridocs/heater"
 	},
-    "custom": {
-		"loom:injected_interfaces": {
-			"net/minecraft/class_2609": ["niv/heater/api/Furnace"]
-		}
-	},
 	"license": "MIT",
 	"icon": "assets/heater/icon.png",
 	"environment": "*",
@@ -33,13 +28,11 @@
 			"niv.heater.HeaterDataGenerator"
 		]
 	},
-	"mixins": [
-        "heater.mixins.json"
-	],
 	"depends": {
-		"fabricloader": ">=0.15.7",
-		"minecraft": "~1.20.3",
-		"java": ">=17",
-		"fabric-api": "*"
+		"fabricloader": ">=0.16.5",
+		"minecraft": "~1.21",
+		"java": ">=21",
+		"fabric-api": "*",
+		"burning": "*"
 	}
 }

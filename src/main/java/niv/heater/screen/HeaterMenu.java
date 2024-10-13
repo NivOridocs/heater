@@ -1,22 +1,20 @@
 package niv.heater.screen;
 
+import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.FurnaceFuelSlot;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import niv.heater.registry.HeaterMenus;
 
 public class HeaterMenu extends AbstractContainerMenu {
-
-    public static final MenuType<HeaterMenu> TYPE = new MenuType<>(HeaterMenu::new, FeatureFlags.VANILLA_SET);
 
     public static final int SLOT_COUNT = 1;
 
@@ -29,7 +27,7 @@ public class HeaterMenu extends AbstractContainerMenu {
 
     public HeaterMenu(int syncId, Inventory inventory,
             Container container, ContainerData containerData) {
-        super(TYPE, syncId);
+        super(HeaterMenus.HEATER, syncId);
         checkContainerSize(container, 1);
         checkContainerDataCount(containerData, 2);
         this.container = container;
@@ -83,17 +81,16 @@ public class HeaterMenu extends AbstractContainerMenu {
         return container.stillValid(player);
     }
 
-    public boolean isBurning() {
+    public boolean isLit() {
         return this.containerData.get(0) > 0;
     }
 
-    public int getFuelProgress() {
-        int i = this.containerData.get(1);
+    public float getLitProgress() {
+        float i = this.containerData.get(1);
         if (i == 0) {
             i = 200;
         }
-
-        return this.containerData.get(0) * 13 / i;
+        return Mth.clamp(this.containerData.get(0) / i, 0f, 1f);
     }
 
     private static final class HeaterFuelSlot extends Slot {

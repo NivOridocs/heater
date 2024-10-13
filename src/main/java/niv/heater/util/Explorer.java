@@ -12,14 +12,11 @@ import java.util.function.BiConsumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
-import niv.heater.Tags;
-import niv.heater.adapter.FurnaceAdapter;
+import niv.burning.api.BurningStorage;
 import niv.heater.api.Connector;
-import niv.heater.api.Furnace;
 import niv.heater.block.HeaterBlock;
 
 public class Explorer implements Runnable {
@@ -30,7 +27,7 @@ public class Explorer implements Runnable {
     private static record ConnectorResult(Connector connector) implements Result {
     }
 
-    private static record FurnaceResult(Furnace furnace) implements Result {
+    private static record BurningStorageResult(BurningStorage burning) implements Result {
     }
 
     private static record HeaterResult(HeaterBlock heater) implements Result {
@@ -39,7 +36,7 @@ public class Explorer implements Runnable {
     private record ConnectorHolder(Connector connector, BlockPos pos, BlockState state, int hops) {
     }
 
-    private final LevelAccessor level;
+    private final Level level;
 
     private final BlockPos posZero;
 
@@ -51,11 +48,11 @@ public class Explorer implements Runnable {
 
     private final Set<BlockPos> visited;
 
-    private BiConsumer<Furnace, BlockPos> onFurnaceCallback = null;
+    private BiConsumer<BurningStorage, BlockPos> onBurningStorageCallback = null;
 
     private BiConsumer<HeaterBlock, BlockPos> onHeaterCallback = null;
 
-    public Explorer(LevelAccessor level, BlockPos pos, BlockState state, int hops) {
+    public Explorer(Level level, BlockPos pos, BlockState state, int hops) {
         this.level = level;
         this.posZero = pos;
         this.stateZero = state;
@@ -64,8 +61,8 @@ public class Explorer implements Runnable {
         this.visited = new HashSet<>();
     }
 
-    public Explorer onFurnaceFound(BiConsumer<Furnace, BlockPos> callback) {
-        this.onFurnaceCallback = callback;
+    public Explorer onBurningStorageCallback(BiConsumer<BurningStorage, BlockPos> callback) {
+        this.onBurningStorageCallback = callback;
         return this;
     }
 
@@ -104,10 +101,10 @@ public class Explorer implements Runnable {
             if (result instanceof ConnectorResult r) {
                 visited.add(pos);
                 connectors.add(new ConnectorHolder(r.connector(), pos, level.getBlockState(pos), hops));
-            } else if (result instanceof FurnaceResult r) {
-                if (onFurnaceCallback != null) {
+            } else if (result instanceof BurningStorageResult r) {
+                if (onBurningStorageCallback != null) {
                     visited.add(pos);
-                    onFurnaceCallback.accept(r.furnace(), pos);
+                    onBurningStorageCallback.accept(r.burning(), pos);
                 }
             } else if (result instanceof HeaterResult r) {
                 if (onHeaterCallback != null) {
@@ -119,40 +116,25 @@ public class Explorer implements Runnable {
     }
 
     private static final Map<Direction, Result> getConnectedNeighbors(Connector connector,
-            LevelAccessor level, BlockPos pos, BlockState state) {
+            Level level, BlockPos pos, BlockState state) {
         var results = new EnumMap<Direction, Result>(Direction.class);
         for (var direction : connector.getConnected(state)) {
             var relative = pos.relative(direction);
             if (connector.canPropagate(level, pos, level.getBlockState(pos), direction)) {
                 Optional.<Result>empty()
-                        .or(() -> asFurnace(level, relative))
-                        .or(() -> asForwardingFurnace(level, relative))
+                        .or(() -> asBurningStorage(level, relative, direction))
                         .or(() -> asConnector(level, relative))
                         .ifPresent(result -> results.put(direction, result));
-            } else if (level.getBlockState(relative).is(Tags.HEATERS)) {
-                asHeater(level, relative)
-                        .ifPresent(result -> results.put(direction, result));
+            } else if (level.getBlockState(relative).getBlock() instanceof HeaterBlock heater) {
+                results.put(direction, new HeaterResult(heater));
             }
         }
         return results;
     }
 
-    private static Optional<FurnaceResult> asFurnace(BlockGetter getter, BlockPos pos) {
-        var entity = getter.getBlockEntity(pos);
-        if (entity != null && entity instanceof Furnace furnace) {
-            return Optional.of(new FurnaceResult(furnace));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private static Optional<FurnaceResult> asForwardingFurnace(LevelReader level, BlockPos pos) {
-        var entity = level.getBlockEntity(pos);
-        if (entity != null) {
-            return FurnaceAdapter.of(level, entity).map(FurnaceResult::new);
-        } else {
-            return Optional.empty();
-        }
+    private static Optional<BurningStorageResult> asBurningStorage(Level level, BlockPos pos, Direction direction) {
+        return Optional.ofNullable(BurningStorage.SIDED.find(level, pos, direction.getOpposite()))
+                .map(BurningStorageResult::new);
     }
 
     private static Optional<ConnectorResult> asConnector(BlockGetter getter, BlockPos pos) {
@@ -162,21 +144,5 @@ public class Explorer implements Runnable {
         } else {
             return Optional.empty();
         }
-    }
-
-    private static Optional<HeaterResult> asHeater(BlockGetter getter, BlockPos pos) {
-        var block = getter.getBlockState(pos).getBlock();
-        if (block instanceof HeaterBlock heater) {
-            return Optional.of(new HeaterResult(heater));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    public static Optional<Furnace> getOptionalFurnace(LevelReader reader, BlockPos pos) {
-        return Optional.<FurnaceResult>empty()
-                .or(() -> asFurnace(reader, pos))
-                .or(() -> asForwardingFurnace(reader, pos))
-                .map(FurnaceResult::furnace);
     }
 }

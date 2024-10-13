@@ -20,7 +20,7 @@ As its namesake block, the **Heater** is this mod's core. Its role is to burn fu
 ![Heater Interface](img/Heater_Screen.png)
 
 </details>
-
+</br>
 <details>
 <summary>Heater Recipe</summary>
 
@@ -38,6 +38,7 @@ The **Heat Pipe** is a pipe-like block which works as you may imagine. Heat prod
 ![Heat Pipe Recipe](img/Heat_Pipe_Recipe.png)
 
 </details>
+</br>
 
 The Heat Pipe is entity-free, so you can fully fulfil your pipe dreams without concerns about dropping performances.
 
@@ -55,12 +56,18 @@ The Thermostat is also the only block that can "push" heat into a Heater, doubli
 ![Thermostat Recipe](img/Thermostat_Recipe.png)
 
 </details>
+</br>
 
 The Thermostat is entity-free, too.
 
 ## Interoperability
 
-If you don't want to read on, for it does become a bit technical, but found a furnace-like block that you feel Heater should propagate heat to but doesn't, then I invite you to check if an [issue](https://github.com/NivOridocs/heater/issues) regarding said block already exists or, if it doesn't, to open a new one. If you open a new one, I ask you to specify the mod name and possibly a source-code link, the furnace-like block or blocks, and the Minecraft version. Note that if a mod isn't open source, I can do close to nothing to make it compatible.
+From **Heater** 4.0 onwards, I moved the interoperability logic to the [**Burning**](https://github.com/NivOridocs/burning) library mod, so look there. Spoiler: it's basically the same.
+
+<details>
+<summary>Deprecated</summary>
+
+~~If you don't want to read on, for it does become a bit technical, but found a furnace-like block that you feel Heater should propagate heat to but doesn't, then I invite you to check if an issue regarding said block already exists or, if it doesn't, to open a new one. If you open a new one, I ask you to specify the mod name and possibly a source-code link, the furnace-like block or blocks, and the Minecraft version. Note that if a mod isn't open source, I can do close to nothing to make it compatible.~~
 
 That said, Heater should be automatically interoperable with any 3rd party mod's block whose entity extends the `AbstractFurnaceBlockEntity` (as from Mojang mappings) class.
 
@@ -70,7 +77,6 @@ However, some mods (like Heater, paradoxically) don't extend said class for the 
 
 To make such blocks interoperable, you can create a data pack containing one or more furnace adapters, as in the following examples.
 
-<details>
 <summary>Data Pack Structure</summary>
 
 ```tree
@@ -87,9 +93,6 @@ To make such blocks interoperable, you can create a data pack containing one or 
 └── pack.png (optional)
 ```
 
-</details>
-
-<details>
 <summary>JSON File Content</summary>
 
 ```json
