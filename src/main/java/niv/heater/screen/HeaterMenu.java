@@ -1,5 +1,6 @@
 package niv.heater.screen;
 
+import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -80,17 +81,16 @@ public class HeaterMenu extends AbstractContainerMenu {
         return container.stillValid(player);
     }
 
-    public boolean isBurning() {
+    public boolean isLit() {
         return this.containerData.get(0) > 0;
     }
 
-    public int getFuelProgress() {
-        int i = this.containerData.get(1);
+    public float getLitProgress() {
+        float i = this.containerData.get(1);
         if (i == 0) {
             i = 200;
         }
-
-        return this.containerData.get(0) * 13 / i;
+        return Mth.clamp(this.containerData.get(0) / i, 0f, 1f);
     }
 
     private static final class HeaterFuelSlot extends Slot {
