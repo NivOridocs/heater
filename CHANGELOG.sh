@@ -1,6 +1,6 @@
 #! /bin/sh
 
-VERSION=`grep mod_version gradle.properties | cut -d'=' -f2`
+VERSION=`grep mod_version gradle.properties | cut -d'=' -f2 | cut -d'+' -f1`
 
 cat CHANGELOG.md \
     | sed -n "/## \[${VERSION}\]/,/## \[/{//b;p}" \
