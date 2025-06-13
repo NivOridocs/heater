@@ -1,9 +1,18 @@
+
+# hidden
+.*
+!.editorconfig
+!.git
+!.gitattributes
+!.github
+!.gitignore
+
 # gradle
 
-.gradle/
 build/
-out/
 classes/
+logs/
+out/
 
 # eclipse
 
@@ -18,11 +27,7 @@ classes/
 
 # vscode
 
-.settings/
-.vscode/
 bin/
-.classpath
-.project
 
 # macos
 
@@ -39,7 +44,3 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
-
-# direnv
-
-.envrc
