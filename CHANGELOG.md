@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
++ Update `burning` library version to 1.0+1.21.
+
 ## [4.0] - 2024-10-13
 
 ### Added
