@@ -7,7 +7,7 @@ name: Heater Release Workflow
 on:
   push:
     tags:
-      - **
+      - '*'
 
 jobs:
   build:
