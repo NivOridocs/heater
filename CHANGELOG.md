@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [4.0.1] - 2025-06-15
+
 ### Changed
 
 + Update `burning` library version to 1.0+1.21.
@@ -94,6 +96,7 @@
 
 Initial release.
 
+[4.0.1]: https://github.com/NivOridocs/heater/releases/tag/4.0.1
 [4.0]: https://github.com/NivOridocs/heater/releases/tag/4.0
 [3.3]: https://github.com/NivOridocs/heater/releases/tag/3.3
 [3.2]: https://github.com/NivOridocs/heater/releases/tag/3.2

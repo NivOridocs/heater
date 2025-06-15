@@ -7,7 +7,10 @@ name: Heater Release Workflow
 on:
   push:
     tags:
-      - **
+      - '*'
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -45,10 +48,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
         run: |
-          test "$tag" = "$(git describe --exact-match main)"
           version=`grep minecraft_version gradle.properties | cut -d'=' -f2`
           gh release create $tag ./build/libs/*.jar \
               --draft --verify-tag \
               --repo "$GITHUB_REPOSITORY" \
-              --title "Heater $tag for Minecraft $version"
+              --title "Heater $tag for Minecraft $version" \
               --notes "$(./CHANGELOG.sh)"
