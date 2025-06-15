@@ -11,7 +11,7 @@ import net.minecraft.world.inventory.FurnaceFuelSlot;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import niv.burning.api.BurningContext;
 import niv.heater.registry.HeaterMenus;
 
 public class HeaterMenu extends AbstractContainerMenu {
@@ -33,7 +33,7 @@ public class HeaterMenu extends AbstractContainerMenu {
         this.container = container;
         this.containerData = containerData;
 
-        addSlot(new HeaterFuelSlot(container, 0, 80, 44));
+        addSlot(new HeaterFuelSlot(container, 0, 80, 44, inventory.player.level().fuelValues()));
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
@@ -95,13 +95,16 @@ public class HeaterMenu extends AbstractContainerMenu {
 
     private static final class HeaterFuelSlot extends Slot {
 
-        public HeaterFuelSlot(Container container, int slot, int x, int y) {
+        private final BurningContext context;
+
+        public HeaterFuelSlot(Container container, int slot, int x, int y, BurningContext context) {
             super(container, slot, x, y);
+            this.context = context;
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return AbstractFurnaceBlockEntity.isFuel(stack) || FurnaceFuelSlot.isBucket(stack);
+            return this.context.isFuel(stack.getItem()) || FurnaceFuelSlot.isBucket(stack);
         }
 
         @Override

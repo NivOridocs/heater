@@ -12,10 +12,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
@@ -26,6 +27,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.level.redstone.Orientation;
 import niv.heater.api.Connector;
 import niv.heater.api.Worded;
 import niv.heater.block.entity.HeaterBlockEntity;
@@ -59,7 +61,7 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
     }
 
     @Override
-    public boolean propagatesSkylightDown(BlockState state, BlockGetter getter, BlockPos pos) {
+    protected boolean propagatesSkylightDown(BlockState state) {
         return !state.getValue(WATERLOGGED).booleanValue();
     }
 
@@ -91,11 +93,11 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
     }
 
     @Override
-    public BlockState updateShape(
-            BlockState state, Direction direction, BlockState neighborState,
-            LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+    protected BlockState updateShape(
+            BlockState state, LevelReader level, ScheduledTickAccess scheduler, BlockPos pos,
+            Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
         if (state.getValue(WATERLOGGED).booleanValue()) {
-            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+            scheduler.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
         if (level instanceof Level world) {
             return state.trySetValue(PROPERTY_BY_DIRECTION.get(direction), canConnect(world, pos, direction));
@@ -105,8 +107,8 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level level, BlockPos pos,
-            Block sourceBlock, BlockPos sourcePos, boolean notify) {
+    protected void neighborChanged(BlockState state, Level level, BlockPos pos,
+            Block sourceBlock, Orientation orientation, boolean notify) {
         if (level.isClientSide) {
             return;
         }
@@ -130,7 +132,7 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
 
     @Override
     public Set<Direction> getConnected(BlockState state) {
-        var directions = new HashSet<Direction>(6);
+        var directions = HashSet.<Direction>newHashSet(6);
         for (var direction : Direction.values()) {
             if (state.getValue(PROPERTY_BY_DIRECTION.get(direction)).booleanValue()) {
                 directions.add(direction);

@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.redstone.Orientation;
 import niv.heater.api.Connector;
 import niv.heater.api.Worded;
 import niv.heater.block.entity.HeaterBlockEntity;
@@ -65,8 +66,8 @@ public class ThermostatBlock extends DirectionalBlock implements Connector, Word
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level level, BlockPos pos,
-            Block sourceBlock, BlockPos sourcePos, boolean notify) {
+    protected void neighborChanged(BlockState state, Level level, BlockPos pos,
+            Block sourceBlock, Orientation orientation, boolean notify) {
         if (level.isClientSide) {
             return;
         }

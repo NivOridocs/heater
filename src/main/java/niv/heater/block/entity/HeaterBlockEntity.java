@@ -32,6 +32,7 @@ import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.burning.api.Burning;
+import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage;
 import niv.heater.block.HeaterBlock;
@@ -39,7 +40,6 @@ import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.Explorer;
 import niv.heater.util.HeaterContainer;
-import niv.heater.util.SingletonBurningContext;
 
 public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable {
 
@@ -98,7 +98,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     @Override
     protected void loadAdditional(CompoundTag compoundTag, Provider provider) {
-        this.lock = LockCode.fromTag(compoundTag);
+        this.lock = LockCode.fromTag(compoundTag, provider);
         if (compoundTag.contains(CUSTOM_NAME_TAG, 8)) {
             this.name = Component.Serializer.fromJson(compoundTag.getString(CUSTOM_NAME_TAG), provider);
         }
@@ -108,7 +108,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     @Override
     protected void saveAdditional(CompoundTag compoundTag, Provider provider) {
-        this.lock.addToTag(compoundTag);
+        this.lock.addToTag(compoundTag, provider);
         if (this.name != null) {
             compoundTag.putString(CUSTOM_NAME_TAG, Component.Serializer.toJson(this.name, provider));
         }
@@ -171,7 +171,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     // Static
 
     public static void tick(Level level, BlockPos pos, BlockState state, HeaterBlockEntity heater) {
-        var context = SingletonBurningContext.getInstance();
+        var context = level.fuelValues();
         try (var transaction = Transaction.openOuter()) {
 
             if (heater.isBurning()) {
@@ -186,19 +186,19 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
             if (heater.isBurning() && state.getBlock() instanceof HeaterBlock block) {
                 heater.burningStorage.extract(
-                        burningReduction(heater.burningStorage.getBurning(context), block.getAge()),
+                        burningReduction(heater.burningStorage.getBurning(context), block.getAge(), context),
                         context,
                         transaction);
             }
 
-            consumeFuel(heater, transaction);
+            consumeFuel(heater, context, transaction);
 
             transaction.commit();
         }
     }
 
     private static void propagateBurnTime(Level level, HeaterBlockEntity heater, Transaction transaction) {
-        var context = SingletonBurningContext.getInstance();
+        var context = level.fuelValues();
         var storages = heater.cache.stream()
                 .map(pos -> BurningStorage.SIDED.find(level, pos, null))
                 .filter(BurningStorage::supportsInsertion)
@@ -221,8 +221,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         }
     }
 
-    private static void consumeFuel(HeaterBlockEntity heater, Transaction transaction) {
-        var context = SingletonBurningContext.getInstance();
+    private static void consumeFuel(HeaterBlockEntity heater, BurningContext context, Transaction transaction) {
         var fuelStack = heater.container.getItem(0);
         if (!heater.isBurning() && !fuelStack.isEmpty()) {
             var fuelItem = fuelStack.getItem();
@@ -230,8 +229,8 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
             if (burning != null) {
                 fuelStack.shrink(1);
                 if (fuelStack.isEmpty()) {
-                    var bucketItem = fuelItem.getCraftingRemainingItem();
-                    heater.container.setItem(0, bucketItem == null ? ItemStack.EMPTY : new ItemStack(bucketItem));
+                    var bucketItem = fuelItem.getCraftingRemainder();
+                    heater.container.setItem(0, bucketItem == null ? ItemStack.EMPTY : bucketItem);
                 }
                 heater.burningStorage.insert(burning.one(), context, transaction);
             }
