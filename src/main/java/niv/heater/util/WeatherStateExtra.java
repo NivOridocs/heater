@@ -73,6 +73,6 @@ public class WeatherStateExtra {
     }
 
     public static final Burning burningReduction(Burning burning, WeatherState state) {
-        return burning.withValue(heatReduction(state));
+        return burning.withValue(heatReduction(state), SingletonBurningContext.getInstance());
     }
 }

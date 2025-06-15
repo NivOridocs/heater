@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.7-SNAPSHOT'
+	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
     id "com.modrinth.minotaur" version "2.+"
 }
@@ -102,7 +102,8 @@ modrinth {
     projectId = "${project.project_id}"
 	versionName = "Heater ${project.mod_version}"
 	changelog = "sh CHANGELOG.sh".execute().text
-    gameVersions = ["1.21", "1.21.1"]
+    versionType = "release"
+    gameVersions = Arrays.asList("${project.game_versions}".toString().split(","))
 	uploadFile = remapJar
 	syncBodyFrom = "sh README.sh".execute().text
     dependencies {
