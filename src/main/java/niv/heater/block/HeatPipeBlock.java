@@ -1,9 +1,7 @@
 package niv.heater.block;
 
-import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,10 +27,9 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.level.redstone.Orientation;
 import niv.heater.api.Connector;
-import niv.heater.api.Worded;
 import niv.heater.block.entity.HeaterBlockEntity;
 
-public class HeatPipeBlock extends PipeBlock implements Connector, Worded, WeatheringCopper, SimpleWaterloggedBlock {
+public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCopper, SimpleWaterloggedBlock {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<HeatPipeBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
@@ -144,18 +141,6 @@ public class HeatPipeBlock extends PipeBlock implements Connector, Worded, Weath
     @Override
     public WeatherState getAge() {
         return weatherState;
-    }
-
-    @Override
-    public String[] getWords() {
-        var result = new ArrayList<String>(4);
-        result.add("waxed");
-        if (getAge() != UNAFFECTED) {
-            result.add(getAge().name().toLowerCase());
-        }
-        result.add("heat");
-        result.add("pipe");
-        return result.toArray(String[]::new);
     }
 
     private boolean canConnect(Level level, BlockPos pos, Direction direction) {

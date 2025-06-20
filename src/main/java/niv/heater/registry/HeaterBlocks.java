@@ -9,7 +9,6 @@ import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEAT
 import static net.minecraft.world.level.block.state.BlockBehaviour.Properties.ofFullCopy;
 import static niv.heater.Heater.MOD_ID;
 
-import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -25,14 +24,14 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import niv.heater.block.HeatPipeBlock;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.ThermostatBlock;
 import niv.heater.block.WeatheringHeatPipeBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import niv.heater.util.WeatherStateExtra;
 
 public class HeaterBlocks {
     private HeaterBlocks() {
@@ -188,14 +187,14 @@ public class HeaterBlocks {
     private static final <T extends Block> T registerWaxed(String name,
             BiFunction<WeatherState, Properties, T> builder,
             WeatherState weathering, Properties properties) {
-        return register("waxed_" + toString(weathering) + name,
+        return register("waxed_" + WeatherStateExtra.toPath(weathering) + name,
                 p -> builder.apply(weathering, p), properties);
     }
 
     private static final <T extends Block> T registerUnwaxed(String name,
             BiFunction<WeatherState, Properties, T> builder,
             WeatherState weathering, Properties properties) {
-        return register(toString(weathering) + name,
+        return register(WeatherStateExtra.toPath(weathering) + name,
                 p -> builder.apply(weathering, p), properties);
     }
 
@@ -211,21 +210,6 @@ public class HeaterBlocks {
                 new BlockItem(block, new Item.Properties().useBlockDescriptionPrefix().setId(itemKey)));
 
         return block;
-    }
-
-    private static final String toString(WeatherState weathering) {
-        switch (weathering) {
-            case UNAFFECTED:
-                return "";
-            case EXPOSED:
-                return "exposed_";
-            case WEATHERED:
-                return "weathered_";
-            case OXIDIZED:
-                return "oxidized_";
-            default:
-                throw new IllegalArgumentException(Objects.toString(weathering));
-        }
     }
 
     public static final void initialize() {
