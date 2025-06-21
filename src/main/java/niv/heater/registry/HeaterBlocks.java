@@ -9,23 +9,29 @@ import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEAT
 import static net.minecraft.world.level.block.state.BlockBehaviour.Properties.ofFullCopy;
 import static niv.heater.Heater.MOD_ID;
 
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import com.google.common.collect.ImmutableMap;
 
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
-import niv.heater.api.Worded;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import niv.heater.block.HeatPipeBlock;
 import niv.heater.block.HeaterBlock;
 import niv.heater.block.ThermostatBlock;
 import niv.heater.block.WeatheringHeatPipeBlock;
 import niv.heater.block.WeatheringHeaterBlock;
 import niv.heater.block.WeatheringThermostatBlock;
+import niv.heater.util.WeatherStateExtra;
 
 public class HeaterBlocks {
     private HeaterBlocks() {
@@ -73,11 +79,15 @@ public class HeaterBlocks {
 
     public static final ImmutableMap<WeatherState, WeatheringThermostatBlock> THERMOSTATS;
 
+    private static final String HEATER_NAME = "heater";
+    private static final String HEAT_PIPE_NAME = "heat_pipe";
+    private static final String THERMOSTAT_NAME = "thermostat";
+
     static {
-        WAXED_HEATER = register(new HeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
-        WAXED_EXPOSED_HEATER = register(new HeaterBlock(EXPOSED, ofFullCopy(FURNACE)));
-        WAXED_WEATHERED_HEATER = register(new HeaterBlock(WEATHERED, ofFullCopy(FURNACE)));
-        WAXED_OXIDIZED_HEATER = register(new HeaterBlock(OXIDIZED, ofFullCopy(FURNACE)));
+        WAXED_HEATER = registerWaxed(HEATER_NAME, HeaterBlock::new, UNAFFECTED, ofFullCopy(FURNACE));
+        WAXED_EXPOSED_HEATER = registerWaxed(HEATER_NAME, HeaterBlock::new, EXPOSED, ofFullCopy(FURNACE));
+        WAXED_WEATHERED_HEATER = registerWaxed(HEATER_NAME, HeaterBlock::new, WEATHERED, ofFullCopy(FURNACE));
+        WAXED_OXIDIZED_HEATER = registerWaxed(HEATER_NAME, HeaterBlock::new, OXIDIZED, ofFullCopy(FURNACE));
 
         WAXED_HEATERS = ImmutableMap.<WeatherState, HeaterBlock>builder()
                 .put(UNAFFECTED, WAXED_HEATER)
@@ -86,10 +96,10 @@ public class HeaterBlocks {
                 .put(OXIDIZED, WAXED_OXIDIZED_HEATER)
                 .build();
 
-        HEATER = register(new WeatheringHeaterBlock(UNAFFECTED, ofFullCopy(FURNACE)));
-        EXPOSED_HEATER = register(new WeatheringHeaterBlock(EXPOSED, ofFullCopy(FURNACE)));
-        WEATHERED_HEATER = register(new WeatheringHeaterBlock(WEATHERED, ofFullCopy(FURNACE)));
-        OXIDIZED_HEATER = register(new WeatheringHeaterBlock(OXIDIZED, ofFullCopy(FURNACE)));
+        HEATER = registerUnwaxed(HEATER_NAME, WeatheringHeaterBlock::new, UNAFFECTED, ofFullCopy(FURNACE));
+        EXPOSED_HEATER = registerUnwaxed(HEATER_NAME, WeatheringHeaterBlock::new, EXPOSED, ofFullCopy(FURNACE));
+        WEATHERED_HEATER = registerUnwaxed(HEATER_NAME, WeatheringHeaterBlock::new, WEATHERED, ofFullCopy(FURNACE));
+        OXIDIZED_HEATER = registerUnwaxed(HEATER_NAME, WeatheringHeaterBlock::new, OXIDIZED, ofFullCopy(FURNACE));
 
         HEATERS = ImmutableMap.<WeatherState, WeatheringHeaterBlock>builder()
                 .put(UNAFFECTED, HEATER)
@@ -107,10 +117,10 @@ public class HeaterBlocks {
         OxidizableBlocksRegistry.registerOxidizableBlockPair(EXPOSED_HEATER, WEATHERED_HEATER);
         OxidizableBlocksRegistry.registerOxidizableBlockPair(WEATHERED_HEATER, OXIDIZED_HEATER);
 
-        WAXED_HEAT_PIPE = register(new HeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_EXPOSED_HEAT_PIPE = register(new HeatPipeBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_WEATHERED_HEAT_PIPE = register(new HeatPipeBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_OXIDIZED_HEAT_PIPE = register(new HeatPipeBlock(OXIDIZED, ofFullCopy(COPPER_BLOCK)));
+        WAXED_HEAT_PIPE = registerWaxed(HEAT_PIPE_NAME, HeatPipeBlock::new, UNAFFECTED, ofFullCopy(COPPER_BLOCK));
+        WAXED_EXPOSED_HEAT_PIPE = registerWaxed(HEAT_PIPE_NAME, HeatPipeBlock::new, EXPOSED, ofFullCopy(COPPER_BLOCK));
+        WAXED_WEATHERED_HEAT_PIPE = registerWaxed(HEAT_PIPE_NAME, HeatPipeBlock::new, WEATHERED, ofFullCopy(COPPER_BLOCK));
+        WAXED_OXIDIZED_HEAT_PIPE = registerWaxed(HEAT_PIPE_NAME, HeatPipeBlock::new, OXIDIZED, ofFullCopy(COPPER_BLOCK));
 
         WAXED_HEAT_PIPES = ImmutableMap.<WeatherState, HeatPipeBlock>builder()
                 .put(UNAFFECTED, WAXED_HEAT_PIPE)
@@ -119,10 +129,10 @@ public class HeaterBlocks {
                 .put(OXIDIZED, WAXED_OXIDIZED_HEAT_PIPE)
                 .build();
 
-        HEAT_PIPE = register(new WeatheringHeatPipeBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        EXPOSED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
-        WEATHERED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
-        OXIDIZED_HEAT_PIPE = register(new WeatheringHeatPipeBlock(OXIDIZED, ofFullCopy(COPPER_BLOCK)));
+        HEAT_PIPE = registerUnwaxed(HEAT_PIPE_NAME, WeatheringHeatPipeBlock::new, UNAFFECTED, ofFullCopy(COPPER_BLOCK));
+        EXPOSED_HEAT_PIPE = registerUnwaxed(HEAT_PIPE_NAME, WeatheringHeatPipeBlock::new, EXPOSED, ofFullCopy(COPPER_BLOCK));
+        WEATHERED_HEAT_PIPE = registerUnwaxed(HEAT_PIPE_NAME, WeatheringHeatPipeBlock::new, WEATHERED, ofFullCopy(COPPER_BLOCK));
+        OXIDIZED_HEAT_PIPE = registerUnwaxed(HEAT_PIPE_NAME, WeatheringHeatPipeBlock::new, OXIDIZED, ofFullCopy(COPPER_BLOCK));
 
         HEAT_PIPES = ImmutableMap.<WeatherState, WeatheringHeatPipeBlock>builder()
                 .put(UNAFFECTED, HEAT_PIPE)
@@ -140,10 +150,10 @@ public class HeaterBlocks {
         OxidizableBlocksRegistry.registerOxidizableBlockPair(EXPOSED_HEAT_PIPE, WEATHERED_HEAT_PIPE);
         OxidizableBlocksRegistry.registerOxidizableBlockPair(WEATHERED_HEAT_PIPE, OXIDIZED_HEAT_PIPE);
 
-        WAXED_THERMOSTAT = register(new ThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_EXPOSED_THERMOSTAT = register(new ThermostatBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_WEATHERED_THERMOSTAT = register(new ThermostatBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
-        WAXED_OXIDIZED_THERMOSTAT = register(new ThermostatBlock(OXIDIZED, ofFullCopy(COPPER_BLOCK)));
+        WAXED_THERMOSTAT = registerWaxed(THERMOSTAT_NAME, ThermostatBlock::new, UNAFFECTED, ofFullCopy(COPPER_BLOCK));
+        WAXED_EXPOSED_THERMOSTAT = registerWaxed(THERMOSTAT_NAME, ThermostatBlock::new, EXPOSED, ofFullCopy(COPPER_BLOCK));
+        WAXED_WEATHERED_THERMOSTAT = registerWaxed(THERMOSTAT_NAME, ThermostatBlock::new, WEATHERED, ofFullCopy(COPPER_BLOCK));
+        WAXED_OXIDIZED_THERMOSTAT = registerWaxed(THERMOSTAT_NAME, ThermostatBlock::new, OXIDIZED, ofFullCopy(COPPER_BLOCK));
 
         WAXED_THERMOSTATS = ImmutableMap.<WeatherState, ThermostatBlock>builder()
                 .put(UNAFFECTED, WAXED_THERMOSTAT)
@@ -152,10 +162,10 @@ public class HeaterBlocks {
                 .put(OXIDIZED, WAXED_OXIDIZED_THERMOSTAT)
                 .build();
 
-        THERMOSTAT = register(new WeatheringThermostatBlock(UNAFFECTED, ofFullCopy(COPPER_BLOCK)));
-        EXPOSED_THERMOSTAT = register(new WeatheringThermostatBlock(EXPOSED, ofFullCopy(COPPER_BLOCK)));
-        WEATHERED_THERMOSTAT = register(new WeatheringThermostatBlock(WEATHERED, ofFullCopy(COPPER_BLOCK)));
-        OXIDIZED_THERMOSTAT = register(new WeatheringThermostatBlock(OXIDIZED, ofFullCopy(COPPER_BLOCK)));
+        THERMOSTAT = registerUnwaxed(THERMOSTAT_NAME, WeatheringThermostatBlock::new, UNAFFECTED, ofFullCopy(COPPER_BLOCK));
+        EXPOSED_THERMOSTAT = registerUnwaxed(THERMOSTAT_NAME, WeatheringThermostatBlock::new, EXPOSED, ofFullCopy(COPPER_BLOCK));
+        WEATHERED_THERMOSTAT = registerUnwaxed(THERMOSTAT_NAME, WeatheringThermostatBlock::new, WEATHERED, ofFullCopy(COPPER_BLOCK));
+        OXIDIZED_THERMOSTAT = registerUnwaxed(THERMOSTAT_NAME, WeatheringThermostatBlock::new, OXIDIZED, ofFullCopy(COPPER_BLOCK));
 
         THERMOSTATS = ImmutableMap.<WeatherState, WeatheringThermostatBlock>builder()
                 .put(UNAFFECTED, THERMOSTAT)
@@ -174,18 +184,32 @@ public class HeaterBlocks {
         OxidizableBlocksRegistry.registerOxidizableBlockPair(WEATHERED_THERMOSTAT, OXIDIZED_THERMOSTAT);
     }
 
-    private static final <T extends Block & Worded> T register(T block) {
-        return register(block, toId(block.getWords()));
+    private static final <T extends Block> T registerWaxed(String name,
+            BiFunction<WeatherState, Properties, T> builder,
+            WeatherState weathering, Properties properties) {
+        return register("waxed_" + WeatherStateExtra.toPath(weathering) + name,
+                p -> builder.apply(weathering, p), properties);
     }
 
-    private static final <T extends Block> T register(T block, String id) {
-        var key = ResourceLocation.tryBuild(MOD_ID, id);
-        Registry.register(BuiltInRegistries.ITEM, key, new BlockItem(block, new Item.Properties()));
-        return Registry.register(BuiltInRegistries.BLOCK, key, block);
+    private static final <T extends Block> T registerUnwaxed(String name,
+            BiFunction<WeatherState, Properties, T> builder,
+            WeatherState weathering, Properties properties) {
+        return register(WeatherStateExtra.toPath(weathering) + name,
+                p -> builder.apply(weathering, p), properties);
     }
 
-    private static final String toId(String... words) {
-        return String.join("_", words).toLowerCase();
+    private static final <T extends Block> T register(String name,
+            Function<Properties, T> constructor,
+            Properties properties) {
+        var blockKey = ResourceKey.create(Registries.BLOCK, ResourceLocation.tryBuild(MOD_ID, name));
+        var block = constructor.apply(properties.setId(blockKey));
+        block = Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+
+        var itemKey = ResourceKey.create(Registries.ITEM, ResourceLocation.tryBuild(MOD_ID, name));
+        Registry.register(BuiltInRegistries.ITEM, itemKey,
+                new BlockItem(block, new Item.Properties().useBlockDescriptionPrefix().setId(itemKey)));
+
+        return block;
     }
 
     public static final void initialize() {

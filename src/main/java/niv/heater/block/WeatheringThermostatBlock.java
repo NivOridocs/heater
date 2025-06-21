@@ -1,9 +1,5 @@
 package niv.heater.block;
 
-import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
-
-import java.util.ArrayList;
-
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -40,15 +36,5 @@ public class WeatheringThermostatBlock extends ThermostatBlock {
     @Override
     public boolean isRandomlyTicking(BlockState state) {
         return WeatheringCopper.getNext(state.getBlock()).isPresent();
-    }
-
-    @Override
-    public String[] getWords() {
-        var result = new ArrayList<String>(2);
-        if (getAge() != UNAFFECTED) {
-            result.add(getAge().name().toLowerCase());
-        }
-        result.add("thermostat");
-        return result.toArray(String[]::new);
     }
 }

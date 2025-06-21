@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [4.0.2] - 2025-06-21
+
+### Changed
+
++ Update target Minecraft version to 1.21.2, with 1.21.3 compatibility.
++ Update `burning` library version to 1.0.1+1.21.
+
 ## [4.0.1] - 2025-06-15
 
 ### Changed
@@ -96,6 +103,7 @@
 
 Initial release.
 
+[4.0.2]: https://github.com/NivOridocs/heater/releases/tag/4.0.2
 [4.0.1]: https://github.com/NivOridocs/heater/releases/tag/4.0.1
 [4.0]: https://github.com/NivOridocs/heater/releases/tag/4.0
 [3.3]: https://github.com/NivOridocs/heater/releases/tag/3.3

@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "#": {
-      "item": "minecraft:cobblestone"
-    },
-    "c": {
-      "item": "minecraft:copper_ingot"
-    },
-    "r": {
-      "item": "minecraft:redstone"
-    }
+    "#": "minecraft:cobblestone",
+    "c": "minecraft:copper_ingot",
+    "r": "minecraft:redstone"
   },
   "pattern": [
     "ccc",

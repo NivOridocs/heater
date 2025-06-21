@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "c": {
-      "item": "minecraft:copper_ingot"
-    },
-    "f": {
-      "item": "minecraft:furnace"
-    }
+    "c": "minecraft:copper_ingot",
+    "f": "minecraft:furnace"
   },
   "pattern": [
     "ccc",

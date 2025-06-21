@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableBiMap;
 
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import niv.burning.api.Burning;
+import niv.burning.api.BurningContext;
 
 public class WeatherStateExtra {
 
@@ -72,7 +73,7 @@ public class WeatherStateExtra {
         }
     }
 
-    public static final Burning burningReduction(Burning burning, WeatherState state) {
-        return burning.withValue(heatReduction(state), SingletonBurningContext.getInstance());
+    public static final Burning burningReduction(Burning burning, WeatherState state, BurningContext context) {
+        return burning.withValue(heatReduction(state), context);
     }
 }
