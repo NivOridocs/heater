@@ -35,6 +35,7 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage;
+import niv.burning.impl.FuelValuesBurningContext;
 import niv.heater.block.HeaterBlock;
 import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.screen.HeaterMenu;
@@ -171,7 +172,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     // Static
 
     public static void tick(Level level, BlockPos pos, BlockState state, HeaterBlockEntity heater) {
-        var context = level.fuelValues();
+        var context = new FuelValuesBurningContext(level.fuelValues());
         try (var transaction = Transaction.openOuter()) {
 
             if (heater.isBurning()) {
@@ -181,7 +182,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
                             .onBurningStorageCallback((s, p) -> heater.cache.add(p))
                             .run();
                 }
-                propagateBurnTime(level, heater, transaction);
+                propagateBurnTime(level, heater, context, transaction);
             }
 
             if (heater.isBurning() && state.getBlock() instanceof HeaterBlock block) {
@@ -197,8 +198,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         }
     }
 
-    private static void propagateBurnTime(Level level, HeaterBlockEntity heater, Transaction transaction) {
-        var context = level.fuelValues();
+    private static void propagateBurnTime(Level level, HeaterBlockEntity heater, BurningContext context, Transaction transaction) {
         var storages = heater.cache.stream()
                 .map(pos -> BurningStorage.SIDED.find(level, pos, null))
                 .filter(BurningStorage::supportsInsertion)
