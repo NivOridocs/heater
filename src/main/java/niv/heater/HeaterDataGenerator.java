@@ -36,8 +36,7 @@ import net.minecraft.data.models.model.TextureSlot;
 import net.minecraft.data.models.model.TexturedModel;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.data.recipes.ShapedRecipeBuilder;
-import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
@@ -69,7 +68,7 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
         pack.addProvider(BlockModelProvider::new);
         pack.addProvider(EnglishLanguageProvider::new);
         pack.addProvider(LootTableProvider::new);
-        pack.addProvider(RecipeProvider::new);
+        pack.addProvider(HeaterRecipeProvider::new);
         pack.addProvider(TagProvider::new);
     }
 
@@ -291,67 +290,77 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
         }
     }
 
-    private static class RecipeProvider extends FabricRecipeProvider {
+    private static class HeaterRecipeProvider extends FabricRecipeProvider {
 
-        private RecipeProvider(FabricDataOutput output, CompletableFuture<Provider> registriesFuture) {
+        private HeaterRecipeProvider(FabricDataOutput output, CompletableFuture<Provider> registriesFuture) {
             super(output, registriesFuture);
         }
 
         @Override
-        public void buildRecipes(RecipeOutput output) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeaterBlocks.HEATER)
-                    .pattern("ccc")
-                    .pattern("cfc")
-                    .pattern("ccc")
-                    .define('c', Items.COPPER_INGOT)
-                    .define('f', Items.FURNACE)
-                    .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
-                    .unlockedBy(getHasName(Items.FURNACE), has(Items.FURNACE))
-                    .save(output);
-
-            for (var state : WeatherState.values()) {
-                generateWaxingRecipe(output,
-                        HeaterBlocks.HEATERS.get(state).asItem(),
-                        HeaterBlocks.WAXED_HEATERS.get(state).asItem());
-            }
-
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeaterBlocks.HEAT_PIPE)
-                    .pattern("ccc")
-                    .define('c', Items.COPPER_INGOT)
-                    .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
-                    .save(output);
-
-            for (var state : WeatherState.values()) {
-                generateWaxingRecipe(output,
-                        HeaterBlocks.HEAT_PIPES.get(state).asItem(),
-                        HeaterBlocks.WAXED_HEAT_PIPES.get(state).asItem());
-            }
-
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeaterBlocks.THERMOSTAT)
-                    .pattern("ccc")
-                    .pattern("#c#")
-                    .pattern("#r#")
-                    .define('c', Items.COPPER_INGOT)
-                    .define('r', Items.REDSTONE)
-                    .define('#', Items.COBBLESTONE)
-                    .unlockedBy(getHasName(Items.COBBLESTONE), has(Items.COBBLESTONE))
-                    .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
-                    .unlockedBy(getHasName(Items.REDSTONE), has(Items.REDSTONE))
-                    .save(output);
-
-            for (var state : WeatherState.values()) {
-                generateWaxingRecipe(output,
-                        HeaterBlocks.THERMOSTATS.get(state).asItem(),
-                        HeaterBlocks.WAXED_THERMOSTATS.get(state).asItem());
-            }
+        public String getName() {
+            return "HeaterRecipeProvider";
         }
 
-        private void generateWaxingRecipe(RecipeOutput output, Item unwaxed, Item waxed) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, waxed)
-                    .requires(unwaxed).requires(Items.HONEYCOMB)
-                    .unlockedBy(getHasName(unwaxed), has(unwaxed))
-                    .unlockedBy(getHasName(Items.HONEYCOMB), has(Items.HONEYCOMB))
-                    .save(output);
+        @Override
+        protected RecipeProvider createRecipeProvider(Provider provider, RecipeOutput exporter) {
+            return new RecipeProvider(provider, exporter) {
+                @Override
+                public void buildRecipes() {
+                    shaped(RecipeCategory.MISC, HeaterBlocks.HEATER)
+                            .pattern("ccc")
+                            .pattern("cfc")
+                            .pattern("ccc")
+                            .define('c', Items.COPPER_INGOT)
+                            .define('f', Items.FURNACE)
+                            .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
+                            .unlockedBy(getHasName(Items.FURNACE), has(Items.FURNACE))
+                            .save(output);
+
+                    for (var state : WeatherState.values()) {
+                        generateWaxingRecipe(output,
+                                HeaterBlocks.HEATERS.get(state).asItem(),
+                                HeaterBlocks.WAXED_HEATERS.get(state).asItem());
+                    }
+
+                    shaped(RecipeCategory.MISC, HeaterBlocks.HEAT_PIPE)
+                            .pattern("ccc")
+                            .define('c', Items.COPPER_INGOT)
+                            .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
+                            .save(output);
+
+                    for (var state : WeatherState.values()) {
+                        generateWaxingRecipe(output,
+                                HeaterBlocks.HEAT_PIPES.get(state).asItem(),
+                                HeaterBlocks.WAXED_HEAT_PIPES.get(state).asItem());
+                    }
+
+                    shaped(RecipeCategory.MISC, HeaterBlocks.THERMOSTAT)
+                            .pattern("ccc")
+                            .pattern("#c#")
+                            .pattern("#r#")
+                            .define('c', Items.COPPER_INGOT)
+                            .define('r', Items.REDSTONE)
+                            .define('#', Items.COBBLESTONE)
+                            .unlockedBy(getHasName(Items.COBBLESTONE), has(Items.COBBLESTONE))
+                            .unlockedBy(getHasName(Items.COPPER_INGOT), has(Items.COPPER_INGOT))
+                            .unlockedBy(getHasName(Items.REDSTONE), has(Items.REDSTONE))
+                            .save(output);
+
+                    for (var state : WeatherState.values()) {
+                        generateWaxingRecipe(output,
+                                HeaterBlocks.THERMOSTATS.get(state).asItem(),
+                                HeaterBlocks.WAXED_THERMOSTATS.get(state).asItem());
+                    }
+                }
+
+                private void generateWaxingRecipe(RecipeOutput output, Item unwaxed, Item waxed) {
+                    shapeless(RecipeCategory.MISC, waxed)
+                            .requires(unwaxed).requires(Items.HONEYCOMB)
+                            .unlockedBy(getHasName(unwaxed), has(unwaxed))
+                            .unlockedBy(getHasName(Items.HONEYCOMB), has(Items.HONEYCOMB))
+                            .save(output);
+                }
+            };
         }
     }
 

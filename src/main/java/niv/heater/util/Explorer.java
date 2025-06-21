@@ -98,18 +98,18 @@ public class Explorer implements Runnable {
             hops = Math.max(0, hops - 1);
         }
         if (!visited.contains(pos) && hops > 0) {
-            if (result instanceof ConnectorResult r) {
+            if (result instanceof ConnectorResult(Connector connector)) {
                 visited.add(pos);
-                connectors.add(new ConnectorHolder(r.connector(), pos, level.getBlockState(pos), hops));
-            } else if (result instanceof BurningStorageResult r) {
+                connectors.add(new ConnectorHolder(connector, pos, level.getBlockState(pos), hops));
+            } else if (result instanceof BurningStorageResult(BurningStorage burningStorage)) {
                 if (onBurningStorageCallback != null) {
                     visited.add(pos);
-                    onBurningStorageCallback.accept(r.burning(), pos);
+                    onBurningStorageCallback.accept(burningStorage, pos);
                 }
-            } else if (result instanceof HeaterResult r) {
+            } else if (result instanceof HeaterResult(HeaterBlock heaterBlock)) {
                 if (onHeaterCallback != null) {
                     visited.add(pos);
-                    onHeaterCallback.accept(r.heater(), pos);
+                    onHeaterCallback.accept(heaterBlock, pos);
                 }
             }
         }

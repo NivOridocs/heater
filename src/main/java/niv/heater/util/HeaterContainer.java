@@ -7,15 +7,17 @@ import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class HeaterContainer extends SimpleContainer implements WorldlyContainer {
 
     private static final int[] SLOTS = new int[] { 0 };
 
-    public HeaterContainer() {
+    private BlockEntity entity;
+
+    public HeaterContainer(BlockEntity entity) {
         super(1);
+        this.entity = entity;
     }
 
     // For {@link SimpleContainer}
@@ -23,7 +25,7 @@ public class HeaterContainer extends SimpleContainer implements WorldlyContainer
     @Override
     public boolean canPlaceItem(int slot, ItemStack stack) {
         if (slot == 0) {
-            return AbstractFurnaceBlockEntity.isFuel(stack)
+            return this.entity.getLevel().fuelValues().isFuel(stack)
                     || stack.is(Items.BUCKET) && !items.get(0).is(Items.BUCKET);
         }
         return true;
@@ -46,16 +48,16 @@ public class HeaterContainer extends SimpleContainer implements WorldlyContainer
         return face != Direction.DOWN || stack.is(Items.WATER_BUCKET) || stack.is(Items.BUCKET);
     }
 
-    public static final HeaterContainer getForBlockEntity(BlockEntity blockEntity) {
-        return new HeaterContainer() {
+    public static final HeaterContainer getForBlockEntity(BlockEntity entity) {
+        return new HeaterContainer(entity) {
             @Override
             public boolean stillValid(Player player) {
-                return Container.stillValidBlockEntity(blockEntity, player);
+                return Container.stillValidBlockEntity(entity, player);
             }
 
             @Override
             public void setChanged() {
-                blockEntity.setChanged();
+                entity.setChanged();
             }
         };
     }

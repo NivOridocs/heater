@@ -1,9 +1,5 @@
 package niv.heater.block;
 
-import static net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED;
-
-import java.util.ArrayList;
-
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -25,12 +21,12 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.redstone.Orientation;
 import niv.heater.api.Connector;
-import niv.heater.api.Worded;
 import niv.heater.block.entity.HeaterBlockEntity;
 import niv.heater.registry.HeaterBlockEntityTypes;
 
-public class HeaterBlock extends AbstractFurnaceBlock implements Connector, Worded, WeatheringCopper {
+public class HeaterBlock extends AbstractFurnaceBlock implements Connector, WeatheringCopper {
 
     @SuppressWarnings("java:S1845")
     public static final MapCodec<HeaterBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
@@ -70,8 +66,8 @@ public class HeaterBlock extends AbstractFurnaceBlock implements Connector, Word
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level level, BlockPos pos,
-            Block sourceBlock, BlockPos sourcePos, boolean notify) {
+    protected void neighborChanged(BlockState blockState, Level level, BlockPos pos,
+            Block sourceBlock, Orientation orientation, boolean notify) {
         if (level.isClientSide) {
             return;
         }
@@ -120,16 +116,5 @@ public class HeaterBlock extends AbstractFurnaceBlock implements Connector, Word
     @Override
     public WeatherState getAge() {
         return weatherState;
-    }
-
-    @Override
-    public String[] getWords() {
-        var result = new ArrayList<String>(3);
-        result.add("waxed");
-        if (getAge() != UNAFFECTED) {
-            result.add(getAge().name().toLowerCase());
-        }
-        result.add("heater");
-        return result.toArray(String[]::new);
     }
 }
