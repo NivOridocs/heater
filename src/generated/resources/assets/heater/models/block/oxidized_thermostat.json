@@ -1,0 +1,8 @@
+{
+  "parent": "heater:block/template_thermostat",
+  "textures": {
+    "bottom": "heater:block/oxidized_thermostat_bottom",
+    "side": "heater:block/oxidized_thermostat_side",
+    "top": "heater:block/oxidized_thermostat_top"
+  }
+}
