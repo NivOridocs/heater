@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
++ Update `burning` library to 1.0+1.21.2 version.
+
+### Fixed
+
++ Fix occasional game-crashing NullPointerException when breaking a heat receiving block.
+
 ## [4.0.2] - 2025-06-21
 
 ### Changed

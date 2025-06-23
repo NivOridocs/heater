@@ -2,9 +2,11 @@ package niv.heater.block.entity;
 
 import static niv.heater.util.WeatherStateExtra.burningReduction;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jetbrains.annotations.Nullable;
@@ -198,24 +200,30 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         }
     }
 
-    private static void propagateBurnTime(Level level, HeaterBlockEntity heater, BurningContext context, Transaction transaction) {
-        var storages = heater.cache.stream()
-                .map(pos -> BurningStorage.SIDED.find(level, pos, null))
-                .filter(BurningStorage::supportsInsertion)
-                .sorted((a, b) -> Double.compare(
-                        a.getBurning(context).getReverseValue(context),
-                        b.getBurning(context).getReverseValue(context)))
-                .limit(heater.burningStorage.getCurrentBurning())
-                .toArray(BurningStorage[]::new);
+    private static void propagateBurnTime(Level level, HeaterBlockEntity heater, BurningContext context,
+            Transaction transaction) {
+        var set = new TreeSet<BurningStorage>((a, b) -> Double.compare(
+                a.getBurning(context).getReverseValue(context),
+                b.getBurning(context).getReverseValue(context)));
+        for (var pos : heater.cache) {
+            var storage = BurningStorage.SIDED.find(level, pos, null);
+            if (storage != null && storage.supportsInsertion()) {
+                set.add(storage);
+            }
+        }
+        var storages = set.toArray(BurningStorage[]::new);
+        storages = Arrays.copyOf(storages, Math.min(storages.length, heater.burningStorage.getCurrentBurning()));
 
         if (storages.length > 0) {
             var deltaBurning = heater.burningStorage.getBurning(context)
                     .withValue(Math.round(heater.burningStorage.getCurrentBurning() * 1f / storages.length), context);
 
             for (var storage : storages) {
-                BurningStorage.transfer(heater.burningStorage, storage, deltaBurning, context, transaction);
-                if (!heater.isBurning()) {
-                    break;
+                if (storage != null) {
+                    BurningStorage.transfer(heater.burningStorage, storage, deltaBurning, context, transaction);
+                    if (!heater.isBurning()) {
+                        break;
+                    }
                 }
             }
         }
