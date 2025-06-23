@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [4.0.3] - 2025-06-23
+
+### Changed
+
++ Update `burning` library to 1.0+1.21.2 version.
+
+### Fixed
+
++ Fix occasional game-crashing NullPointerException when breaking a heat receiving block.
+
 ## [4.0.2] - 2025-06-21
 
 ### Changed
@@ -103,6 +113,7 @@
 
 Initial release.
 
+[4.0.3]: https://github.com/NivOridocs/heater/releases/tag/4.0.3
 [4.0.2]: https://github.com/NivOridocs/heater/releases/tag/4.0.2
 [4.0.1]: https://github.com/NivOridocs/heater/releases/tag/4.0.1
 [4.0]: https://github.com/NivOridocs/heater/releases/tag/4.0
