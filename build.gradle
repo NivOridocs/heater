@@ -26,7 +26,7 @@ repositories {
 }
 
 loom {
-    splitEnvironmentSourceSets()
+	splitEnvironmentSourceSets()
 
 	mods {
 		"heater" {
@@ -37,38 +37,10 @@ loom {
 }
 
 fabricApi {
-    // configureDataGeneration()
-
 	configureDataGeneration {
-        // Contains the output directory where generated data files will be stored.
-        // Defaults to `src/main/generated`
-        outputDirectory = file("src/main/generated")
-
-        // Contains a boolean indicating whether a run configuration should be created for the data generation process.
-        // Defaults to `true`
-        // createRunConfiguration = true
-
-        // Contains a boolean indicating whether a new source set should be created for the data generation process.
-        // This is useful if you do not want your datagen code to be exported in your mod jar.
-        // Defaults to `false`
-        // createSourceSet = true
-
-        // Contains a string representing the mod ID associated with the data generation process. This must be set if `createSourceSet` is true.
-        // This must be the mod id of the mod used for datagen in the datagen source set and not your main mod id.
-        // modId = "heater-datagen"
-
-        // Contains a boolean indicating whether strict validation is enabled.
-        // Defaults to `false`
-        // strictValidation = true
-
-        // Contains a boolean indicating whether the generated resources will be automatically added to the main source set.
-        // Defaults to `true`
-        // addToResources = true
-
-        // Contains a boolean indicating whether data generation will be compiled and run with the client.
-        // Defaults to `false`
-        client = true
-    }
+        outputDirectory = file("src/generated/resources")
+		client = true
+	}
 }
 
 dependencies {
@@ -86,7 +58,7 @@ processResources {
 	inputs.property "version", project.version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": inputs.properties.version
 	}
 }
 
@@ -105,8 +77,10 @@ java {
 }
 
 jar {
+	inputs.property "archivesName", project.base.archivesName
+
 	from("LICENSE") {
-		rename { "${it}_${project.base.archivesName.get()}"}
+		rename { "${it}_${inputs.properties.archivesName}"}
 	}
 }
 
