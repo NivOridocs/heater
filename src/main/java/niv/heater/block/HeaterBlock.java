@@ -6,11 +6,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
@@ -72,23 +70,6 @@ public class HeaterBlock extends AbstractFurnaceBlock implements Connector, Weat
             return;
         }
         level.getBlockEntity(pos, HeaterBlockEntityTypes.HEATER).ifPresent(HeaterBlockEntity::makeDirty);
-    }
-
-    @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
-        if (state.getBlock() instanceof HeaterBlock && newState.getBlock() instanceof HeaterBlock) {
-            return;
-        }
-        var entity = level.getBlockEntity(pos);
-        if (entity instanceof HeaterBlockEntity heater) {
-            if (level instanceof ServerLevel) {
-                Containers.dropContents(level, pos, heater.getContainer());
-            }
-            level.updateNeighbourForOutputSignal(pos, this);
-        }
-        if (state.hasBlockEntity() && !state.is(newState.getBlock())) {
-            level.removeBlockEntity(pos);
-        }
     }
 
     @Override

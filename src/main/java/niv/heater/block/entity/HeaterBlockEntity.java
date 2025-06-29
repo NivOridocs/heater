@@ -16,18 +16,23 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap.Builder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.Container;
 import net.minecraft.world.LockCode;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.Nameable;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
@@ -42,9 +47,8 @@ import niv.heater.block.HeaterBlock;
 import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.Explorer;
-import niv.heater.util.HeaterContainer;
 
-public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable {
+public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable, WorldlyContainer {
 
     public static final String CONTAINER_NAME = "container.heater";
 
@@ -54,9 +58,11 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     private static final String CUSTOM_NAME_TAG = "CustomName";
     private static final String ITEM_TAG = "Item";
 
+    private static final int[] SLOTS = new int[] { 0 };
+
     private static final int MAX_HOPS = 64;
 
-    private final HeaterContainer container;
+    private final SimpleContainer container;
 
     private final SimpleBurningStorage burningStorage;
 
@@ -75,7 +81,6 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
         super(HeaterBlockEntityTypes.HEATER, pos, state);
-        this.container = new HeaterContainer(this);
         this.burningStorage = SimpleBurningStorage.getForBlockEntity(this, i -> i);
         this.burningData = SimpleBurningStorage.getDefaultContainerData(this.burningStorage);
         this.wrappers = new EnumMap<>(Direction.class);
@@ -83,10 +88,17 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
         this.dirty = new AtomicBoolean(true);
         this.lock = LockCode.NO_LOCK;
         this.name = null;
-    }
 
-    public HeaterContainer getContainer() {
-        return container;
+        this.container = new SimpleContainer(1) {
+            @Override
+            public boolean canPlaceItem(int slot, ItemStack stack) {
+                if (slot == 0) {
+                    return HeaterBlockEntity.this.getLevel().fuelValues().isFuel(stack)
+                            || stack.is(Items.BUCKET) && !this.items.get(0).is(Items.BUCKET);
+                }
+                return true;
+            }
+        };
     }
 
     public boolean isBurning() {
@@ -103,10 +115,11 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     protected void loadAdditional(CompoundTag compoundTag, Provider provider) {
         super.loadAdditional(compoundTag, provider);
         this.lock = LockCode.fromTag(compoundTag, provider);
-        if (compoundTag.contains(CUSTOM_NAME_TAG, 8)) {
-            this.name = parseCustomNameSafe(compoundTag.getString(CUSTOM_NAME_TAG), provider);
-        }
-        this.container.setItem(0, ItemStack.parseOptional(provider, compoundTag.getCompound(ITEM_TAG)));
+        this.name = parseCustomNameSafe(compoundTag.get(CUSTOM_NAME_TAG), provider);
+        this.container.setItem(0, compoundTag
+                .getCompound(ITEM_TAG)
+                .flatMap(tag -> ItemStack.parse(provider, tag))
+                .orElse(ItemStack.EMPTY));
         this.burningStorage.load(compoundTag, provider);
     }
 
@@ -124,11 +137,11 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     }
 
     @Override
-    protected void applyImplicitComponents(DataComponentInput input) {
-        super.applyImplicitComponents(input);
-        this.name = input.get(DataComponents.CUSTOM_NAME);
-        this.lock = input.getOrDefault(DataComponents.LOCK, LockCode.NO_LOCK);
-        input.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyInto(this.container.getItems());
+    protected void applyImplicitComponents(DataComponentGetter getter) {
+        super.applyImplicitComponents(getter);
+        this.name = getter.get(DataComponents.CUSTOM_NAME);
+        this.lock = getter.getOrDefault(DataComponents.LOCK, LockCode.NO_LOCK);
+        getter.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyInto(this.container.getItems());
     }
 
     @Override
@@ -171,6 +184,63 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     public void setCustomName(Component name) {
         this.name = name;
+    }
+
+    // For {@link WorldlyContainer}
+
+    @Override
+    public int getContainerSize() {
+        return this.container.getContainerSize();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return this.container.isEmpty();
+    }
+
+    @Override
+    public ItemStack getItem(int i) {
+        return this.container.getItem(i);
+    }
+
+    @Override
+    public ItemStack removeItem(int i, int j) {
+        return this.container.removeItem(i, j);
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(int i) {
+        return this.container.removeItemNoUpdate(i);
+    }
+
+    @Override
+    public void setItem(int i, ItemStack itemStack) {
+        this.container.setItem(i, itemStack);
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return Container.stillValidBlockEntity(this, player);
+    }
+
+    @Override
+    public void clearContent() {
+        this.container.clearContent();
+    }
+
+    @Override
+    public int[] getSlotsForFace(Direction direction) {
+        return SLOTS;
+    }
+
+    @Override
+    public boolean canPlaceItemThroughFace(int i, ItemStack itemStack, Direction direction) {
+        return this.container.canPlaceItem(i, itemStack);
+    }
+
+    @Override
+    public boolean canTakeItemThroughFace(int i, ItemStack itemStack, Direction direction) {
+        return direction != Direction.DOWN || itemStack.is(Items.WATER_BUCKET) || itemStack.is(Items.BUCKET);
     }
 
     // Static
