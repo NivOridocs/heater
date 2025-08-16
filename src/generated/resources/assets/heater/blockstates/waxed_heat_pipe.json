@@ -7,38 +7,10 @@
     },
     {
       "apply": {
-        "model": "heater:block/heat_pipe_arm",
-        "x": 90
-      },
-      "when": {
-        "down": "true"
-      }
-    },
-    {
-      "apply": {
-        "model": "heater:block/heat_pipe_arm",
-        "x": 270
-      },
-      "when": {
-        "up": "true"
-      }
-    },
-    {
-      "apply": {
-        "model": "heater:block/heat_pipe_arm",
-        "y": 0
+        "model": "heater:block/heat_pipe_arm"
       },
       "when": {
         "north": "true"
-      }
-    },
-    {
-      "apply": {
-        "model": "heater:block/heat_pipe_arm",
-        "y": 180
-      },
-      "when": {
-        "south": "true"
       }
     },
     {
@@ -53,10 +25,37 @@
     {
       "apply": {
         "model": "heater:block/heat_pipe_arm",
+        "y": 180
+      },
+      "when": {
+        "south": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "heater:block/heat_pipe_arm",
         "y": 270
       },
       "when": {
         "west": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "heater:block/heat_pipe_arm",
+        "x": 90
+      },
+      "when": {
+        "down": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "heater:block/heat_pipe_arm",
+        "x": 270
+      },
+      "when": {
+        "up": "true"
       }
     }
   ]
