@@ -75,7 +75,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
         super(HeaterBlockEntityTypes.HEATER, pos, state);
-        this.container = HeaterContainer.getForBlockEntity(this);
+        this.container = new HeaterContainer(this);
         this.burningStorage = SimpleBurningStorage.getForBlockEntity(this, i -> i);
         this.burningData = SimpleBurningStorage.getDefaultContainerData(this.burningStorage);
         this.wrappers = new EnumMap<>(Direction.class);
@@ -101,9 +101,10 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     @Override
     protected void loadAdditional(CompoundTag compoundTag, Provider provider) {
+        super.loadAdditional(compoundTag, provider);
         this.lock = LockCode.fromTag(compoundTag, provider);
         if (compoundTag.contains(CUSTOM_NAME_TAG, 8)) {
-            this.name = Component.Serializer.fromJson(compoundTag.getString(CUSTOM_NAME_TAG), provider);
+            this.name = parseCustomNameSafe(compoundTag.getString(CUSTOM_NAME_TAG), provider);
         }
         this.container.setItem(0, ItemStack.parseOptional(provider, compoundTag.getCompound(ITEM_TAG)));
         this.burningStorage.load(compoundTag, provider);
@@ -111,6 +112,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     @Override
     protected void saveAdditional(CompoundTag compoundTag, Provider provider) {
+        super.saveAdditional(compoundTag, provider);
         this.lock.addToTag(compoundTag, provider);
         if (this.name != null) {
             compoundTag.putString(CUSTOM_NAME_TAG, Component.Serializer.toJson(this.name, provider));

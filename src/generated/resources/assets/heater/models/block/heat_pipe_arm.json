@@ -1,0 +1,6 @@
+{
+  "parent": "heater:block/pipe_arm",
+  "textures": {
+    "texture": "heater:block/heat_pipe"
+  }
+}

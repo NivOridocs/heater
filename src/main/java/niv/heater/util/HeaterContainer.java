@@ -26,15 +26,25 @@ public class HeaterContainer extends SimpleContainer implements WorldlyContainer
     public boolean canPlaceItem(int slot, ItemStack stack) {
         if (slot == 0) {
             return this.entity.getLevel().fuelValues().isFuel(stack)
-                    || stack.is(Items.BUCKET) && !items.get(0).is(Items.BUCKET);
+                    || stack.is(Items.BUCKET) && !this.items.get(0).is(Items.BUCKET);
         }
         return true;
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return Container.stillValidBlockEntity(this.entity, player);
+    }
+
+    @Override
+    public void setChanged() {
+        this.entity.setChanged();
     }
 
     // For {@link WorldlyContainer}
 
     @Override
-    public int[] getSlotsForFace(Direction var1) {
+    public int[] getSlotsForFace(Direction direction) {
         return SLOTS;
     }
 
@@ -46,19 +56,5 @@ public class HeaterContainer extends SimpleContainer implements WorldlyContainer
     @Override
     public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction face) {
         return face != Direction.DOWN || stack.is(Items.WATER_BUCKET) || stack.is(Items.BUCKET);
-    }
-
-    public static final HeaterContainer getForBlockEntity(BlockEntity entity) {
-        return new HeaterContainer(entity) {
-            @Override
-            public boolean stillValid(Player player) {
-                return Container.stillValidBlockEntity(entity, player);
-            }
-
-            @Override
-            public void setChanged() {
-                entity.setChanged();
-            }
-        };
     }
 }

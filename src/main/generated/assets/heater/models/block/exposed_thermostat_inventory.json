@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "bottom": "heater:block/exposed_thermostat_bottom",
-    "side": "heater:block/exposed_thermostat_side",
-    "top": "heater:block/exposed_thermostat_front"
-  }
-}
