@@ -10,6 +10,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -40,7 +41,7 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     private final WeatherState weatherState;
 
     public HeatPipeBlock(WeatherState weatherState, Properties settings) {
-        super(.1875F, settings);
+        super(6.0F, settings);
         this.weatherState = weatherState;
         this.registerDefaultState(stateDefinition.any()
                 .setValue(DOWN, false)
@@ -118,7 +119,7 @@ public class HeatPipeBlock extends PipeBlock implements Connector, WeatheringCop
     }
 
     @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
+    public void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean moved) {
         HeaterBlockEntity.updateConnectedHeaters(level, pos, state);
     }
 
