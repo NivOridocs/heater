@@ -120,6 +120,7 @@
 
 Initial release.
 
+[4.0.4]: https://github.com/NivOridocs/heater/releases/tag/4.0.4
 [4.0.3]: https://github.com/NivOridocs/heater/releases/tag/4.0.3
 [4.0.2]: https://github.com/NivOridocs/heater/releases/tag/4.0.2
 [4.0.1]: https://github.com/NivOridocs/heater/releases/tag/4.0.1
