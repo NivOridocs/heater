@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [4.0.6] - 2025-08-18
+
+### Changed
+
++ Update target Minecraft version to 1.21.6, with up to 1.21.8 compatibility.
++ Update `burning` library to 1.1+1.21.6 version.
+
 ## [4.0.5] - 2025-08-16
 
 ### Changed

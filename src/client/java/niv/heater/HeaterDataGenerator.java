@@ -16,9 +16,11 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WEST;
 import static niv.heater.Heater.MOD_ID;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
@@ -41,9 +43,11 @@ import net.minecraft.client.renderer.block.model.VariantMutator;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
@@ -51,12 +55,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import niv.heater.block.HeatPipeBlock;
-import niv.heater.block.HeaterBlock;
-import niv.heater.block.ThermostatBlock;
-import niv.heater.block.WeatheringHeatPipeBlock;
-import niv.heater.block.WeatheringHeaterBlock;
-import niv.heater.block.WeatheringThermostatBlock;
 import niv.heater.block.entity.HeaterBlockEntity;
 import niv.heater.registry.HeaterBlocks;
 import niv.heater.registry.HeaterTabs;
@@ -368,19 +366,26 @@ public class HeaterDataGenerator implements DataGeneratorEntrypoint {
         }
 
         @Override
-        protected void addTags(HolderLookup.Provider arg) {
+        protected void addTags(HolderLookup.Provider lookup) {
 
-            getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE)
-                    .setReplace(false)
+            builder(BlockTags.MINEABLE_WITH_PICKAXE)
                     // Heaters
-                    .add(HeaterBlocks.HEATERS.values().toArray(WeatheringHeaterBlock[]::new))
-                    .add(HeaterBlocks.WAXED_HEATERS.values().toArray(HeaterBlock[]::new))
+                    .addAll(getResourceKeys(HeaterBlocks.HEATERS.values()))
+                    .addAll(getResourceKeys(HeaterBlocks.WAXED_HEATERS.values()))
                     // Heat Pipes
-                    .add(HeaterBlocks.HEAT_PIPES.values().toArray(WeatheringHeatPipeBlock[]::new))
-                    .add(HeaterBlocks.WAXED_HEAT_PIPES.values().toArray(HeatPipeBlock[]::new))
+                    .addAll(getResourceKeys(HeaterBlocks.HEAT_PIPES.values()))
+                    .addAll(getResourceKeys(HeaterBlocks.WAXED_HEAT_PIPES.values()))
                     // Thermostats
-                    .add(HeaterBlocks.THERMOSTATS.values().toArray(WeatheringThermostatBlock[]::new))
-                    .add(HeaterBlocks.WAXED_THERMOSTATS.values().toArray(ThermostatBlock[]::new));
+                    .addAll(getResourceKeys(HeaterBlocks.THERMOSTATS.values()))
+                    .addAll(getResourceKeys(HeaterBlocks.WAXED_THERMOSTATS.values()))
+                    // Don't replace
+                    .setReplace(false);
+        }
+
+        private Stream<ResourceKey<Block>> getResourceKeys(Collection<? extends Block> blocks) {
+            return blocks.stream()
+                .map(BuiltInRegistries.BLOCK::getResourceKey)
+                .flatMap(Optional::stream);
         }
     }
 }
