@@ -15,13 +15,13 @@ import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap.Builder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.world.Container;
+import net.minecraft.world.ContainerListener;
 import net.minecraft.world.LockCode;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.Nameable;
@@ -38,9 +38,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
+import niv.burning.api.BurningStorageHelper;
+import niv.burning.api.BurningStorageListener;
 import niv.burning.api.base.SimpleBurningStorage;
 import niv.burning.impl.FuelValuesBurningContext;
 import niv.heater.block.HeaterBlock;
@@ -48,7 +52,8 @@ import niv.heater.registry.HeaterBlockEntityTypes;
 import niv.heater.screen.HeaterMenu;
 import niv.heater.util.Explorer;
 
-public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Nameable, WorldlyContainer {
+public class HeaterBlockEntity extends BlockEntity
+        implements BurningStorageListener, ContainerListener, MenuProvider, Nameable, WorldlyContainer {
 
     public static final String CONTAINER_NAME = "container.heater";
 
@@ -57,16 +62,48 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     private static final String CUSTOM_NAME_TAG = "CustomName";
     private static final String ITEM_TAG = "Item";
+    private static final String BURNING_TAG = "Burning";
 
     private static final int[] SLOTS = new int[] { 0 };
 
     private static final int MAX_HOPS = 64;
 
+    private final ContainerData burningData = new ContainerData() {
+        @Override
+        public int get(int index) {
+            switch (index) {
+                case 0:
+                    return HeaterBlockEntity.this.burningStorage.getCurrentBurning();
+                case 1:
+                    return HeaterBlockEntity.this.burningStorage.getMaxBurning();
+                default:
+                    throw new IndexOutOfBoundsException(index);
+            }
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0:
+                    HeaterBlockEntity.this.burningStorage.setCurrentBurning(value);
+                    break;
+                case 1:
+                    HeaterBlockEntity.this.burningStorage.setMaxBurning(value);
+                    break;
+                default:
+                    throw new IndexOutOfBoundsException(index);
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+    };
+
     private final SimpleContainer container;
 
     private final SimpleBurningStorage burningStorage;
-
-    private final ContainerData burningData;
 
     private final EnumMap<Direction, InventoryStorage> wrappers;
 
@@ -81,14 +118,6 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
 
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
         super(HeaterBlockEntityTypes.HEATER, pos, state);
-        this.burningStorage = SimpleBurningStorage.getForBlockEntity(this, i -> i);
-        this.burningData = SimpleBurningStorage.getDefaultContainerData(this.burningStorage);
-        this.wrappers = new EnumMap<>(Direction.class);
-        this.cache = new HashSet<>();
-        this.dirty = new AtomicBoolean(true);
-        this.lock = LockCode.NO_LOCK;
-        this.name = null;
-
         this.container = new SimpleContainer(1) {
             @Override
             public boolean canPlaceItem(int slot, ItemStack stack) {
@@ -99,6 +128,15 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
                 return true;
             }
         };
+        this.burningStorage = new SimpleBurningStorage();
+        this.wrappers = new EnumMap<>(Direction.class);
+        this.cache = new HashSet<>();
+        this.dirty = new AtomicBoolean(true);
+        this.lock = LockCode.NO_LOCK;
+        this.name = null;
+
+        this.burningStorage.addListener(this);
+        this.container.addListener(this);
     }
 
     public boolean isBurning() {
@@ -112,28 +150,24 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
     // For {@link BlockEntity}
 
     @Override
-    protected void loadAdditional(CompoundTag compoundTag, Provider provider) {
-        super.loadAdditional(compoundTag, provider);
-        this.lock = LockCode.fromTag(compoundTag, provider);
-        this.name = parseCustomNameSafe(compoundTag.get(CUSTOM_NAME_TAG), provider);
-        this.container.setItem(0, compoundTag
-                .getCompound(ITEM_TAG)
-                .flatMap(tag -> ItemStack.parse(provider, tag))
-                .orElse(ItemStack.EMPTY));
-        this.burningStorage.load(compoundTag, provider);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        this.lock = LockCode.fromTag(input);
+        this.name = input.read(CUSTOM_NAME_TAG, ComponentSerialization.CODEC).orElse(null);
+        this.container.setItem(0, input.read(ITEM_TAG, ItemStack.CODEC).orElse(ItemStack.EMPTY));
+        input.read(BURNING_TAG, SimpleBurningStorage.SNAPSHOT_CODEC).ifPresent(this.burningStorage::readSnapshot);
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compoundTag, Provider provider) {
-        super.saveAdditional(compoundTag, provider);
-        this.lock.addToTag(compoundTag, provider);
-        if (this.name != null) {
-            compoundTag.putString(CUSTOM_NAME_TAG, Component.Serializer.toJson(this.name, provider));
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        this.lock.addToTag(output);
+        output.storeNullable(CUSTOM_NAME_TAG, ComponentSerialization.CODEC, this.name);
+        var fuel = this.container.getItem(0);
+        if (!fuel.isEmpty()) {
+            output.store(ITEM_TAG, ItemStack.CODEC, fuel);
         }
-        if (!this.container.getItem(0).isEmpty()) {
-            compoundTag.put(ITEM_TAG, this.container.getItem(0).save(provider, new CompoundTag()));
-        }
-        this.burningStorage.save(compoundTag, provider);
+        output.store(BURNING_TAG, SimpleBurningStorage.SNAPSHOT_CODEC, this.burningStorage.createSnapshot());
     }
 
     @Override
@@ -152,6 +186,21 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider, Name
             builder.set(DataComponents.LOCK, this.lock);
         }
         builder.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(this.container.getItems()));
+    }
+
+    // For {@link BurningStorageListener}
+
+    @Override
+    public void burningStorageChanged(BurningStorage storage) {
+        BurningStorageHelper.tryUpdateLitProperty(this, storage);
+        this.setChanged();
+    }
+
+    // For {@link ContainerListener}
+
+    @Override
+    public void containerChanged(Container container) {
+        this.setChanged();
     }
 
     // For {@link MenuProvider}
